@@ -1012,7 +1012,7 @@ fun LoadingRow() {
     }
 }
 
-// ── Empty Row ──
+//emotes to be added
 @Composable
 fun EmptyRow(message: String) {
     Box(
