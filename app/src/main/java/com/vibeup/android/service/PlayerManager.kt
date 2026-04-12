@@ -183,14 +183,17 @@ class PlayerManager @Inject constructor(
     }
 
     fun resetState() {
+        android.util.Log.d("PlayerManager", "Resetting all state!")
+        progressJob?.cancel()
         exoPlayer?.stop()
         exoPlayer?.clearMediaItems()
+        exoPlayer?.release()
+        exoPlayer = null  // ← force new instance next time
         _currentSong.value = null
         _isPlaying.value = false
         _currentPosition.value = 0L
         _duration.value = 0L
         _queue.value = emptyList()
-        progressJob?.cancel()
     }
 
     fun release() {

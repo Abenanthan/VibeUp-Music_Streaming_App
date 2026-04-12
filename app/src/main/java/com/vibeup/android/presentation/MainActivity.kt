@@ -30,6 +30,8 @@ import com.vibeup.android.ui.theme.VibeUpTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.vibeup.android.service.PlayerManager
+import javax.inject.Inject
 
 data class BottomNavItem(
     val label: String,
@@ -39,10 +41,15 @@ data class BottomNavItem(
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var playerManager: PlayerManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) {
+            playerManager.resetState()
+        }
 
 
 
