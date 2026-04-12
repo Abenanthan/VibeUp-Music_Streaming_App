@@ -13,6 +13,7 @@ import androidx.media3.ui.PlayerNotificationManager
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import android.content.Intent
 
 @UnstableApi
 @AndroidEntryPoint
@@ -132,6 +133,14 @@ class MusicPlayerService : MediaSessionService() {
             mediaSession = null
         }
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // ✅ Clear player state when app killed
+        playerManager.resetState()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+        super.onTaskRemoved(rootIntent)
     }
 
     private fun createNotificationChannel() {

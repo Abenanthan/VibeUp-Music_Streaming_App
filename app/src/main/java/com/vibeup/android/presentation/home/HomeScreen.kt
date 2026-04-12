@@ -12,11 +12,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,13 +31,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.vibeup.android.Screen
 import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.presentation.library.LibraryViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.theme.*
-import androidx.compose.foundation.gestures.ScrollableDefaults
 
 @Composable
 fun HomeScreen(
@@ -49,16 +46,37 @@ fun HomeScreen(
     playerViewModel: PlayerViewModel = hiltViewModel(),
     libraryViewModel: LibraryViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()
     val favouriteSongs by viewModel.favouriteSongs.collectAsState()
     val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
     val trendingSongs by viewModel.trendingSongs.collectAsState()
+    val newReleases by viewModel.newReleases.collectAsState()
+    val romanticSongs by viewModel.romanticSongs.collectAsState()
+    val partySongs by viewModel.partySongs.collectAsState()
+    val chillSongs by viewModel.chillSongs.collectAsState()
+    val sadSongs by viewModel.sadSongs.collectAsState()
+    val arRahmanSongs by viewModel.arRahmanSongs.collectAsState()
+    val anirudhSongs by viewModel.anirudhSongs.collectAsState()
+    val sidSriramSongs by viewModel.sidSriramSongs.collectAsState()
+    val arijitSongs by viewModel.arijitSongs.collectAsState()
+    val gvPrakashSongs by viewModel.gvPrakashSongs.collectAsState()
+    val hipHopSongs by viewModel.hipHopSongs.collectAsState()
     val tamilSongs by viewModel.tamilSongs.collectAsState()
     val teluguSongs by viewModel.teluguSongs.collectAsState()
     val hindiSongs by viewModel.hindiSongs.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val playlists by libraryViewModel.playlists.collectAsState()
+    val playlists by viewModel.playlists.collectAsState()
+    val libraryPlaylists by libraryViewModel.playlists.collectAsState()
     val listState = rememberLazyListState()
+
+    fun playSong(song: Song, queue: List<Song>) {
+        playerViewModel.playSong(song, queue)
+    }
+
+    fun likeSong(song: Song) = libraryViewModel.likeSong(song)
+
+    fun addToPlaylist(playlistId: String, song: Song) =
+        libraryViewModel.addSongToPlaylist(playlistId, song)
 
     Box(
         modifier = Modifier
@@ -72,324 +90,263 @@ fun HomeScreen(
                 )
             )
     ) {
-        when {
-            isLoading -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(
-                        color = PurplePrimary,
-                        modifier = Modifier.size(48.dp),
-                        strokeWidth = 3.dp
+        if (isLoading) {
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator(
+                    color = PurplePrimary,
+                    modifier = Modifier.size(48.dp),
+                    strokeWidth = 3.dp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Loading your vibes...",
+                    color = TextSecondary,
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
+                // ── 1. Header ──
+                item(key = "header") {
+                    HomeHeader(navController = navController)
+                }
+
+                // ── 2. Search Shortcut ──
+                item(key = "search") {
+                    SearchShortcut(
+                        onClick = {
+                            navController.navigate(Screen.Search.route)
+                        }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Loading your vibes...",
-                        color = TextSecondary,
-                        fontSize = 14.sp
-                    )
                 }
-            }
-            error != null -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "😔", fontSize = 48.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Something went wrong!",
-                        color = TextPrimary,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { viewModel.refresh() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PurplePrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = null
+
+                // ── 3. Playlist Shortcuts ──
+                if (playlists.isNotEmpty()) {
+                    item(key = "playlists") {
+                        SectionTitle(
+                            title = "📋 Your Playlists",
+                            subtitle = "Jump right in"
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Retry")
+                        PlaylistShortcuts(
+                            playlists = playlists,
+                            onPlaylistClick = { playlist ->
+                                navController.navigate(
+                                    "${Screen.Playlist.route}/${playlist.id}"
+                                )
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
-            }
-            else -> {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 24.dp)
 
-                ) {
-                    // Header
-                    item { HomeHeader(navController = navController) }
-
-                    // Abe's Favourites
-                    item {
-                        SectionTitle(
-                            title = "❤️ Abe's Favourites",
-                            subtitle = "Your personal picks"
-                        )
-                        if (favouriteSongs.isEmpty()) {
-                            LoadingRow()
-                        } else {
-                            LazyRow(
-                                contentPadding = PaddingValues(
-                                    horizontal = 16.dp
-                                ),
-                                horizontalArrangement = Arrangement
-                                    .spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = favouriteSongs,
-                                    key = { it.id }
-                                ) { song ->
-                                    GlassSongCard(
-                                        song = song,
-                                        playlists = playlists,
-                                        onClick = {
-                                            playerViewModel.playSong(
-                                                song, favouriteSongs
-                                            )
-                                        },
-                                        onLike = {
-                                            libraryViewModel.likeSong(song)
-                                        },
-                                        onAddToPlaylist = { id ->
-                                            libraryViewModel
-                                                .addSongToPlaylist(id, song)
-                                        }
-                                    )
-                                }
-                            }
+                // ── 4. Abe's Favourites ──
+                item(key = "favourites") {
+                    SectionTitle(
+                        title = "❤️ Abeeee's Favourites",
+                        subtitle = "Your personal picks"
+                    )
+                    SongRow(
+                        songs = favouriteSongs,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song ->
+                            playSong(song, favouriteSongs)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-                    // Recently Played
-                    item {
-                        SectionTitle(
-                            title = "🕐 Recently Played",
-                            subtitle = "Continue where you left off"
-                        )
-                        if (recentlyPlayed.isEmpty()) {
-                            EmptySection(
-                                message = "No recently played songs yet!\nStart playing some music 🎵"
-                            )
-                        } else {
-                            LazyRow(
-                                contentPadding = PaddingValues(
-                                    horizontal = 16.dp
-                                ),
-                                horizontalArrangement = Arrangement
-                                    .spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = recentlyPlayed,
-                                    key = { it.id }
-                                ) { song ->
-                                    GlassSongCard(
-                                        song = song,
-                                        playlists = playlists,
-                                        onClick = {
-                                            playerViewModel.playSong(
-                                                song, recentlyPlayed
-                                            )
-                                        },
-                                        onLike = {
-                                            libraryViewModel.likeSong(song)
-                                        },
-                                        onAddToPlaylist = { id ->
-                                            libraryViewModel
-                                                .addSongToPlaylist(id, song)
-                                        }
-                                    )
-                                }
+                // ── 5. Recently Played ──
+                item(key = "recent") {
+                    SectionTitle(
+                        title = "🕐 Recently Played",
+                        subtitle = "Continue where you left off"
+                    )
+                    if (recentlyPlayed.isEmpty()) {
+                        EmptySection("Play some songs to see them here! 🎵")
+                    } else {
+                        SongRow(
+                            songs = recentlyPlayed,
+                            context = context,
+                            playlists = libraryPlaylists,
+                            onSongClick = { song ->
+                                playSong(song, recentlyPlayed)
+                            },
+                            onLike = { song -> likeSong(song) },
+                            onAddToPlaylist = { id, song ->
+                                addToPlaylist(id, song)
                             }
-                        }
-                        Spacer(modifier = Modifier.height(24.dp))
+                        )
                     }
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-                    // Trending Now
-                    item {
-                        SectionTitle(
-                            title = "🔥 Trending Now",
-                            subtitle = "What everyone's listening to"
-                        )
-                        if (trendingSongs.isEmpty()) {
-                            LoadingRow()
-                        } else {
-                            LazyRow(
-                                contentPadding = PaddingValues(
-                                    horizontal = 16.dp
-                                ),
-                                horizontalArrangement = Arrangement
-                                    .spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = trendingSongs,
-                                    key = { it.id }
-                                ) { song ->
-                                    GlassSongCard(
-                                        song = song,
-                                        playlists = playlists,
-                                        onClick = {
-                                            playerViewModel.playSong(
-                                                song, trendingSongs
-                                            )
-                                        },
-                                        onLike = {
-                                            libraryViewModel.likeSong(song)
-                                        },
-                                        onAddToPlaylist = { id ->
-                                            libraryViewModel
-                                                .addSongToPlaylist(id, song)
-                                        }
-                                    )
-                                }
-                            }
+                // ── 6. Moods ──
+                item(key = "moods") {
+                    SectionTitle(
+                        title = "🎭 Moods",
+                        subtitle = "Music for every feeling"
+                    )
+                    MoodsSection(
+                        romantic = romanticSongs,
+                        party = partySongs,
+                        chill = chillSongs,
+                        sad = sadSongs,
+                        onMoodClick = { songs, song ->
+                            playSong(song, songs)
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-                    // Tamil Hits
-                    item {
-                        SectionTitle(
-                            title = "🎵 Tamil Hits",
-                            subtitle = "Best of Tamil music"
-                        )
-                        if (tamilSongs.isEmpty()) {
-                            LoadingRow()
-                        } else {
-                            LazyRow(
-                                contentPadding = PaddingValues(
-                                    horizontal = 16.dp
-                                ),
-                                horizontalArrangement = Arrangement
-                                    .spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = tamilSongs,
-                                    key = { it.id }
-                                ) { song ->
-                                    GlassSongCard(
-                                        song = song,
-                                        playlists = playlists,
-                                        onClick = {
-                                            playerViewModel.playSong(
-                                                song, tamilSongs
-                                            )
-                                        },
-                                        onLike = {
-                                            libraryViewModel.likeSong(song)
-                                        },
-                                        onAddToPlaylist = { id ->
-                                            libraryViewModel
-                                                .addSongToPlaylist(id, song)
-                                        }
-                                    )
-                                }
-                            }
+                // ── 7. Trending Now ──
+                item(key = "trending") {
+                    SectionTitle(
+                        title = "🔥 Trending Now",
+                        subtitle = "What everyone's listening to"
+                    )
+                    SongRow(
+                        songs = trendingSongs,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song ->
+                            playSong(song, trendingSongs)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-                    // Telugu Hits
-                    item {
-                        SectionTitle(
-                            title = "🎶 Telugu Hits",
-                            subtitle = "Best of Telugu music"
-                        )
-                        if (teluguSongs.isEmpty()) {
-                            LoadingRow()
-                        } else {
-                            LazyRow(
-                                contentPadding = PaddingValues(
-                                    horizontal = 16.dp
-                                ),
-                                horizontalArrangement = Arrangement
-                                    .spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = teluguSongs,
-                                    key = { it.id }
-                                ) { song ->
-                                    GlassSongCard(
-                                        song = song,
-                                        playlists = playlists,
-                                        onClick = {
-                                            playerViewModel.playSong(
-                                                song, teluguSongs
-                                            )
-                                        },
-                                        onLike = {
-                                            libraryViewModel.likeSong(song)
-                                        },
-                                        onAddToPlaylist = { id ->
-                                            libraryViewModel
-                                                .addSongToPlaylist(id, song)
-                                        }
-                                    )
-                                }
-                            }
+                // ── 8. New Releases ──
+                item(key = "new_releases") {
+                    SectionTitle(
+                        title = "🆕 New Releases",
+                        subtitle = "Fresh music just for you"
+                    )
+                    SongRow(
+                        songs = newReleases,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song ->
+                            playSong(song, newReleases)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-                    // Hindi Hits
-                    item {
-                        SectionTitle(
-                            title = "🎼 Hindi Hits",
-                            subtitle = "Best of Hindi music"
-                        )
-                        if (hindiSongs.isEmpty()) {
-                            LoadingRow()
-                        } else {
-                            LazyRow(
-                                contentPadding = PaddingValues(
-                                    horizontal = 16.dp
-                                ),
-                                horizontalArrangement = Arrangement
-                                    .spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = hindiSongs,
-                                    key = { it.id }
-                                ) { song ->
-                                    GlassSongCard(
-                                        song = song,
-                                        playlists = playlists,
-                                        onClick = {
-                                            playerViewModel.playSong(
-                                                song, hindiSongs
-                                            )
-                                        },
-                                        onLike = {
-                                            libraryViewModel.likeSong(song)
-                                        },
-                                        onAddToPlaylist = { id ->
-                                            libraryViewModel
-                                                .addSongToPlaylist(id, song)
-                                        }
-                                    )
-                                }
-                            }
+                // ── 9. Artists ──
+                item(key = "artists") {
+                    SectionTitle(
+                        title = "🎤 Artists",
+                        subtitle = "Your favourite musicians"
+                    )
+                    ArtistsSection(
+                        arRahman = arRahmanSongs,
+                        anirudh = anirudhSongs,
+                        sidSriram = sidSriramSongs,
+                        arijit = arijitSongs,
+                        gvPrakash = gvPrakashSongs,
+                        hipHop = hipHopSongs,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song, queue ->
+                            playSong(song, queue)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // ── 10. Tamil Hits ──
+                item(key = "tamil") {
+                    SectionTitle(
+                        title = "🎵 Tamil Hits",
+                        subtitle = "Best of Tamil music"
+                    )
+                    SongRow(
+                        songs = tamilSongs,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song ->
+                            playSong(song, tamilSongs)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // ── 11. Telugu Hits ──
+                item(key = "telugu") {
+                    SectionTitle(
+                        title = "🎶 Telugu Hits",
+                        subtitle = "Best of Telugu music"
+                    )
+                    SongRow(
+                        songs = teluguSongs,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song ->
+                            playSong(song, teluguSongs)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // ── 12. Hindi Hits ──
+                item(key = "hindi") {
+                    SectionTitle(
+                        title = "🎼 Hindi Hits",
+                        subtitle = "Best of Hindi music"
+                    )
+                    SongRow(
+                        songs = hindiSongs,
+                        context = context,
+                        playlists = libraryPlaylists,
+                        onSongClick = { song ->
+                            playSong(song, hindiSongs)
+                        },
+                        onLike = { song -> likeSong(song) },
+                        onAddToPlaylist = { id, song ->
+                            addToPlaylist(id, song)
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
     }
 }
 
+// ── Header ──
 @Composable
 fun HomeHeader(navController: NavController) {
     Row(
@@ -402,7 +359,7 @@ fun HomeHeader(navController: NavController) {
         Column {
             Text(
                 text = "VibeUp 🎵",
-                fontSize = 32.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.ExtraBold,
                 style = TextStyle(
                     brush = Brush.horizontalGradient(
@@ -412,13 +369,13 @@ fun HomeHeader(navController: NavController) {
             )
             Text(
                 text = "Feel the music 🎧",
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 color = TextSecondary
             )
         }
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(42.dp)
                 .background(
                     Brush.linearGradient(
                         colors = listOf(PurplePrimary, BluePrimary)
@@ -432,89 +389,303 @@ fun HomeHeader(navController: NavController) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Person,
+                Icons.Default.Person,
                 contentDescription = "Profile",
                 tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp)
             )
         }
     }
 }
 
+// ── Search Shortcut ──
 @Composable
-fun SectionTitle(title: String, subtitle: String = "") {
-    Column(
-        modifier = Modifier.padding(
-            start = 16.dp,
-            end = 16.dp,
-            bottom = 12.dp
-        )
+fun SearchShortcut(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(DarkCard)
+            .clickable { onClick() },
+        contentAlignment = Alignment.CenterStart
     ) {
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = TextPrimary
-        )
-        if (subtitle.isNotEmpty()) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = TextSecondary
+                text = "Search songs, artists...",
+                color = TextSecondary,
+                fontSize = 14.sp
             )
         }
     }
 }
 
+// ── Playlist Shortcuts ──
 @Composable
-fun LoadingRow() {
+fun PlaylistShortcuts(
+    playlists: List<Playlist>,
+    onPlaylistClick: (Playlist) -> Unit
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(items = playlists, key = { it.id }) { playlist ->
+            Box(
+                modifier = Modifier
+                    .width(130.dp)
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                PurplePrimary.copy(alpha = 0.4f),
+                                BluePrimary.copy(alpha = 0.4f)
+                            )
+                        )
+                    )
+                    .clickable { onPlaylistClick(playlist) },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "🎵", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = playlist.name,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Moods Section ──
+@Composable
+fun MoodsSection(
+    romantic: List<Song>,
+    party: List<Song>,
+    chill: List<Song>,
+    sad: List<Song>,
+    onMoodClick: (List<Song>, Song) -> Unit
+) {
+    val moods = listOf(
+        Triple("💕 Romantic", romantic, listOf(Color(0xFFFF6B9D), Color(0xFFFF8E53))),
+        Triple("🎉 Party", party, listOf(Color(0xFFFFD93D), Color(0xFFFF6B6B))),
+        Triple("😌 Chill", chill, listOf(Color(0xFF4FC3F7), Color(0xFF00B4D8))),
+        Triple("😢 Sad", sad, listOf(Color(0xFF667EEA), Color(0xFF764BA2)))
+    )
+
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(5) {
-            Box(
-                modifier = Modifier
-                    .size(155.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(DarkCard)
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .align(Alignment.Center),
-                    color = PurplePrimary,
-                    strokeWidth = 2.dp
+        items(moods) { (label, songs, colors) ->
+            MoodCard(
+                label = label,
+                songs = songs,
+                gradientColors = colors,
+                onClick = {
+                    if (songs.isNotEmpty()) {
+                        onMoodClick(songs, songs.first())
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun MoodCard(
+    label: String,
+    songs: List<Song>,
+    gradientColors: List<Color>,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .width(130.dp)
+            .height(70.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.linearGradient(colors = gradientColors)
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            if (songs.isNotEmpty()) {
+                Text(
+                    text = "${songs.size} songs",
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 11.sp
+                )
+            } else {
+                Text(
+                    text = "Loading...",
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 11.sp
                 )
             }
         }
     }
 }
 
+// ── Artists Section ──
 @Composable
-fun EmptySection(message: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .height(100.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(DarkCard),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = message,
-            color = TextSecondary,
-            fontSize = 13.sp,
-            textAlign = TextAlign.Center
-        )
+fun ArtistsSection(
+    arRahman: List<Song>,
+    anirudh: List<Song>,
+    sidSriram: List<Song>,
+    arijit: List<Song>,
+    gvPrakash: List<Song>,
+    hipHop: List<Song>,
+    context: android.content.Context,
+    playlists: List<Playlist>,
+    onSongClick: (Song, List<Song>) -> Unit,
+    onLike: (Song) -> Unit,
+    onAddToPlaylist: (String, Song) -> Unit
+) {
+    val artists = listOf(
+        Triple("AR Rahman 🎹", arRahman, "🎹"),
+        Triple("Anirudh 🎸", anirudh, "🎸"),
+        Triple("Sid Sriram 🎤", sidSriram, "🎤"),
+        Triple("Arijit Singh 💙", arijit, "💙"),
+        Triple("GV Prakash 🎵", gvPrakash, "🎵"),
+        Triple("Hip Hop Tamizha 🔥", hipHop, "🔥")
+    )
+
+    Column {
+        artists.forEach { (name, songs, _) ->
+            if (songs.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 8.dp
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        PurplePrimary,
+                                        BluePrimary
+                                    )
+                                ),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🎵",
+                            fontSize = 16.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = name,
+                        color = TextPrimary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = songs,
+                        key = { "${name}_${it.id}" }
+                    ) { song ->
+                        GlassSongCard(
+                            song = song,
+                            context = context,
+                            playlists = playlists,
+                            onClick = { onSongClick(song, songs) },
+                            onLike = { onLike(song) },
+                            onAddToPlaylist = { id ->
+                                onAddToPlaylist(id, song)
+                            }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }
 
+// ── Song Row ──
+@Composable
+fun SongRow(
+    songs: List<Song>,
+    context: android.content.Context,
+    playlists: List<Playlist>,
+    onSongClick: (Song) -> Unit,
+    onLike: (Song) -> Unit,
+    onAddToPlaylist: (String, Song) -> Unit
+) {
+    if (songs.isEmpty()) {
+        LoadingRow()
+    } else {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(items = songs, key = { it.id }) { song ->
+                GlassSongCard(
+                    song = song,
+                    context = context,
+                    playlists = playlists,
+                    onClick = { onSongClick(song) },
+                    onLike = { onLike(song) },
+                    onAddToPlaylist = { id ->
+                        onAddToPlaylist(id, song)
+                    }
+                )
+            }
+        }
+    }
+}
+
+// ── Glass Song Card ──
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GlassSongCard(
     song: Song,
+    context: android.content.Context,
     playlists: List<Playlist> = emptyList(),
     onClick: () -> Unit,
     onLike: () -> Unit = {},
@@ -534,7 +705,7 @@ fun GlassSongCard(
 
     Column(
         modifier = Modifier
-            .width(155.dp)
+            .width(140.dp)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = { showOptions = true }
@@ -542,18 +713,22 @@ fun GlassSongCard(
     ) {
         Box(
             modifier = Modifier
-                .size(155.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .size(140.dp)
+                .clip(RoundedCornerShape(12.dp))
         ) {
-            // Album Art
             AsyncImage(
-                model = song.imageUrl,
-                contentDescription = song.title,
+                model = ImageRequest.Builder(context)
+                    .data(song.imageUrl)
+                    .crossfade(300)
+                    .memoryCacheKey(song.id)
+                    .diskCacheKey(song.id)
+                    .build(),
+                contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
 
-            // Gradient overlay
+            // Dark gradient
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -561,88 +736,66 @@ fun GlassSongCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color(0xFF0A0A1A).copy(alpha = 0.7f)
+                                Color(0xBB0A0A1A)
                             ),
                             startY = 80f
                         )
                     )
             )
 
-            // Glass effect border
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.05f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-            )
-
-            // Options button
-            Box(
+            // Options
+            IconButton(
+                onClick = { showOptions = true },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .size(28.dp)
-                    .background(
-                        Color.Black.copy(alpha = 0.5f),
-                        CircleShape
-                    )
-                    .clip(CircleShape)
-                    .clickable { showOptions = true },
-                contentAlignment = Alignment.Center
+                    .size(30.dp)
             ) {
                 Icon(
                     Icons.Default.MoreVert,
-                    contentDescription = "Options",
+                    contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(14.dp)
                 )
             }
 
-            // Purple glow at bottom
+            // Purple/Blue bottom line
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(4.dp)
+                    .height(3.dp)
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
-                                PurplePrimary.copy(alpha = 0.8f),
-                                BluePrimary.copy(alpha = 0.8f)
+                                PurplePrimary,
+                                BluePrimary
                             )
                         )
                     )
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = song.title,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             color = TextPrimary,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 2.dp)
+            overflow = TextOverflow.Ellipsis
         )
         Text(
             text = song.artist,
             fontSize = 11.sp,
             color = TextSecondary,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 2.dp)
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
+// ── Song Options Dialog ──
 @Composable
 fun SongOptionsDialog(
     song: Song,
@@ -678,13 +831,16 @@ fun SongOptionsDialog(
                             tint = PurplePrimary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add to Liked Songs", color = Color.White)
+                        Text(
+                            "Add to Liked Songs",
+                            color = Color.White
+                        )
                     }
                 }
                 HorizontalDivider(color = DarkElevated)
                 if (playlists.isEmpty()) {
                     Text(
-                        text = "No playlists yet!\nCreate one in Library",
+                        text = "No playlists yet!\nCreate one in Library 📚",
                         color = TextSecondary,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(8.dp)
@@ -716,7 +872,10 @@ fun SongOptionsDialog(
                                     tint = TextSecondary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(playlist.name, color = Color.White)
+                                Text(
+                                    playlist.name,
+                                    color = Color.White
+                                )
                             }
                         }
                     }
@@ -731,4 +890,76 @@ fun SongOptionsDialog(
         },
         containerColor = DarkCard
     )
+}
+
+// ── Section Title ──
+@Composable
+fun SectionTitle(title: String, subtitle: String = "") {
+    Column(
+        modifier = Modifier.padding(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 10.dp
+        )
+    ) {
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+        if (subtitle.isNotEmpty()) {
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = TextSecondary
+            )
+        }
+    }
+}
+
+// ── Loading Row ──
+@Composable
+fun LoadingRow() {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(4) {
+            Box(
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DarkCard),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = PurplePrimary,
+                    strokeWidth = 2.dp
+                )
+            }
+        }
+    }
+}
+
+// ── Empty Section ──
+@Composable
+fun EmptySection(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(80.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(DarkCard),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            color = TextSecondary,
+            fontSize = 13.sp,
+            textAlign = TextAlign.Center
+        )
+    }
 }

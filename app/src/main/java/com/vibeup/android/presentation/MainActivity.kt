@@ -66,6 +66,9 @@ class MainActivity : ComponentActivity() {
                 val currentSong by playerViewModel.currentSong.collectAsState()
                 val isPlaying by playerViewModel.isPlaying.collectAsState()
                 val currentUser by authViewModel.currentUser.collectAsState()
+                //val isPlayerActive by playerViewModel.isPlayerActive.collectAsState()
+
+
 
                 val bottomNavItems = listOf(
                     BottomNavItem("Home", Icons.Default.Home, Screen.Home.route),
@@ -85,12 +88,18 @@ class MainActivity : ComponentActivity() {
                                     MiniPlayer(
                                         song = song,
                                         isPlaying = isPlaying,
-                                        currentPosition = playerViewModel.currentPosition.collectAsState().value,
-                                        duration = playerViewModel.duration.collectAsState().value,
-                                        onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                                        currentPosition = playerViewModel.currentPosition
+                                            .collectAsState().value,
+                                        duration = playerViewModel.duration
+                                            .collectAsState().value,
+                                        onTogglePlayPause = {
+                                            playerViewModel.togglePlayPause()
+                                        },
                                         onNext = { playerViewModel.playNext() },
                                         onPrevious = { playerViewModel.playPrevious() },
-                                        onExpand = { navController.navigate(Screen.Player.route) }
+                                        onExpand = {
+                                            navController.navigate(Screen.Player.route)
+                                        }
                                     )
                                 }
                                 NavigationBar(

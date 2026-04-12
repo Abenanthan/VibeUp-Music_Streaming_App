@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.*
@@ -14,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -21,9 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.Song
+import com.vibeup.android.ui.theme.BluePrimary
 import com.vibeup.android.ui.theme.DarkCard
+import com.vibeup.android.ui.theme.PurplePrimary
 import com.vibeup.android.ui.theme.TextSecondary
-import com.vibeup.android.ui.theme.VibeUpGreen
 
 @Composable
 fun MiniPlayer(
@@ -34,21 +39,41 @@ fun MiniPlayer(
     onTogglePlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
-    onExpand: () -> Unit
+    onExpand: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(DarkCard)
     ) {
-        // Progress Bar
+        // ✅ Purple/Blue gradient progress bar
         if (duration > 0) {
-            LinearProgressIndicator(
-                progress = { (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth(),
-                color = VibeUpGreen,
-                trackColor = DarkCard
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+            ) {
+                // Track
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White.copy(alpha = 0.1f))
+                )
+                // Progress
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(
+                            (currentPosition.toFloat() / duration.toFloat())
+                                .coerceIn(0f, 1f)
+                        )
+                        .fillMaxHeight()
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(PurplePrimary, BluePrimary)
+                            )
+                        )
+                )
+            }
         }
 
         // Player Controls Row
@@ -65,7 +90,7 @@ fun MiniPlayer(
                 contentDescription = null,
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
 
@@ -99,16 +124,16 @@ fun MiniPlayer(
                 )
             }
 
-            // Play/Pause Button
+            // ✅ Play/Pause Button — handles restored state
             IconButton(onClick = onTogglePlayPause) {
                 Icon(
                     imageVector = if (isPlaying)
-                        Icons.Default.Pause
+                        Icons.Default.PauseCircle
                     else
-                        Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
+                        Icons.Default.PlayCircle,
+                    contentDescription = "Play/Pause",
+                    tint = PurplePrimary,
+                    modifier = Modifier.size(36.dp)
                 )
             }
 

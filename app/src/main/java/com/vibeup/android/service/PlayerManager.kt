@@ -50,6 +50,9 @@ class PlayerManager @Inject constructor(
     private val _queue = MutableStateFlow<List<Song>>(emptyList())
     val queue: StateFlow<List<Song>> = _queue.asStateFlow()
 
+    // Dummy isRestored — always false now
+    val isRestored = MutableStateFlow(false)
+
     fun getExoPlayer(): ExoPlayer {
         if (exoPlayer == null) {
             exoPlayer = ExoPlayer.Builder(context)
@@ -64,10 +67,10 @@ class PlayerManager @Inject constructor(
                 .build()
                 .apply {
                     addListener(object : Player.Listener {
-                        override fun onIsPlayingChanged(isPlaying: Boolean) {
-                            _isPlaying.value = isPlaying
-                            if (isPlaying) startProgressTracking()
-                            else stopProgressTracking()
+                        override fun onIsPlayingChanged(playing: Boolean) {
+                            _isPlaying.value = playing
+                            if (playing) startTracking()
+                            else stopTracking()
                         }
 
                         override fun onPlaybackStateChanged(state: Int) {
@@ -80,22 +83,18 @@ class PlayerManager @Inject constructor(
                             mediaItem: MediaItem?,
                             reason: Int
                         ) {
-                            val currentIndex = exoPlayer?.currentMediaItemIndex ?: 0
+                            val index =
+                                exoPlayer?.currentMediaItemIndex ?: 0
                             if (_queue.value.isNotEmpty() &&
-                                currentIndex < _queue.value.size
+                                index < _queue.value.size
                             ) {
-                                val newSong = _queue.value[currentIndex]
+                                val newSong = _queue.value[index]
                                 _currentSong.value = newSong
-                                // ✅ Track recently played on auto transition too
                                 CoroutineScope(Dispatchers.IO).launch {
                                     try {
-                                        libraryRepository.addToRecentlyPlayed(newSong)
-                                    } catch (e: Exception) {
-                                        android.util.Log.e(
-                                            "PlayerManager",
-                                            "Recently played: ${e.message}"
-                                        )
-                                    }
+                                        libraryRepository
+                                            .addToRecentlyPlayed(newSong)
+                                    } catch (e: Exception) { }
                                 }
                             }
                         }
@@ -105,61 +104,41 @@ class PlayerManager @Inject constructor(
         return exoPlayer!!
     }
 
-    private fun startProgressTracking() {
-        progressJob?.cancel()
-        progressJob = scope.launch {
-            while (true) {
-                exoPlayer?.let {
-                    _currentPosition.value = it.currentPosition
-                    _duration.value = it.duration.coerceAtLeast(0L)
-                }
-                delay(500)
-            }
-        }
-    }
-
-    private fun stopProgressTracking() {
-        progressJob?.cancel()
-    }
-
     fun playSong(song: Song, queue: List<Song> = emptyList()) {
-        _currentSong.value = song
         if (queue.isNotEmpty()) _queue.value = queue
+        _currentSong.value = song
 
-        // ✅ Track recently played
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                libraryRepository.addToRecentlyPlayed(song)
-            } catch (e: Exception) {
-                android.util.Log.e("PlayerManager", "Recently played: ${e.message}")
-            }
-        }
-
-        // Start service for notification
-        val serviceIntent = Intent(context, MusicPlayerService::class.java)
-        context.startForegroundService(serviceIntent)
+        // Start service
+        try {
+            context.startForegroundService(
+                Intent(context, MusicPlayerService::class.java)
+            )
+        } catch (e: Exception) { }
 
         val player = getExoPlayer()
-
-        // Set entire queue in ExoPlayer
-        val mediaItems = _queue.value.map { queueSong ->
+        val items = _queue.value.map { s ->
             MediaItem.Builder()
-                .setUri(queueSong.audioUrl)
+                .setUri(s.audioUrl)
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setTitle(queueSong.title)
-                        .setArtist(queueSong.artist)
-                        .setAlbumTitle(queueSong.album)
-                        .setArtworkUri(queueSong.imageUrl.toUri())
+                        .setTitle(s.title)
+                        .setArtist(s.artist)
+                        .setAlbumTitle(s.album)
+                        .setArtworkUri(s.imageUrl.toUri())
                         .build()
                 )
                 .build()
         }
-
-        val currentIndex = _queue.value.indexOf(song).coerceAtLeast(0)
-        player.setMediaItems(mediaItems, currentIndex, 0)
+        val index = _queue.value.indexOf(song).coerceAtLeast(0)
+        player.setMediaItems(items, index, 0L)
         player.prepare()
         player.play()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                libraryRepository.addToRecentlyPlayed(song)
+            } catch (e: Exception) { }
+        }
     }
 
     fun togglePlayPause() {
@@ -186,8 +165,36 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    private fun startTracking() {
+        progressJob?.cancel()
+        progressJob = scope.launch {
+            while (true) {
+                exoPlayer?.let {
+                    _currentPosition.value = it.currentPosition
+                    _duration.value = it.duration.coerceAtLeast(0L)
+                }
+                delay(500)
+            }
+        }
+    }
+
+    private fun stopTracking() {
+        progressJob?.cancel()
+    }
+
+    fun resetState() {
+        exoPlayer?.stop()
+        exoPlayer?.clearMediaItems()
+        _currentSong.value = null
+        _isPlaying.value = false
+        _currentPosition.value = 0L
+        _duration.value = 0L
+        _queue.value = emptyList()
+        progressJob?.cancel()
+    }
+
     fun release() {
-        stopProgressTracking()
+        progressJob?.cancel()
         exoPlayer?.release()
         exoPlayer = null
     }
