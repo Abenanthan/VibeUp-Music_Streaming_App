@@ -4,6 +4,7 @@ import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
+
 interface LibraryRepository {
     suspend fun likeSong(song: Song)
     suspend fun unlikeSong(songId: String)
@@ -17,6 +18,8 @@ interface LibraryRepository {
     suspend fun deletePlaylist(playlistId: String)
 
     suspend fun addToRecentlyPlayed(song: Song)
+
+    suspend fun renamePlaylist(playlistId: String, newName: String)
 
     fun getRecentlyPlayed(): Flow<List<Song>>
 }

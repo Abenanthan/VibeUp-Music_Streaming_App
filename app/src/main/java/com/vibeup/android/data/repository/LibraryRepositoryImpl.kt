@@ -172,6 +172,13 @@ class LibraryRepositoryImpl @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    override suspend fun renamePlaylist(playlistId: String, newName: String) {
+        userDoc().collection("playlists")
+            .document(playlistId)
+            .update("name", newName)
+            .await()
+    }
+
     // Extension functions
     private fun Song.toMap() = mapOf(
         "id" to id,

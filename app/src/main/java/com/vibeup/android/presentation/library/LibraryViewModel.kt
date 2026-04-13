@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class SortOrder {
+    DATE_ADDED, ALPHABETICAL, ARTIST, DURATION
+}
+
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val libraryRepository: LibraryRepository
@@ -28,6 +32,9 @@ class LibraryViewModel @Inject constructor(
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
+
+    private val _sortOrder = MutableStateFlow(SortOrder.DATE_ADDED)
+    val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
 
     init {
         loadLikedSongs()
@@ -60,6 +67,17 @@ class LibraryViewModel @Inject constructor(
                 _message.value = "Failed to create playlist!"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun renamePlaylist(playlistId: String, newName: String) {
+        viewModelScope.launch {
+            try {
+                libraryRepository.renamePlaylist(playlistId, newName)
+                _message.value = "Playlist renamed! ✅"
+            } catch (e: Exception) {
+                _message.value = "Failed to rename playlist!"
             }
         }
     }
@@ -97,6 +115,17 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
+    fun removeSongFromPlaylist(playlistId: String, songId: String) {
+        viewModelScope.launch {
+            try {
+                libraryRepository.removeSongFromPlaylist(playlistId, songId)
+                _message.value = "Song removed!"
+            } catch (e: Exception) {
+                _message.value = "Failed to remove song!"
+            }
+        }
+    }
+
     fun deletePlaylist(playlistId: String) {
         viewModelScope.launch {
             try {
@@ -108,21 +137,14 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun clearMessage() {
-        _message.value = null
-    }
-
     fun getPlaylistSongs(playlistId: String) =
         libraryRepository.getPlaylistSongs(playlistId)
 
-    fun removeSongFromPlaylist(playlistId: String, songId: String) {
-        viewModelScope.launch {
-            try {
-                libraryRepository.removeSongFromPlaylist(playlistId, songId)
-                _message.value = "Song removed from playlist!"
-            } catch (e: Exception) {
-                _message.value = "Failed to remove song!"
-            }
-        }
+    fun setSortOrder(order: SortOrder) {
+        _sortOrder.value = order
+    }
+
+    fun clearMessage() {
+        _message.value = null
     }
 }
