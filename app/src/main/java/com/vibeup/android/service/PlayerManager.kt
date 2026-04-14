@@ -50,6 +50,12 @@ class PlayerManager @Inject constructor(
     private val _queue = MutableStateFlow<List<Song>>(emptyList())
     val queue: StateFlow<List<Song>> = _queue.asStateFlow()
 
+    private val _isShuffleEnabled = MutableStateFlow(false)
+    val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled.asStateFlow()
+
+    private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
+    val repeatMode: StateFlow<Int> = _repeatMode.asStateFlow()
+
     // Dummy isRestored — always false now
     val isRestored = MutableStateFlow(false)
 
@@ -77,6 +83,14 @@ class PlayerManager @Inject constructor(
                             if (state == Player.STATE_READY) {
                                 _duration.value = duration
                             }
+                        }
+
+                        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                            _isShuffleEnabled.value = shuffleModeEnabled
+                        }
+
+                        override fun onRepeatModeChanged(repeatMode: Int) {
+                            _repeatMode.value = repeatMode
                         }
 
                         override fun onMediaItemTransition(
@@ -163,6 +177,21 @@ class PlayerManager @Inject constructor(
         if (player.hasPreviousMediaItem()) {
             player.seekToPreviousMediaItem()
         }
+    }
+
+    fun toggleShuffle() {
+        val player = getExoPlayer()
+        player.shuffleModeEnabled = !player.shuffleModeEnabled
+    }
+
+    fun toggleRepeatMode() {
+        val player = getExoPlayer()
+        val nextMode = when (player.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+        player.repeatMode = nextMode
     }
 
     private fun startTracking() {

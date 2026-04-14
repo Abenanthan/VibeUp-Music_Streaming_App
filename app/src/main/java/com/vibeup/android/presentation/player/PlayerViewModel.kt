@@ -17,6 +17,8 @@ class PlayerViewModel @Inject constructor(
     val currentPosition: StateFlow<Long> = playerManager.currentPosition
     val duration: StateFlow<Long> = playerManager.duration
     val queue: StateFlow<List<Song>> = playerManager.queue
+    val isShuffleEnabled: StateFlow<Boolean> = playerManager.isShuffleEnabled
+    val repeatMode: StateFlow<Int> = playerManager.repeatMode
 
     fun playSong(song: Song, queue: List<Song> = emptyList()) {
         playerManager.playSong(song, queue)
@@ -36,5 +38,13 @@ class PlayerViewModel @Inject constructor(
 
     fun playPrevious() {
         playerManager.playPrevious()
+    }
+
+    fun toggleShuffle() {
+        playerManager.toggleShuffle()
+    }
+
+    fun toggleRepeatMode() {
+        playerManager.toggleRepeatMode()
     }
 }
