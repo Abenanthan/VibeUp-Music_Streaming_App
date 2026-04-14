@@ -167,7 +167,7 @@ class HomeViewModel @Inject constructor(
                 val si = async { loadArtistSongs("Sid Sriram", _sidSriramSongs) }
                 val aj = async { loadArtistSongs("Arijit Singh", _arijitSongs) }
                 val gv = async { loadArtistSongs("GV Prakash", _gvPrakashSongs) }
-                val hh = async { loadArtistSongs("Hip Hop Tamizha", _hipHopSongs) }
+                val hh = async { loadArtistSongs("Hiphop Tamizha", _hipHopSongs) }
                 val ta = async { loadLanguageSongs("tamil") }
                 val te = async { loadLanguageSongs("telugu") }
                 val hi = async { loadLanguageSongs("hindi") }
@@ -232,7 +232,7 @@ class HomeViewModel @Inject constructor(
         state: MutableStateFlow<List<Song>>
     ) {
         try {
-            val result = api.searchSongs("$artist songs", limit = 10)
+            val result = api.searchSongs("$artist", limit = 10)
                 .data?.results?.map { it.toDomain() } ?: emptyList()
             state.value = result
         } catch (e: Exception) {

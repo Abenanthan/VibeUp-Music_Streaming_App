@@ -78,28 +78,30 @@ fun HomeScreen(
     val libraryPlaylists by libraryViewModel.playlists.collectAsState()
     val listState = rememberLazyListState()
 
-    val moods = listOf(
-        MoodItem(
-            "Romantic", "💕", romanticSongs,
-            listOf(Color(0xFFBE185D), Color(0xFFF97316)),
-            Color(0xFFFB7185)
-        ),
-        MoodItem(
-            "Party", "🎉", partySongs,
-            listOf(Color(0xFFB45309), Color(0xFFDC2626)),
-            Color(0xFFFBBF24)
-        ),
-        MoodItem(
-            "Chill", "😌", chillSongs,
-            listOf(Color(0xFF0E7490), Color(0xFF1D4ED8)),
-            Color(0xFF38BDF8)
-        ),
-        MoodItem(
-            "Sad", "😢", sadSongs,
-            listOf(Color(0xFF4C1D95), Color(0xFF1E3A8A)),
-            Color(0xFFA78BFA)
+    val moods = remember(romanticSongs, partySongs, chillSongs, sadSongs) {
+        listOf(
+            MoodItem(
+                "Romantic", "💕", romanticSongs,
+                listOf(Color(0xFFBE185D), Color(0xFFF97316)),
+                Color(0xFFFB7185)
+            ),
+            MoodItem(
+                "Party", "🎉", partySongs,
+                listOf(Color(0xFFB45309), Color(0xFFDC2626)),
+                Color(0xFFFBBF24)
+            ),
+            MoodItem(
+                "Chill", "😌", chillSongs,
+                listOf(Color(0xFF0E7490), Color(0xFF1D4ED8)),
+                Color(0xFF38BDF8)
+            ),
+            MoodItem(
+                "Sad", "😢", sadSongs,
+                listOf(Color(0xFF4C1D95), Color(0xFF1E3A8A)),
+                Color(0xFFA78BFA)
+            )
         )
-    )
+    }
 
     Box(
         modifier = Modifier
@@ -264,15 +266,17 @@ fun HomeScreen(
                         title = "🎤 Artists",
                         subtitle = "Your favourite musicians"
                     )
+                    val artistsData = remember(anirudhSongs, sidSriramSongs, arijitSongs, gvPrakashSongs, hipHopSongs) {
+                        listOf(
+                            ArtistData("Anirudh 🎸", anirudhSongs, "🎸", "https://c.saavncdn.com/artists/Anirudh_Ravichander_500x500.jpg"),
+                            ArtistData("Sid Sriram 🎤", sidSriramSongs, "🎤", "https://c.saavncdn.com/artists/Sid_Sriram_500x500.jpg"),
+                            ArtistData("Arijit Singh 💙", arijitSongs, "💙", "https://c.saavncdn.com/artists/Arijit_Singh_500x500.jpg"),
+                            ArtistData("GV Prakash 🎵", gvPrakashSongs, "🎵", "https://c.saavncdn.com/artists/G_V_Prakash_Kumar_500x500.jpg"),
+                            ArtistData("HHT 🔥", hipHopSongs, "🔥", "https://c.saavncdn.com/artists/Hiphop_Tamizha_500x500.jpg")
+                        )
+                    }
                     ArtistsSection(
-                        artists = listOf(
-                            Triple("AR Rahman 🎹", arRahmanSongs, "🎹"),
-                            Triple("Anirudh 🎸", anirudhSongs, "🎸"),
-                            Triple("Sid Sriram 🎤", sidSriramSongs, "🎤"),
-                            Triple("Arijit Singh 💙", arijitSongs, "💙"),
-                            Triple("GV Prakash 🎵", gvPrakashSongs, "🎵"),
-                            Triple("Hip Hop Tamizha 🔥", hipHopSongs, "🔥")
-                        ),
+                        artists = artistsData,
                         context = context,
                         playlists = libraryPlaylists,
                         onSongClick = { song, queue ->
@@ -346,6 +350,14 @@ fun HomeScreen(
         }
     }
 }
+
+// Artist Data Helper
+data class ArtistData(
+    val name: String,
+    val songs: List<Song>,
+    val emoji: String,
+    val artistImageUrl: String
+)
 
 // ── Header ──
 @Composable
@@ -487,12 +499,14 @@ fun PlaylistShortcuts(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items = playlists, key = { it.id }) { playlist ->
-            val gradients = listOf(
-                listOf(Color(0xFF4C1D95), Color(0xFF7C3AED)),
-                listOf(Color(0xFFBE185D), Color(0xFFF97316)),
-                listOf(Color(0xFF0E7490), Color(0xFF1D4ED8)),
-                listOf(Color(0xFF065F46), Color(0xFF059669))
-            )
+            val gradients = remember {
+                listOf(
+                    listOf(Color(0xFF4C1D95), Color(0xFF7C3AED)),
+                    listOf(Color(0xFFBE185D), Color(0xFFF97316)),
+                    listOf(Color(0xFF0E7490), Color(0xFF1D4ED8)),
+                    listOf(Color(0xFF065F46), Color(0xFF059669))
+                )
+            }
             val grad = gradients[playlists.indexOf(playlist) % gradients.size]
 
             Row(
@@ -633,7 +647,7 @@ fun MoodCard(
 // ── Artists Section ──
 @Composable
 fun ArtistsSection(
-    artists: List<Triple<String, List<Song>, String>>,
+    artists: List<ArtistData>,
     context: android.content.Context,
     playlists: List<Playlist>,
     onSongClick: (Song, List<Song>) -> Unit,
@@ -646,7 +660,7 @@ fun ArtistsSection(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.padding(bottom = 16.dp)
     ) {
-        items(artists) { (name, _, emoji) ->
+        items(artists, key = { it.name }) { artist ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.width(64.dp)
@@ -665,15 +679,24 @@ fun ArtistsSection(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFF12122A), CircleShape),
+                            .background(Color(0xFF12122A), CircleShape)
+                            .clip(CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = emoji.last().toString(), fontSize = 22.sp)
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(artist.artistImageUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = artist.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = name.substringBefore(" ").trim(),
+                    text = artist.name.substringBefore(" ").trim(),
                     fontSize = 10.sp,
                     color = Color(0xFF9CA3AF),
                     textAlign = TextAlign.Center,
@@ -685,8 +708,8 @@ fun ArtistsSection(
     }
 
     // Songs per artist
-    artists.forEach { (name, songs, _) ->
-        if (songs.isNotEmpty()) {
+    artists.forEach { artist ->
+        if (artist.songs.isNotEmpty()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -706,7 +729,7 @@ fun ArtistsSection(
                         )
                 )
                 Text(
-                    text = name,
+                    text = artist.name,
                     color = Color(0xFFE5E7EB),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
@@ -718,14 +741,14 @@ fun ArtistsSection(
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
                 items(
-                    items = songs,
-                    key = { "${name}_${it.id}" }
+                    items = artist.songs,
+                    key = { "${artist.name}_${it.id}" }
                 ) { song ->
                     GlassSongCard(
                         song = song,
                         context = context,
                         playlists = playlists,
-                        onClick = { onSongClick(song, songs) },
+                        onClick = { onSongClick(song, artist.songs) },
                         onLike = { onLike(song) },
                         onAddToPlaylist = { id -> onAddToPlaylist(id, song) }
                     )
