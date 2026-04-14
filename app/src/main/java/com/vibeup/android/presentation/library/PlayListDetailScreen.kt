@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.vibeup.android.Screen
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.theme.*
@@ -56,9 +57,7 @@ fun PlaylistDetailScreen(
 
     var showMenu by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
-    var showAddSongsDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(playlist?.name ?: "") }
-    var searchQuery by remember { mutableStateOf("") }
     var isShuffled by remember { mutableStateOf(false) }
 
     if (showRenameDialog) {
@@ -408,7 +407,11 @@ fun PlaylistDetailScreen(
 
                     // Add Songs
                     Button(
-                        onClick = { showAddSongsDialog = true },
+                        onClick = {
+                            navController.navigate(
+                                "${Screen.AddSongs.route}/$playlistId"
+                            )
+                        },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = PurplePrimary.copy(alpha = 0.15f)
@@ -443,7 +446,7 @@ fun PlaylistDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.padding(bottom = 12.dp)
                 ) {
-                    items(SortOrder.values()) { order ->
+                    items(SortOrder.entries) { order ->
                         val label = when (order) {
                             SortOrder.DATE_ADDED -> "Date Added"
                             SortOrder.ALPHABETICAL -> "A → Z"

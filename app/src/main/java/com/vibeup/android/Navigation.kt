@@ -13,7 +13,7 @@ import com.vibeup.android.presentation.player.PlayerScreen
 import com.vibeup.android.presentation.search.SearchScreen
 import com.vibeup.android.presentation.library.PlaylistDetailScreen
 import com.vibeup.android.presentation.local.LocalMusicScreen
-
+import com.vibeup.android.presentation.library.AddSongsScreen
 
 
 sealed class Screen(val route: String) {
@@ -23,8 +23,10 @@ sealed class Screen(val route: String) {
     object Library : Screen("library")
     object Player  : Screen("player")
     object Profile : Screen("profile")
+
     object Playlist : Screen("playlist")
 
+    object AddSongs : Screen("add_songs")
     object Local : Screen("local")
 }
 
@@ -65,6 +67,14 @@ fun VibeUpNavHost(
         composable("${Screen.Playlist.route}/{playlistId}") { backStackEntry ->
             val playlistId = backStackEntry.arguments?.getString("playlistId") ?: ""
             PlaylistDetailScreen(
+                navController = navController,
+                playlistId = playlistId
+            )
+        }
+
+        composable("${Screen.AddSongs.route}/{playlistId}") { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getString("playlistId") ?: ""
+            AddSongsScreen(
                 navController = navController,
                 playlistId = playlistId
             )
