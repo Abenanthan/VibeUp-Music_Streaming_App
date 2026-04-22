@@ -167,7 +167,7 @@ fun HomeScreen(
                 item(key = "favs") {
                     SectionHeader(
                         title = "❤️ Abe's Favourites",
-                        subtitle = "Your personal picks"
+                        subtitle = "Angel's Favourites"
                     )
                     SongRow(
                         songs = favouriteSongs,

@@ -7,13 +7,31 @@ import com.vibeup.android.domain.repository.SongRepository
 import javax.inject.Inject
 
 class SongRepositoryImpl @Inject constructor(
-    private val api: SaavnApiService  // ← SaavnApiService not YouTubeSearchService
+    private val api: SaavnApiService
 ) : SongRepository {
 
     override suspend fun searchSongs(query: String): List<Song> {
         return try {
-            val response = api.searchSongs(query)
-            response.data?.results?.map { it.toDomain() } ?: emptyList()
+            // First search for the most relevant results
+            val response = api.searchSongs(query, limit = 20)
+            val results = response.data?.results?.map { it.toDomain() } ?: emptyList()
+            
+            // Refine results:
+            // We want to prioritize results where the title exactly matches or contains 
+            // the query and sort by relevance or popularity (handled by API mostly,
+            // but we can filter out "covers" or "tributes" if they aren't what we want)
+            
+            val filteredResults = results.filterNot { song ->
+                val titleLower = song.title.lowercase()
+                titleLower.contains("tribute") || 
+                titleLower.contains("instrumental") ||
+                titleLower.contains("lofi") ||
+                titleLower.contains("karaoke")
+            }
+            
+            // If the filtered list is empty, return the original results
+            if (filteredResults.isEmpty()) results else filteredResults
+            
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -40,16 +58,3 @@ class SongRepositoryImpl @Inject constructor(
         return url
     }
 }
-/*```
-
----
-
-## Steps in Order:
-```
-1. Update SongRepositoryImpl.kt ✅
-2. Delete NewPipeDownloader.kt ✅
-3. Delete YouTubeSearchService.kt ✅
-4. Remove NewPipe from build.gradle.kts ✅
-5. Run: ./gradlew clean
-6. Build → Rebuild Project
-7. Run app ✅*/
