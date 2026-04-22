@@ -144,6 +144,7 @@ class PlayerManager @Inject constructor(
                 .build()
         }
         val index = _queue.value.indexOf(song).coerceAtLeast(0)
+        
         player.setMediaItems(items, index, 0L)
         player.prepare()
         player.play()
@@ -182,6 +183,11 @@ class PlayerManager @Inject constructor(
     fun toggleShuffle() {
         val player = getExoPlayer()
         player.shuffleModeEnabled = !player.shuffleModeEnabled
+    }
+    
+    fun setShuffleEnabled(enabled: Boolean) {
+        val player = getExoPlayer()
+        player.shuffleModeEnabled = enabled
     }
 
     fun toggleRepeatMode() {
