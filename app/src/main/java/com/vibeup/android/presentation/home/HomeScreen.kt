@@ -162,7 +162,6 @@ fun HomeScreen(
                         SectionDivider()
                     }
                 }
-
                 // ── Abe's Favourites ──
                 item(key = "favs") {
                     SectionHeader(
