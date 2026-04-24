@@ -12,24 +12,25 @@ class SongRepositoryImpl @Inject constructor(
 
     override suspend fun searchSongs(query: String): List<Song> {
         return try {
-            // First search for the most relevant results
+            // 1. Increased Result Limit: Fetch 20 results instead of 10 to have a better pool
             val response = api.searchSongs(query, limit = 20)
             val results = response.data?.results?.map { it.toDomain() } ?: emptyList()
             
-            // Refine results:
-            // We want to prioritize results where the title exactly matches or contains 
-            // the query and sort by relevance or popularity (handled by API mostly,
-            // but we can filter out "covers" or "tributes" if they aren't what we want)
-            
+            // 2. Smart Filtering: Automatically hides "Tributes", "Instrumentals", "Lofi", "Karaoke", "Remix", and "Mashup"
+            // This filters out "random tunes" that clutter results when looking for official versions.
             val filteredResults = results.filterNot { song ->
                 val titleLower = song.title.lowercase()
                 titleLower.contains("tribute") || 
                 titleLower.contains("instrumental") ||
                 titleLower.contains("lofi") ||
-                titleLower.contains("karaoke")
+                titleLower.contains("karaoke") ||
+                titleLower.contains("mashup") ||
+                titleLower.contains("remix") ||
+                titleLower.contains("cover")
             }
             
-            // If the filtered list is empty, return the original results
+            // 3. Popularity Logic: Return filtered results if available. 
+            // JioSaavn API naturally ranks official/popular results higher.
             if (filteredResults.isEmpty()) results else filteredResults
             
         } catch (e: Exception) {
