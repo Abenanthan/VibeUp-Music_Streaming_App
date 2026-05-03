@@ -55,6 +55,18 @@ fun PlaylistDetailScreen(
         }
     }
 
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredSongs = remember(sortedSongs, searchQuery) {
+        if (searchQuery.isBlank()) {
+            sortedSongs
+        } else {
+            sortedSongs.filter {
+                it.title.contains(searchQuery, ignoreCase = true) ||
+                it.artist.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
     var showMenu by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(playlist?.name ?: "") }
@@ -163,7 +175,7 @@ fun PlaylistDetailScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "${sortedSongs.size} songs",
+                            text = "${playlistSongs.size} songs",
                             fontSize = 12.sp,
                             color = Color(0xFF6B7280)
                         )
@@ -225,19 +237,19 @@ fun PlaylistDetailScreen(
 
             // ── Cover Art ──
             item {
-                if (sortedSongs.isNotEmpty()) {
+                if (playlistSongs.isNotEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
                             .clip(RoundedCornerShape(20.dp))
                     ) {
-                        if (sortedSongs.size >= 4) {
+                        if (playlistSongs.size >= 4) {
                             Row(modifier = Modifier.fillMaxSize()) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
-                                            .data(sortedSongs[0].imageUrl)
+                                            .data(playlistSongs[0].imageUrl)
                                             .crossfade(true).build(),
                                         contentDescription = null,
                                         modifier = Modifier
@@ -247,7 +259,7 @@ fun PlaylistDetailScreen(
                                     )
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
-                                            .data(sortedSongs[1].imageUrl)
+                                            .data(playlistSongs[1].imageUrl)
                                             .crossfade(true).build(),
                                         contentDescription = null,
                                         modifier = Modifier
@@ -259,7 +271,7 @@ fun PlaylistDetailScreen(
                                 Column(modifier = Modifier.weight(1f)) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
-                                            .data(sortedSongs[2].imageUrl)
+                                            .data(playlistSongs[2].imageUrl)
                                             .crossfade(true).build(),
                                         contentDescription = null,
                                         modifier = Modifier
@@ -269,7 +281,7 @@ fun PlaylistDetailScreen(
                                     )
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
-                                            .data(sortedSongs[3].imageUrl)
+                                            .data(playlistSongs[3].imageUrl)
                                             .crossfade(true).build(),
                                         contentDescription = null,
                                         modifier = Modifier
@@ -282,7 +294,7 @@ fun PlaylistDetailScreen(
                         } else {
                             AsyncImage(
                                 model = ImageRequest.Builder(context)
-                                    .data(sortedSongs[0].imageUrl)
+                                    .data(playlistSongs[0].imageUrl)
                                     .crossfade(true).build(),
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
@@ -317,10 +329,10 @@ fun PlaylistDetailScreen(
                     // Play All
                     Button(
                         onClick = {
-                            if (sortedSongs.isNotEmpty()) {
+                            if (filteredSongs.isNotEmpty()) {
                                 playerViewModel.playSong(
-                                    sortedSongs.first(),
-                                    sortedSongs
+                                    filteredSongs.first(),
+                                    filteredSongs
                                 )
                             }
                         },
@@ -367,8 +379,8 @@ fun PlaylistDetailScreen(
                     Button(
                         onClick = {
                             isShuffled = !isShuffled
-                            if (sortedSongs.isNotEmpty()) {
-                                val shuffled = sortedSongs.shuffled()
+                            if (filteredSongs.isNotEmpty()) {
+                                val shuffled = filteredSongs.shuffled()
                                 playerViewModel.playSong(
                                     shuffled.first(),
                                     shuffled
@@ -440,6 +452,56 @@ fun PlaylistDetailScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
+            // ── Search Bar ──
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 14.dp),
+                    placeholder = {
+                        Text(
+                            "Search in playlist...",
+                            color = Color(0xFF6B7280),
+                            fontSize = 13.sp
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = Color(0xFF6B7280),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = null,
+                                    tint = Color(0xFF6B7280),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PurplePrimary.copy(alpha = 0.5f),
+                        unfocusedBorderColor = Color(0xFF12122A),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = PurplePrimary,
+                        focusedContainerColor = Color(0xFF12122A),
+                        unfocusedContainerColor = Color(0xFF12122A)
+                    ),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+                )
+            }
+
             // ── Sort Chips ──
             item {
                 LazyRow(
@@ -493,7 +555,7 @@ fun PlaylistDetailScreen(
             }
 
             // ── Songs ──
-            if (sortedSongs.isEmpty()) {
+            if (filteredSongs.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
@@ -507,24 +569,26 @@ fun PlaylistDetailScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("🎵", fontSize = 36.sp)
+                            Text(if (searchQuery.isEmpty()) "🎵" else "🔍", fontSize = 36.sp)
                             Text(
-                                "No songs yet!",
+                                if (searchQuery.isEmpty()) "No songs yet!" else "No results found!",
                                 color = Color(0xFF6B7280),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Text(
-                                "Tap Add to add songs",
-                                color = Color(0xFF4B5563),
-                                fontSize = 12.sp
-                            )
+                            if (searchQuery.isEmpty()) {
+                                Text(
+                                    "Tap Add to add songs",
+                                    color = Color(0xFF4B5563),
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
             } else {
                 items(
-                    items = sortedSongs,
+                    items = filteredSongs,
                     key = { it.id }
                 ) { song ->
                     PlaylistSongItem(
@@ -532,7 +596,7 @@ fun PlaylistDetailScreen(
                         index = sortedSongs.indexOf(song) + 1,
                         context = context,
                         onClick = {
-                            playerViewModel.playSong(song, sortedSongs)
+                            playerViewModel.playSong(song, filteredSongs)
                         },
                         onLike = {
                             viewModel.likeSong(song)
