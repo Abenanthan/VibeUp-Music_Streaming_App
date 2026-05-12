@@ -23,9 +23,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Random
 import javax.inject.Inject
 import javax.inject.Singleton
-import java.util.Random
 
 @OptIn(UnstableApi::class)
 @Singleton
@@ -58,7 +58,6 @@ class PlayerManager @Inject constructor(
     private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
     val repeatMode: StateFlow<Int> = _repeatMode.asStateFlow()
 
-    // Dummy isRestored — always false now
     val isRestored = MutableStateFlow(false)
 
     fun getExoPlayer(): ExoPlayer {
@@ -77,13 +76,12 @@ class PlayerManager @Inject constructor(
                     addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(playing: Boolean) {
                             _isPlaying.value = playing
-                            if (playing) startTracking()
-                            else stopTracking()
+                            if (playing) startTracking() else stopTracking()
                         }
 
                         override fun onPlaybackStateChanged(state: Int) {
                             if (state == Player.STATE_READY) {
-                                _duration.value = duration
+                                _duration.value = this@apply.duration.coerceAtLeast(0L)
                             }
                         }
 
@@ -93,24 +91,20 @@ class PlayerManager @Inject constructor(
 
                         override fun onRepeatModeChanged(repeatMode: Int) {
                             _repeatMode.value = repeatMode
-                        }//cmt
+                        }
 
                         override fun onMediaItemTransition(
                             mediaItem: MediaItem?,
                             reason: Int
                         ) {
-                            val index =
-                                exoPlayer?.currentMediaItemIndex ?: 0
-                            if (_queue.value.isNotEmpty() &&
-                                index < _queue.value.size
-                            ) {
+                            val index = exoPlayer?.currentMediaItemIndex ?: 0
+                            if (_queue.value.isNotEmpty() && index < _queue.value.size) {
                                 val newSong = _queue.value[index]
                                 _currentSong.value = newSong
                                 CoroutineScope(Dispatchers.IO).launch {
                                     try {
-                                        libraryRepository
-                                            .addToRecentlyPlayed(newSong)
-                                    } catch (e: Exception) { }
+                                        libraryRepository.addToRecentlyPlayed(newSong)
+                                    } catch (e: Exception) { /* ignore */ }
                                 }
                             }
                         }
@@ -124,50 +118,76 @@ class PlayerManager @Inject constructor(
         if (queue.isNotEmpty()) _queue.value = queue
         _currentSong.value = song
 
-        // Start service
         try {
             context.startForegroundService(
                 Intent(context, MusicPlayerService::class.java)
             )
-        } catch (e: Exception) { }
+        } catch (e: Exception) { /* ignore */ }
 
         val player = getExoPlayer()
+
+        // ── KEY FIX FOR ORIGIN ISLAND ─────────────────────────────────────────
+        // Every MediaItem MUST have complete MediaMetadata, especially artworkUri.
+        // ExoPlayer automatically propagates this to the MediaSession, which then
+        // updates the MediaStyle notification. OriginOS 6 reads the active
+        // MediaSession's metadata to render the Origin Island pill with:
+        //   • Song title
+        //   • Artist name
+        //   • Album art (loaded from artworkUri by the system)
+        //   • Play/pause, next, previous controls
+        //
+        // Previously you were not setting artworkUri on MediaItems — which is why
+        // Origin Island showed no album art. Spotify/JioSaavn always set this.
         val items = _queue.value.map { s ->
-            MediaItem.Builder()
-                .setUri(s.audioUrl)
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle(s.title)
-                        .setArtist(s.artist)
-                        .setAlbumTitle(s.album)
-                        .setArtworkUri(s.imageUrl.toUri())
-                        .build()
-                )
-                .build()
+            buildMediaItem(s)
         }
+
         val index = _queue.value.indexOf(song).coerceAtLeast(0)
-        
         player.setMediaItems(items, index, 0L)
-        
-        // Reset shuffle order with a new random seed whenever a new queue is set
+
         if (player.shuffleModeEnabled) {
-            player.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(items.size, Random().nextLong()))
+            player.setShuffleOrder(
+                ShuffleOrder.DefaultShuffleOrder(items.size, Random().nextLong())
+            )
         }
-        
+
         player.prepare()
         player.play()
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 libraryRepository.addToRecentlyPlayed(song)
-            } catch (e: Exception) { }
+            } catch (e: Exception) { /* ignore */ }
         }
+    }
+
+    /**
+     * Builds a MediaItem with full metadata for Origin Island display.
+     *
+     * The artworkUri is the critical field — OriginOS 6 fetches and displays
+     * this as the album art in the Origin Island pill. Without it the pill shows
+     * a generic music icon instead of your album cover.
+     */
+    private fun buildMediaItem(song: Song): MediaItem {
+        return MediaItem.Builder()
+            .setUri(song.audioUrl)
+            .setMediaId(song.id.toString())           // stable ID helps system caching
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(song.title)
+                    .setArtist(song.artist)
+                    .setAlbumTitle(song.album)
+                    .setArtworkUri(song.imageUrl.toUri())   // ← Origin Island album art
+                    .setIsBrowsable(false)
+                    .setIsPlayable(true)
+                    .build()
+            )
+            .build()
     }
 
     fun togglePlayPause() {
         val player = getExoPlayer()
-        if (player.isPlaying) player.pause()
-        else player.play()
+        if (player.isPlaying) player.pause() else player.play()
     }
 
     fun seekTo(position: Long) {
@@ -176,34 +196,32 @@ class PlayerManager @Inject constructor(
 
     fun playNext() {
         val player = getExoPlayer()
-        if (player.hasNextMediaItem()) {
-            player.seekToNextMediaItem()
-        }
+        if (player.hasNextMediaItem()) player.seekToNextMediaItem()
     }
 
     fun playPrevious() {
         val player = getExoPlayer()
-        if (player.hasPreviousMediaItem()) {
-            player.seekToPreviousMediaItem()
-        }
+        if (player.hasPreviousMediaItem()) player.seekToPreviousMediaItem()
     }
 
     fun toggleShuffle() {
         val player = getExoPlayer()
         val enabled = !player.shuffleModeEnabled
         player.shuffleModeEnabled = enabled
-        
-        // Force a new random shuffle order when enabled
         if (enabled) {
-            player.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(player.mediaItemCount, Random().nextLong()))
+            player.setShuffleOrder(
+                ShuffleOrder.DefaultShuffleOrder(player.mediaItemCount, Random().nextLong())
+            )
         }
     }
-    
+
     fun setShuffleEnabled(enabled: Boolean) {
         val player = getExoPlayer()
         player.shuffleModeEnabled = enabled
         if (enabled) {
-            player.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(player.mediaItemCount, Random().nextLong()))
+            player.setShuffleOrder(
+                ShuffleOrder.DefaultShuffleOrder(player.mediaItemCount, Random().nextLong())
+            )
         }
     }
 
@@ -240,7 +258,7 @@ class PlayerManager @Inject constructor(
         exoPlayer?.stop()
         exoPlayer?.clearMediaItems()
         exoPlayer?.release()
-        exoPlayer = null  // ← force new instance next time
+        exoPlayer = null
         _currentSong.value = null
         _isPlaying.value = false
         _currentPosition.value = 0L
