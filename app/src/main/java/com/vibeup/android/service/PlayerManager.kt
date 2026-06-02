@@ -11,7 +11,6 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.ShuffleOrder
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.LibraryRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,7 +24,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
-import java.util.Random
 
 @OptIn(UnstableApi::class)
 @Singleton
@@ -93,7 +91,7 @@ class PlayerManager @Inject constructor(
 
                         override fun onRepeatModeChanged(repeatMode: Int) {
                             _repeatMode.value = repeatMode
-                        }//cmt
+                        }
 
                         override fun onMediaItemTransition(
                             mediaItem: MediaItem?,
@@ -146,14 +144,7 @@ class PlayerManager @Inject constructor(
                 .build()
         }
         val index = _queue.value.indexOf(song).coerceAtLeast(0)
-        
         player.setMediaItems(items, index, 0L)
-        
-        // Reset shuffle order with a new random seed whenever a new queue is set
-        if (player.shuffleModeEnabled) {
-            player.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(items.size, Random().nextLong()))
-        }
-        
         player.prepare()
         player.play()
 
@@ -190,21 +181,7 @@ class PlayerManager @Inject constructor(
 
     fun toggleShuffle() {
         val player = getExoPlayer()
-        val enabled = !player.shuffleModeEnabled
-        player.shuffleModeEnabled = enabled
-        
-        // Force a new random shuffle order when enabled
-        if (enabled) {
-            player.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(player.mediaItemCount, Random().nextLong()))
-        }
-    }
-    
-    fun setShuffleEnabled(enabled: Boolean) {
-        val player = getExoPlayer()
-        player.shuffleModeEnabled = enabled
-        if (enabled) {
-            player.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(player.mediaItemCount, Random().nextLong()))
-        }
+        player.shuffleModeEnabled = !player.shuffleModeEnabled
     }
 
     fun toggleRepeatMode() {

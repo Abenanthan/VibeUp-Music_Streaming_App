@@ -148,7 +148,7 @@ fun HomeScreen(
                 if (homePlaylists.isNotEmpty()) {
                     item(key = "playlists") {
                         SectionHeader(
-                            title = "📋 Your Playlists",
+                            title = "Your Playlists",
                             subtitle = "Jump right in"
                         )
                         PlaylistShortcuts(
@@ -165,8 +165,8 @@ fun HomeScreen(
                 // ── Abe's Favourites ──
                 item(key = "favs") {
                     SectionHeader(
-                        title = "❤️ Abe's Favourites",
-                        subtitle = "Angel's Favourites"
+                        title = "Abe's Favourites ❤️ ",
+                        subtitle = "Listen with mee"
                     )
                     SongRow(
                         songs = favouriteSongs,
@@ -184,7 +184,7 @@ fun HomeScreen(
                 // ── Recently Played ──
                 item(key = "recent") {
                     SectionHeader(
-                        title = "🕐 Recently Played",
+                        title = "Recently Played 🕐 ",
                         subtitle = "Continue where you left off"
                     )
                     if (recentlyPlayed.isEmpty()) {
@@ -207,8 +207,8 @@ fun HomeScreen(
                 // ── Moods ──
                 item(key = "moods") {
                     SectionHeader(
-                        title = "🎭 Moods",
-                        subtitle = "Music for every feeling"
+                        title = "Moods 🎭 ",
+                        subtitle = "Mood'ku etha paatu"
                     )
                     MoodsGrid(
                         moods = moods,
@@ -224,8 +224,8 @@ fun HomeScreen(
                 // ── Trending Now ──
                 item(key = "trending") {
                     SectionHeader(
-                        title = "🔥 Trending Now",
-                        subtitle = "What everyone's listening to"
+                        title = "Trending Now 🔥",
+                        subtitle = "Trending in India"
                     )
                     SongRow(
                         songs = trendingSongs,
@@ -244,7 +244,7 @@ fun HomeScreen(
                 item(key = "new") {
                     SectionHeader(
                         title = "🆕 New Releases",
-                        subtitle = "Fresh music just for you"
+                        subtitle = "Pudhu Paatu Ungalukaga"
                     )
                     SongRow(
                         songs = newReleases,
@@ -262,7 +262,7 @@ fun HomeScreen(
                 // ── Artists ──
                 item(key = "artists") {
                     SectionHeader(
-                        title = "🎤 Artists",
+                        title = "Artists 🎤 ",
                         subtitle = "Your favourite musicians"
                     )
                     val artistsData = remember(anirudhSongs, sidSriramSongs, arijitSongs, gvPrakashSongs, hipHopSongs) {
