@@ -28,19 +28,38 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- ✅ Category and Action for OriginOS Discovery -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.MUSIC_PLAYER" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_MUSIC" />
+            </intent-filter>
         </activity>
 
-        <!-- Music Player Service -->
+        <!-- Music Player Service - Upgraded to MediaLibraryService protocol -->
         <service
             android:name=".service.MusicPlayerService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true"
-            android:stopWithTask="true">
+            android:stopWithTask="false">
             <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
                 <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
+        <receiver android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- ✅ Explicit Vivo Support Flag -->
+        <meta-data android:name="com.vivo.origin.music.support" android:value="true" />
 
     </application>
 </manifest>
