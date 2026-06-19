@@ -29,7 +29,8 @@ import javax.inject.Singleton
 @Singleton
 class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val libraryRepository: LibraryRepository
+    private val libraryRepository: LibraryRepository,
+    private val audioEffectsManager: AudioEffectsManager
 ) {
     private var exoPlayer: ExoPlayer? = null
     private val scope = CoroutineScope(Dispatchers.Main)
@@ -71,6 +72,7 @@ class PlayerManager @Inject constructor(
                 )
                 .setHandleAudioBecomingNoisy(true)
                 .build()
+
                 .apply {
                     addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(playing: Boolean) {
@@ -112,7 +114,9 @@ class PlayerManager @Inject constructor(
                                 }
                             }
                         }
+
                     })
+                    audioEffectsManager.initialize(audioSessionId)
                 }
         }
         return exoPlayer!!
@@ -213,6 +217,7 @@ class PlayerManager @Inject constructor(
 
     fun resetState() {
         android.util.Log.d("PlayerManager", "Resetting all state!")
+        audioEffectsManager.releaseEffects()
         progressJob?.cancel()
         exoPlayer?.stop()
         exoPlayer?.clearMediaItems()

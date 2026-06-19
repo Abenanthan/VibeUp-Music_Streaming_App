@@ -14,7 +14,7 @@ import com.vibeup.android.presentation.search.SearchScreen
 import com.vibeup.android.presentation.library.PlaylistDetailScreen
 import com.vibeup.android.presentation.local.LocalMusicScreen
 import com.vibeup.android.presentation.library.AddSongsScreen
-
+import com.vibeup.android.presentation.player.AudioEffectsScreen
 
 sealed class Screen(val route: String) {
     object Auth    : Screen("auth")
@@ -28,6 +28,8 @@ sealed class Screen(val route: String) {
 
     object AddSongs : Screen("add_songs")
     object Local : Screen("local")
+
+    object AudioEffects : Screen("audio_effects")
 }
 
 @Composable
@@ -62,6 +64,10 @@ fun VibeUpNavHost(
 
         composable(Screen.Local.route) {
             LocalMusicScreen(navController = navController)
+        }
+
+        composable(Screen.AudioEffects.route) {
+            AudioEffectsScreen(navController = navController)
         }
 
         composable("${Screen.Playlist.route}/{playlistId}") { backStackEntry ->

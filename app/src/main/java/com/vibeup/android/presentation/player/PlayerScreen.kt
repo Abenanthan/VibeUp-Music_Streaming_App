@@ -29,6 +29,8 @@ import com.vibeup.android.ui.theme.DarkBackground
 import com.vibeup.android.ui.theme.TextSecondary
 import com.vibeup.android.ui.theme.VibeUpGreen
 import androidx.media3.common.Player
+import androidx.compose.material.icons.filled.Equalizer
+import com.vibeup.android.Screen
 
 @Composable
 fun PlayerScreen(
@@ -100,12 +102,12 @@ fun PlayerScreen(
                         )
                     }
                     IconButton(
-                        onClick = { /* More options */ },
+                        onClick = { navController.navigate(Screen.AudioEffects.route) },
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Options",
+                            imageVector = Icons.Default.Equalizer,
+                            contentDescription = "Audio Effects",
                             tint = Color.White
                         )
                     }
