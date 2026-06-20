@@ -92,7 +92,9 @@ class AudioEffectsManager @Inject constructor(
         "Classical"  to listOf(300, 200, -200, 200, 300),
         "Dance"      to listOf(500, 300, 0, 200, 100),
         "Hip Hop"    to listOf(500, 400, 100, 0, 200),
-        "Bass Boost" to listOf(600, 400, 0, 0, 0)
+        "Bass Boost" to listOf(600, 400, 0, 0, 0),
+        "Voice Clarity" to listOf(-200, -100, 300, 500, 200),
+        "Surround"   to listOf(300, 100, 0, 100, 400)
     )
 
     fun initialize(audioSessionId: Int) {
