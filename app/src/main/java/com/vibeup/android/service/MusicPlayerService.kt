@@ -95,6 +95,7 @@ class MusicPlayerService : MediaLibraryService() {
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
                         MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
             )
+            isActive = true
             setSessionActivity(pendingIntent)
             // Wire transport controls back to PlayerManager
             setCallback(object : MediaSessionCompat.Callback() {
@@ -104,7 +105,7 @@ class MusicPlayerService : MediaLibraryService() {
                 override fun onSkipToPrevious()     { playerManager.playPrevious() }
                 override fun onSeekTo(pos: Long)    { playerManager.seekTo(pos) }
             })
-            isActive = true
+
         }
 
         mediaLibrarySession = MediaLibrarySession.Builder(

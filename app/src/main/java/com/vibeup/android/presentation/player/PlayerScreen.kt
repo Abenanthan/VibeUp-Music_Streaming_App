@@ -31,6 +31,7 @@ import com.vibeup.android.ui.theme.VibeUpGreen
 import androidx.media3.common.Player
 import androidx.compose.material.icons.filled.Equalizer
 import com.vibeup.android.Screen
+import androidx.compose.material.icons.filled.Lyrics
 
 @Composable
 fun PlayerScreen(
@@ -101,8 +102,22 @@ fun PlayerScreen(
                             modifier = Modifier.widthIn(max = 200.dp)
                         )
                     }
+
                     IconButton(
-                        onClick = { navController.navigate(Screen.AudioEffects.route) },
+                        onClick = { navController.navigate(Screen.Lyrics.route) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lyrics,
+                            contentDescription = "Lyrics",
+                            tint = Color.White
+                        )
+                    }
+                    // Equalizer button
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.AudioEffects.route)
+                        },
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
@@ -111,6 +126,17 @@ fun PlayerScreen(
                             tint = Color.White
                         )
                     }
+
+                    /*IconButton(
+                        onClick = { navController.navigate(Screen.AudioEffects.route) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Equalizer,
+                            contentDescription = "Audio Effects",
+                            tint = Color.White
+                        )
+                    }*/
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))

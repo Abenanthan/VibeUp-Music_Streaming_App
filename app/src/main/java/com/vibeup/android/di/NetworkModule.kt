@@ -1,5 +1,6 @@
 package com.vibeup.android.di
 
+import com.vibeup.android.data.remote.api.LyricsApiService
 import com.vibeup.android.data.remote.api.SaavnApiService
 import dagger.Module
 import dagger.Provides
@@ -11,6 +12,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import javax.inject.Qualifier
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class LyricsRetrofit
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -18,6 +25,7 @@ object NetworkModule {
 
     private const val BASE_URL =
         "https://jiosaavn-api.abenanthan-p-2024-cse.workers.dev/"
+    private const val LYRICS_BASE_URL = "https://lrclib.net/"
 
     @Provides
     @Singleton
@@ -46,6 +54,30 @@ object NetworkModule {
     @Singleton
     fun provideSaavnApiService(retrofit: Retrofit): SaavnApiService {
         return retrofit.create(SaavnApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    @LyricsRetrofit
+    fun provideLyricsRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(LYRICS_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(
+                okHttpClient.newBuilder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(10, TimeUnit.SECONDS)
+                    .build()
+            )
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLyricsApiService(
+        @LyricsRetrofit retrofit: Retrofit
+    ): LyricsApiService {
+        return retrofit.create(LyricsApiService::class.java)
     }
 }
 /*```
