@@ -38,7 +38,7 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/VibeUp.git
+   git clone https://github.com/Abenanthan/VibeUp-Music_Streaming_App
    ```
 2. **Open in Android Studio**:
    - Ensure you have the latest version of Android Studio (Hedgehog or newer).
