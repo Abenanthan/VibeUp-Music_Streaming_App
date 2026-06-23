@@ -84,6 +84,7 @@ class PlayerManager @Inject constructor(
                         override fun onPlaybackStateChanged(state: Int) {
                             if (state == Player.STATE_READY) {
                                 _duration.value = duration
+                                audioEffectsManager.initialize(audioSessionId)
                             }
                         }
 
@@ -116,8 +117,9 @@ class PlayerManager @Inject constructor(
                         }
 
                     })
-                    audioEffectsManager.initialize(audioSessionId)
+                    //audioEffectsManager.initialize(audioSessionId)
                 }
+            audioEffectsManager.initialize(exoPlayer!!.audioSessionId)
         }
         return exoPlayer!!
     }
@@ -134,6 +136,9 @@ class PlayerManager @Inject constructor(
         } catch (e: Exception) { }
 
         val player = getExoPlayer()
+        if (player.audioSessionId > 0) {
+            audioEffectsManager.initialize(player.audioSessionId)
+        }
         val items = _queue.value.map { s ->
             MediaItem.Builder()
                 .setUri(s.audioUrl)
@@ -221,6 +226,7 @@ class PlayerManager @Inject constructor(
         progressJob?.cancel()
         exoPlayer?.stop()
         exoPlayer?.clearMediaItems()
+        audioEffectsManager.releaseEffects()
         exoPlayer?.release()
         exoPlayer = null  // ← force new instance next time
         _currentSong.value = null

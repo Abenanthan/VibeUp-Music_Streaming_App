@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
+private var currentAudioSessionId: Int = -1
 @Singleton
 class AudioEffectsManager @Inject constructor(
     @ApplicationContext private val context: Context
@@ -98,42 +100,73 @@ class AudioEffectsManager @Inject constructor(
     )
 
     fun initialize(audioSessionId: Int) {
+        if (audioSessionId == currentAudioSessionId &&
+            equalizer != null) return
+
+        currentAudioSessionId = audioSessionId
+        android.util.Log.d(
+            "AudioEffects",
+            "Initializing session $audioSessionId"
+        )
+
         try {
             releaseEffects()
 
+            // ✅ Create equalizer but apply bands carefully
             equalizer = Equalizer(0, audioSessionId).apply {
-                enabled = _equalizerEnabled.value
+                // Apply saved band levels
                 val bands = _eqBandLevels.value
                 for (i in 0 until numberOfBands) {
-                    if (i < bands.size) {
-                        setBandLevel(i.toShort(), bands[i].toShort())
-                    }
+                    try {
+                        if (i < bands.size) {
+                            setBandLevel(i.toShort(), bands[i].toShort())
+                        }
+                    } catch (e: Exception) { }
                 }
+                // ✅ Enable AFTER setting levels
+                enabled = _equalizerEnabled.value
             }
 
             bassBoost = BassBoost(0, audioSessionId).apply {
-                setStrength(_bassStrength.value.toShort())
+                try {
+                    setStrength(_bassStrength.value.toShort())
+                } catch (e: Exception) { }
                 enabled = _bassBoostEnabled.value
             }
 
             virtualizer = Virtualizer(0, audioSessionId).apply {
-                setStrength(_virtualizerStrength.value.toShort())
+                try {
+                    setStrength(_virtualizerStrength.value.toShort())
+                } catch (e: Exception) { }
                 enabled = _virtualizerEnabled.value
             }
 
             reverb = PresetReverb(0, audioSessionId).apply {
-                preset = _reverbPreset.value.toShort()
+                try {
+                    preset = _reverbPreset.value.toShort()
+                } catch (e: Exception) { }
                 enabled = _reverbEnabled.value
             }
 
             loudness = LoudnessEnhancer(audioSessionId).apply {
-                setTargetGain(_loudnessGain.value)
+                try {
+                    setTargetGain(_loudnessGain.value)
+                } catch (e: Exception) { }
                 enabled = _loudnessEnabled.value
             }
 
-            android.util.Log.d("AudioEffects", "Initialized for session $audioSessionId")
+            android.util.Log.d(
+                "AudioEffects",
+                "Init done. EQ enabled=${_equalizerEnabled.value}"
+            )
         } catch (e: Exception) {
-            android.util.Log.e("AudioEffects", "Init error: ${e.message}")
+            android.util.Log.e(
+                "AudioEffects",
+                "Init failed: ${e.message}"
+            )
+            // ✅ If init fails, reset all effects to safe state
+            releaseEffects()
+            resetAllEffectStates()
         }
     }
 
@@ -165,13 +198,15 @@ class AudioEffectsManager @Inject constructor(
         _eqPreset.value = index
         prefs.edit().putInt("eq_preset", index).apply()
 
-        levels.forEachIndexed { band, level ->
-            val mb = (level * 100).toShort()
-            try {
-                equalizer?.setBandLevel(band.toShort(), mb)
-            } catch (e: Exception) { }
-        }
+        // ✅ Convert to millibels (multiply by 100)
         val mbLevels = levels.map { it * 100 }
+        mbLevels.forEachIndexed { band, level ->
+            try {
+                equalizer?.setBandLevel(band.toShort(), level.toShort())
+            } catch (e: Exception) {
+                android.util.Log.e("AudioEffects", "Band $band error: ${e.message}")
+            }
+        }
         _eqBandLevels.value = mbLevels
         saveEqBands(mbLevels)
     }
@@ -260,18 +295,50 @@ class AudioEffectsManager @Inject constructor(
         return (0..4).map { i -> prefs.getInt("eq_band_$i", 0) }
     }
 
+    private fun resetAllEffectStates() {
+        android.util.Log.d("AudioEffects", "Resetting all effect states!")
+        _equalizerEnabled.value = false
+        _bassBoostEnabled.value = false
+        _virtualizerEnabled.value = false
+        _reverbEnabled.value = false
+        _loudnessEnabled.value = false
+        _eqBandLevels.value = listOf(0, 0, 0, 0, 0)
+        _eqPreset.value = 0 // Normal
+        prefs.edit().apply {
+            putBoolean("eq_enabled", false)
+            putBoolean("bass_enabled", false)
+            putBoolean("virt_enabled", false)
+            putBoolean("reverb_enabled", false)
+            putBoolean("loudness_enabled", false)
+            putInt("eq_preset", 0)
+            for (i in 0..4) putInt("eq_band_$i", 0)
+            apply()
+        }
+    }
+
     fun releaseEffects() {
         try {
+            // ✅ Disable before releasing
+            equalizer?.enabled = false
+            bassBoost?.enabled = false
+            virtualizer?.enabled = false
+            reverb?.enabled = false
+            loudness?.enabled = false
+
             equalizer?.release()
             bassBoost?.release()
             virtualizer?.release()
             reverb?.release()
             loudness?.release()
-        } catch (e: Exception) { }
-        equalizer = null
-        bassBoost = null
-        virtualizer = null
-        reverb = null
-        loudness = null
+        } catch (e: Exception) {
+            android.util.Log.e("AudioEffects", "Release error: ${e.message}")
+        } finally {
+            equalizer = null
+            bassBoost = null
+            virtualizer = null
+            reverb = null
+            loudness = null
+            currentAudioSessionId = -1
+        }
     }
 }
