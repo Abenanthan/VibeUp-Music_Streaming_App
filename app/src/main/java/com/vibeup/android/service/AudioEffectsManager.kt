@@ -114,12 +114,18 @@ class AudioEffectsManager @Inject constructor(
 
             // ✅ Create equalizer but apply bands carefully
             equalizer = Equalizer(0, audioSessionId).apply {
+                val range = try { bandLevelRange } catch (e: Exception) { shortArrayOf(-1500, 1500) }
+                val minLevel = range[0].toInt()
+                val maxLevel = range[1].toInt()
+
                 // Apply saved band levels
                 val bands = _eqBandLevels.value
-                for (i in 0 until numberOfBands) {
+                for (i in 0 until numberOfBands.toInt()) {
                     try {
                         if (i < bands.size) {
-                            setBandLevel(i.toShort(), bands[i].toShort())
+                            // Clamp value to supported range to prevent silence/overflow
+                            val level = bands[i].coerceIn(minLevel, maxLevel).toShort()
+                            setBandLevel(i.toShort(), level)
                         }
                     } catch (e: Exception) { }
                 }
@@ -198,17 +204,16 @@ class AudioEffectsManager @Inject constructor(
         _eqPreset.value = index
         prefs.edit().putInt("eq_preset", index).apply()
 
-        // ✅ Convert to millibels (multiply by 100)
-        val mbLevels = levels.map { it * 100 }
-        mbLevels.forEachIndexed { band, level ->
+        // Apply levels (they are already in millibels)
+        levels.forEachIndexed { band, level ->
             try {
                 equalizer?.setBandLevel(band.toShort(), level.toShort())
             } catch (e: Exception) {
                 android.util.Log.e("AudioEffects", "Band $band error: ${e.message}")
             }
         }
-        _eqBandLevels.value = mbLevels
-        saveEqBands(mbLevels)
+        _eqBandLevels.value = levels
+        saveEqBands(levels)
     }
 
     fun getEqBandFrequencies(): List<String> {
