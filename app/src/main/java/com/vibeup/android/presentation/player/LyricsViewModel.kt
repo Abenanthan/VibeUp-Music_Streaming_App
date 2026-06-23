@@ -6,6 +6,7 @@ import com.vibeup.android.data.remote.api.LyricsApiService
 import com.vibeup.android.domain.model.Song
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,71 +42,71 @@ class LyricsViewModel @Inject constructor(
     private val _showSynced = MutableStateFlow(true)
     val showSynced: StateFlow<Boolean> = _showSynced.asStateFlow()
 
-    private var lastSong: Song? = null
+    private var lastSongId: String? = null
+    private var fetchJob: Job? = null
 
     fun loadLyrics(song: Song) {
-        if (lastSong?.id == song.id) return
-        lastSong = song
+        // ✅ Skip if same song already loaded/loading
+        if (lastSongId == song.id &&
+            _lyricsState.value !is LyricsState.Idle &&
+            _lyricsState.value !is LyricsState.Error
+        ) return
+
+        lastSongId = song.id
+        fetchJob?.cancel()
         _lyricsState.value = LyricsState.Loading
         _currentLineIndex.value = 0
 
-        viewModelScope.launch(Dispatchers.IO) {
+        fetchJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Try exact match first
+                // ✅ Try direct fetch first (faster)
                 val response = lyricsApiService.getLyrics(
-                    artistName = song.artist,
-                    trackName = song.title,
+                    artistName = cleanArtistName(song.artist),
+                    trackName = cleanTrackName(song.title),
                     albumName = song.album
                 )
 
                 when {
-                    response.instrumental == true -> {
+                    response.instrumental == true ->
                         _lyricsState.value = LyricsState.Instrumental
-                    }
+
                     response.syncedLyrics != null -> {
                         val lines = parseSyncedLyrics(response.syncedLyrics)
-                        if (lines.isNotEmpty()) {
-                            _lyricsState.value = LyricsState.SyncedLoaded(lines)
-                        } else if (response.plainLyrics != null) {
-                            _lyricsState.value = LyricsState.PlainLoaded(
-                                response.plainLyrics
-                            )
-                        } else {
-                            _lyricsState.value = LyricsState.NotFound
-                        }
+                        _lyricsState.value = if (lines.isNotEmpty())
+                            LyricsState.SyncedLoaded(lines)
+                        else if (response.plainLyrics != null)
+                            LyricsState.PlainLoaded(response.plainLyrics)
+                        else
+                            LyricsState.NotFound
                     }
-                    response.plainLyrics != null -> {
+
+                    response.plainLyrics != null ->
                         _lyricsState.value = LyricsState.PlainLoaded(
                             response.plainLyrics
                         )
-                    }
-                    else -> {
-                        // Try search as fallback
-                        searchLyrics(song)
-                    }
+
+                    else -> searchFallback(song)
                 }
             } catch (e: Exception) {
-                android.util.Log.e("LyricsVM", "Error: ${e.message}")
-                // Try search as fallback
-                searchLyrics(song)
+                searchFallback(song)
             }
         }
     }
 
-    private suspend fun searchLyrics(song: Song) {
+    private suspend fun searchFallback(song: Song) {
         try {
             val results = lyricsApiService.searchLyrics(
-                artistName = song.artist,
-                trackName = song.title
+                artistName = cleanArtistName(song.artist),
+                trackName = cleanTrackName(song.title)
             )
             val first = results.firstOrNull()
             when {
-                first == null -> {
+                first == null ->
                     _lyricsState.value = LyricsState.NotFound
-                }
-                first.instrumental == true -> {
+
+                first.instrumental == true ->
                     _lyricsState.value = LyricsState.Instrumental
-                }
+
                 first.syncedLyrics != null -> {
                     val lines = parseSyncedLyrics(first.syncedLyrics)
                     _lyricsState.value = if (lines.isNotEmpty())
@@ -115,32 +116,46 @@ class LyricsViewModel @Inject constructor(
                     else
                         LyricsState.NotFound
                 }
-                first.plainLyrics != null -> {
+
+                first.plainLyrics != null ->
                     _lyricsState.value = LyricsState.PlainLoaded(
                         first.plainLyrics
                     )
-                }
-                else -> {
-                    _lyricsState.value = LyricsState.NotFound
-                }
+
+                else -> _lyricsState.value = LyricsState.NotFound
             }
         } catch (e: Exception) {
             _lyricsState.value = LyricsState.NotFound
         }
     }
 
+    // ✅ Clean artist name — remove featuring artists
+    private fun cleanArtistName(artist: String): String {
+        return artist
+            .split(",", "&", "feat.", "ft.", "Feat.", "Ft.")
+            .first()
+            .trim()
+    }
+
+    // ✅ Clean track name — remove extra info
+    private fun cleanTrackName(title: String): String {
+        return title
+            .replace(Regex("\\(.*?\\)"), "")
+            .replace(Regex("\\[.*?\\]"), "")
+            .trim()
+    }
+
     // ✅ Parse [mm:ss.xx] format
     private fun parseSyncedLyrics(synced: String): List<LyricLine> {
         val lines = mutableListOf<LyricLine>()
         val regex = Regex("""\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)""")
-
         synced.lines().forEach { line ->
             val match = regex.find(line.trim()) ?: return@forEach
             val (min, sec, ms, text) = match.destructured
             val timeMs = (min.toLong() * 60 * 1000) +
                     (sec.toLong() * 1000) +
-                    (if (ms.length == 2) ms.toLong() * 10
-                    else ms.toLong())
+                    if (ms.length == 2) ms.toLong() * 10
+                    else ms.toLong()
             val cleanText = text.trim()
             if (cleanText.isNotEmpty()) {
                 lines.add(LyricLine(timeMs, cleanText))
@@ -149,19 +164,14 @@ class LyricsViewModel @Inject constructor(
         return lines.sortedBy { it.timeMs }
     }
 
-    // ✅ Update current line based on playback position
     fun updateCurrentLine(positionMs: Long) {
         val state = _lyricsState.value
         if (state !is LyricsState.SyncedLoaded) return
-
         val lines = state.lines
         var index = 0
         for (i in lines.indices) {
-            if (positionMs >= lines[i].timeMs) {
-                index = i
-            } else {
-                break
-            }
+            if (positionMs >= lines[i].timeMs) index = i
+            else break
         }
         if (_currentLineIndex.value != index) {
             _currentLineIndex.value = index
@@ -173,7 +183,9 @@ class LyricsViewModel @Inject constructor(
     }
 
     fun resetLyrics() {
+        fetchJob?.cancel()
         _lyricsState.value = LyricsState.Idle
-        lastSong = null
+        lastSongId = null
+        _currentLineIndex.value = 0
     }
 }
