@@ -1,8 +1,8 @@
-# VibeUp ?
+# VibeUp 
 
 VibeUp is a modern, high-performance Android music player built with Jetpack Compose and Media3 (ExoPlayer). It offers a seamless listening experience with a focus on deep audio customization, dynamic lyrics, and local library management.
 
-## ? Features
+## Features
 
 - **Modern UI/UX**: Fully built with Jetpack Compose following Material 3 guidelines.
 - **Advanced Playback Engine**: Powered by Android Media3 (ExoPlayer) for stable and high-quality audio streaming and local playback.
@@ -16,7 +16,7 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 - **Background Playback**: Persistent playback with modern MediaStyle notifications and seamless integration with Android's media controls.
 - **Mini Player**: Always-accessible playback controls while browsing the app.
 
-## ? Tech Stack
+## Tech Stack
 
 - **Language**: [Kotlin](https://kotlinlang.org/)
 - **UI Framework**: [Jetpack Compose](https://developer.android.com/jetpack/compose)
@@ -27,14 +27,14 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 - **Local Database**: [Room](https://developer.android.com/training/data-storage/room)
 - **Concurrency**: Kotlin Coroutines & Flow
 
-## ? Project Structure
+## Project Structure
 
 - `com.vibeup.android.presentation`: UI layers including Screens, ViewModels, and Compose Components.
 - `com.vibeup.android.service`: Core background services including `MusicPlayerService`, `PlayerManager`, and `AudioEffectsManager`.
 - `com.vibeup.android.domain`: Domain models and repository interfaces.
 - `com.vibeup.android.ui.theme`: App styling, colors (Purple/Blue primary palette), and Typography.
 
-## ? Getting Started
+## Getting Started
 
 1. **Clone the repository**:
    ```bash
@@ -46,6 +46,6 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
    - The app requires Android 7.0 (API 24) or higher.
    - For notification controls on Android 13+, ensure you grant the notification permission on the first launch.
 
-## ?? License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
