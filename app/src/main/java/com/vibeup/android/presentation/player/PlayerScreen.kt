@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 fun PlayerScreen(
     navController: NavController,
     viewModel: PlayerViewModel = hiltViewModel(),
-    lyricsViewModel: LyricsViewModel = hiltViewModel()
+    lyricsViewModel: LyricsViewModel = activityViewModel()
 ) {
     val currentSong by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
@@ -55,8 +55,21 @@ fun PlayerScreen(
     val scope = rememberCoroutineScope()
 
     // ✅ Load lyrics as soon as song is available
-    LaunchedEffect(currentSong?.id) {
+    /*LaunchedEffect(currentSong?.id) {
         currentSong?.let { lyricsViewModel.loadLyrics(it) }
+    }*/
+
+    LaunchedEffect(currentSong?.id) {
+        currentSong?.let { song ->
+            val state = lyricsViewModel.lyricsState.value
+            if (state is LyricsState.Idle ||
+                state is LyricsState.Error
+            ) {
+                lyricsViewModel.loadLyrics(song)
+            } else if (lyricsViewModel.lastLoadedSongId != song.id) {
+                lyricsViewModel.loadLyrics(song)
+            }
+        }
     }
 
     // ✅ Update current lyric line

@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 fun LyricsScreen(
     navController: NavController,
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    lyricsViewModel: LyricsViewModel = hiltViewModel()
+    lyricsViewModel: LyricsViewModel = activityViewModel()
 ) {
     val currentSong by playerViewModel.currentSong.collectAsState()
     val currentPosition by playerViewModel.currentPosition.collectAsState()

@@ -42,17 +42,18 @@ class LyricsViewModel @Inject constructor(
     private val _showSynced = MutableStateFlow(true)
     val showSynced: StateFlow<Boolean> = _showSynced.asStateFlow()
 
-    private var lastSongId: String? = null
+    var lastLoadedSongId: String? = null
+        private set
     private var fetchJob: Job? = null
 
     fun loadLyrics(song: Song) {
         // ✅ Skip if same song already loaded/loading
-        if (lastSongId == song.id &&
+        if (lastLoadedSongId == song.id &&
             _lyricsState.value !is LyricsState.Idle &&
             _lyricsState.value !is LyricsState.Error
         ) return
 
-        lastSongId = song.id
+        lastLoadedSongId = song.id
         fetchJob?.cancel()
         _lyricsState.value = LyricsState.Loading
         _currentLineIndex.value = 0
@@ -185,7 +186,7 @@ class LyricsViewModel @Inject constructor(
     fun resetLyrics() {
         fetchJob?.cancel()
         _lyricsState.value = LyricsState.Idle
-        lastSongId = null
+        lastLoadedSongId = null
         _currentLineIndex.value = 0
     }
 }
