@@ -64,9 +64,30 @@ fun PlayerScreen(
         lyricsViewModel.updateCurrentLine(currentPosition)
     }
 
-    // ✅ Auto scroll to current line
+    // ✅ Track if user is manually scrolling
+    val isUserScrolling = remember { mutableStateOf(false) }
+
+    // Detect user scroll interaction
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) {
+            isUserScrolling.value = true
+        }
+    }
+
+    // Resume auto scroll after 5 seconds of no interaction
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress && isUserScrolling.value) {
+            kotlinx.coroutines.delay(7000)
+            isUserScrolling.value = false
+        }
+    }
+
+    // ✅ Auto scroll ONLY if user is not scrolling
     LaunchedEffect(currentLineIndex) {
-        if (lyricsState is LyricsState.SyncedLoaded && showSynced) {
+        if (lyricsState is LyricsState.SyncedLoaded &&
+            showSynced &&
+            !isUserScrolling.value
+        ) {
             scope.launch {
                 val scrollTo = (currentLineIndex - 1).coerceAtLeast(0)
                 listState.animateScrollToItem(scrollTo)
