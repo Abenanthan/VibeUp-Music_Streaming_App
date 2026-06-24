@@ -14,9 +14,6 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 - **Multilingual Lyrics (Native Languages)**: Display lyrics in the user's native language when available. Features include:
   - Support for multiple language tracks per song (original and translations).
   - Automatic language detection based on device locale with the option to manually switch languages.
-  - Inline translation fallback when full translated lyrics are not available.
-  - Ability to download and cache translated lyrics for offline use.
-  - Support for synced translations using multi-track LRC files and plain translated lyric files.
 - **Local Music Integration**: Scan and play music directly from your device storage.
 - **Playlist Management**: Create, edit, and organize your music library into custom playlists.
 - **Background Playback**: Persistent playback with modern MediaStyle notifications and seamless integration with Android's media controls.
