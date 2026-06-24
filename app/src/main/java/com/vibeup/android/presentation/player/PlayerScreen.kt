@@ -71,6 +71,7 @@ fun PlayerScreen(
     LaunchedEffect(listState.isScrollInProgress) {
         if (listState.isScrollInProgress) {
             isUserScrolling.value = true
+
         }
     }
 
