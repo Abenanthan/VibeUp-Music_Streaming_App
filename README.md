@@ -1,6 +1,6 @@
 # VibeUp 
 
-VibeUp is a modern, high-performance Android music player built with Jetpack Compose and Media3 (ExoPlayer). It offers a seamless listening experience with a focus on deep audio customization, dynamic lyrics, and local library management.
+VibeUp is a modern, high-performance Android music player built with Jetpack Compose and Media3 (ExoPlayer). It offers a seamless listening experience with a focus on deep audio customization, dynamic lyrics, and multilingual support.
 
 ## Features
 
@@ -11,6 +11,9 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
   - Bass Boost and Virtualizer (Surround Sound).
   - Loudness Enhancer and Reverb presets.
 - **Dynamic Lyrics**: Supports both synced (LRC) and plain text lyrics with tap-to-seek functionality.
+- **Multilingual Lyrics (Native Languages)**: Display lyrics in the user's native language when available. Features include:
+  - Support for multiple language tracks per song (original and translations).
+  - Automatic language detection based on device locale with the option to manually switch languages.
 - **Local Music Integration**: Scan and play music directly from your device storage.
 - **Playlist Management**: Create, edit, and organize your music library into custom playlists.
 - **Background Playback**: Persistent playback with modern MediaStyle notifications and seamless integration with Android's media controls.
@@ -30,7 +33,7 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 ## Project Structure
 
 - `com.vibeup.android.presentation`: UI layers including Screens, ViewModels, and Compose Components.
-- `com.vibeup.android.service`: Core background services including `MusicPlayerService`, `PlayerManager`, and `AudioEffectsManager`.
+- `com.vibeup.android.service`: Core background services including `MusicPlayerService`, `PlayerManager`, `AudioEffectsManager`, and `LyricsManager` (handles fetching, caching, syncing, and language selection for lyrics).
 - `com.vibeup.android.domain`: Domain models and repository interfaces.
 - `com.vibeup.android.ui.theme`: App styling, colors (Purple/Blue primary palette), and Typography.
 
@@ -45,6 +48,7 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 3. **Build and Run**:
    - The app requires Android 7.0 (API 24) or higher.
    - For notification controls on Android 13+, ensure you grant the notification permission on the first launch.
+   - If you want to use translated lyrics or online lyric lookup, ensure the app has network permission and an optional lyrics provider API key configured in the app settings.
 
 ## License
 
