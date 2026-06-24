@@ -10,6 +10,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.vibeup.android.data.local.dao.DownloadDao
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,7 +25,9 @@ object DatabaseModule {
             context,
             VibeUpDatabase::class.java,
             "vibeup_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -33,5 +36,11 @@ object DatabaseModule {
         database: VibeUpDatabase
     ): SearchHistoryDao {
         return database.searchHistoryDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDownloadDao(database: VibeUpDatabase): DownloadDao {
+        return database.downloadDao()
     }
 }

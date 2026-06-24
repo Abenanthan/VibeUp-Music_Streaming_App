@@ -35,6 +35,7 @@ import coil.request.ImageRequest
 import com.vibeup.android.Screen
 import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
+import com.vibeup.android.presentation.library.DownloadsViewModel
 import com.vibeup.android.presentation.library.LibraryViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.theme.*
@@ -53,7 +54,8 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    libraryViewModel: LibraryViewModel = hiltViewModel()
+    libraryViewModel: LibraryViewModel = hiltViewModel(),
+    downloadsViewModel: DownloadsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()
@@ -176,6 +178,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -198,6 +203,9 @@ fun HomeScreen(
                             onLike = { libraryViewModel.likeSong(it) },
                             onAddToPlaylist = { id, song ->
                                 libraryViewModel.addSongToPlaylist(id, song)
+                            },
+                            onDownload = { song, quality ->
+                                downloadsViewModel.downloadSong(song, quality)
                             }
                         )
                     }
@@ -235,6 +243,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -254,6 +265,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -284,6 +298,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -303,6 +320,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -322,6 +342,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -341,6 +364,9 @@ fun HomeScreen(
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
                             libraryViewModel.addSongToPlaylist(id, song)
+                        },
+                        onDownload = { song, quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -651,7 +677,8 @@ fun ArtistsSection(
     playlists: List<Playlist>,
     onSongClick: (Song, List<Song>) -> Unit,
     onLike: (Song) -> Unit,
-    onAddToPlaylist: (String, Song) -> Unit
+    onAddToPlaylist: (String, Song) -> Unit,
+    onDownload: (Song, String) -> Unit
 ) {
     // Artist avatars row
     LazyRow(
@@ -749,7 +776,8 @@ fun ArtistsSection(
                         playlists = playlists,
                         onClick = { onSongClick(song, artist.songs) },
                         onLike = { onLike(song) },
-                        onAddToPlaylist = { id -> onAddToPlaylist(id, song) }
+                        onAddToPlaylist = { id -> onAddToPlaylist(id, song) },
+                        onDownload = { quality -> onDownload(song, quality) }
                     )
                 }
             }
@@ -765,7 +793,8 @@ fun SongRow(
     playlists: List<Playlist>,
     onSongClick: (Song) -> Unit,
     onLike: (Song) -> Unit,
-    onAddToPlaylist: (String, Song) -> Unit
+    onAddToPlaylist: (String, Song) -> Unit,
+    onDownload: (Song, String) -> Unit
 ) {
     if (songs.isEmpty()) {
         LoadingRow()
@@ -781,7 +810,8 @@ fun SongRow(
                     playlists = playlists,
                     onClick = { onSongClick(song) },
                     onLike = { onLike(song) },
-                    onAddToPlaylist = { id -> onAddToPlaylist(id, song) }
+                    onAddToPlaylist = { id -> onAddToPlaylist(id, song) },
+                    onDownload = { quality -> onDownload(song, quality) }
                 )
             }
         }
@@ -797,7 +827,8 @@ fun GlassSongCard(
     playlists: List<Playlist> = emptyList(),
     onClick: () -> Unit,
     onLike: () -> Unit = {},
-    onAddToPlaylist: (String) -> Unit = {}
+    onAddToPlaylist: (String) -> Unit = {},
+    onDownload: (String) -> Unit = {}
 ) {
     var showOptions by remember { mutableStateOf(false) }
 
@@ -807,7 +838,8 @@ fun GlassSongCard(
             playlists = playlists,
             onDismiss = { showOptions = false },
             onLike = onLike,
-            onAddToPlaylist = onAddToPlaylist
+            onAddToPlaylist = onAddToPlaylist,
+            onDownload = onDownload
         )
     }
 
@@ -915,7 +947,8 @@ fun SongOptionsDialog(
     playlists: List<Playlist>,
     onDismiss: () -> Unit,
     onLike: () -> Unit,
-    onAddToPlaylist: (String) -> Unit
+    onAddToPlaylist: (String) -> Unit,
+    onDownload: ((String) -> Unit)? = null
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -952,6 +985,59 @@ fun SongOptionsDialog(
                         )
                     }
                 }
+
+                // Download option
+                if (onDownload != null) {
+                    HorizontalDivider(color = Color(0xFF1F1F3A), thickness = 1.dp)
+                    var showQualityMenu by remember { mutableStateOf(false) }
+
+                    TextButton(
+                        onClick = { showQualityMenu = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = null,
+                                tint = BluePrimary
+                            )
+                            Text("Download", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+
+                    if (showQualityMenu) {
+                        listOf("320kbps", "160kbps", "96kbps").forEach { quality ->
+                            TextButton(
+                                onClick = {
+                                    onDownload(quality)
+                                    onDismiss()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.GraphicEq,
+                                        contentDescription = null,
+                                        tint = Color(0xFF6B7280),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(quality, color = Color(0xFF9CA3AF), fontSize = 13.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 HorizontalDivider(
                     color = Color(0xFF1F1F3A),
                     thickness = 1.dp

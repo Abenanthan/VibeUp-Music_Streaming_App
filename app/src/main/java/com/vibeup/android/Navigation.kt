@@ -16,6 +16,7 @@ import com.vibeup.android.presentation.local.LocalMusicScreen
 import com.vibeup.android.presentation.library.AddSongsScreen
 import com.vibeup.android.presentation.player.AudioEffectsScreen
 import com.vibeup.android.presentation.player.LyricsScreen
+import com.vibeup.android.presentation.library.DownloadsScreen
 
 sealed class Screen(val route: String) {
     object Auth    : Screen("auth")
@@ -33,6 +34,8 @@ sealed class Screen(val route: String) {
     object AudioEffects : Screen("audio_effects")
 
     object Lyrics : Screen("lyrics")
+
+    object Downloads : Screen("downloads")
 }
 
 @Composable
@@ -92,5 +95,10 @@ fun VibeUpNavHost(
                 playlistId = playlistId
             )
         }
+
+        composable(Screen.Downloads.route) {
+            DownloadsScreen(navController = navController)
+        }
+
     }
 }

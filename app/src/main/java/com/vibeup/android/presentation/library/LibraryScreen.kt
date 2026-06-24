@@ -369,6 +369,68 @@ fun LibraryScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
+
+                    // Downloads Card
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            BluePrimary.copy(alpha = 0.2f),
+                                            PurplePrimary.copy(alpha = 0.2f)
+                                        )
+                                    )
+                                )
+                                .clickable {
+                                    navController.navigate(Screen.Downloads.route)
+                                }
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(BluePrimary, PurplePrimary)
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Download,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Downloads",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFF3F4F6)
+                                )
+                                Text(
+                                    "Play music offline",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF6B7280)
+                                )
+                            }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = Color(0xFF374151),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
 
                 // ── Liked Songs Tab ──

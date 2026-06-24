@@ -47,3 +47,4 @@ data class DownloadUrlDto(
     @SerializedName("quality") val quality: String?,
     @SerializedName("url")     val url: String?
 )
+
