@@ -24,10 +24,10 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val favouriteIds = listOf( //2 4
-        "GWwnRe0u", "cDHlLKvW", "m1iXOUID", "_KjTxjcC",
+        "GWwnRe0u", "rjkrTnma", "m1iXOUID", "mPTrDSun",
         "__YIeFT-", "uP7MlTHz", "eLm-JvK4", "SM-rvz75",
         "qcVqPqk5", "vRNpPA7_", "yBmo2qWU", "QWLY3Ls_",
-        "QkFUdVod", "BH07HVc8", "kehuVn2F"
+        "QkFUdVod", "BH07HVc8", "kehuVn2F", "cDHlLKvW", "_KjTxjcC"
     )
 
     // Wave 1

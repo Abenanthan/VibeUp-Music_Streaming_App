@@ -52,6 +52,8 @@ fun SearchScreen(
 ) {
     val query by viewModel.query.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsState()
+    val topSearches by viewModel.topSearches.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val searchHistory by viewModel.searchHistory.collectAsState()
     val playlists by libraryViewModel.playlists.collectAsState()
@@ -132,22 +134,40 @@ fun SearchScreen(
                     )
                 }
                 query.isEmpty() -> {
-                    // Show search history
-                    if (searchHistory.isEmpty()) {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "🎵", fontSize = 64.sp)
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Search for your favourite songs",
-                                fontSize = 16.sp,
-                                color = TextSecondary
-                            )
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Show Top Searches
+                        if (topSearches.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Popular Searches 🔥",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            items(topSearches) { suggestion ->
+                                SuggestionItem(
+                                    suggestion = suggestion,
+                                    onClick = {
+                                        viewModel.searchFromSuggestion(suggestion)
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            }
+                            item {
+                                HorizontalDivider(
+                                    color = DarkSurface,
+                                    thickness = 0.5.dp,
+                                    modifier = Modifier.padding(vertical = 12.dp)
+                                )
+                            }
                         }
-                    } else {
-                        LazyColumn {
+
+                        // Show search history
+                        if (searchHistory.isNotEmpty()) {
                             item {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -170,7 +190,6 @@ fun SearchScreen(
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
                             }
                             items(searchHistory) { history ->
                                 Row(
@@ -213,27 +232,79 @@ fun SearchScreen(
                                     thickness = 0.5.dp
                                 )
                             }
+                        } else if (topSearches.isEmpty()) {
+                            // Show empty state if both history and top searches are empty
+                            item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 100.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = "🎵", fontSize = 64.sp)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "Search for your favourite songs",
+                                        fontSize = 16.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
                 searchResults.isEmpty() && query.isNotEmpty() && !isLoading -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "😔", fontSize = 64.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "No results found for \"$query\"",
-                            fontSize = 16.sp,
-                            color = TextSecondary
-                        )
+                    if (suggestions.isNotEmpty()) {
+                        LazyColumn {
+                            items(suggestions) { suggestion ->
+                                SuggestionItem(
+                                    suggestion = suggestion,
+                                    onClick = {
+                                        viewModel.searchFromSuggestion(suggestion)
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.align(Alignment.Center),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = "😔", fontSize = 64.sp)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No results found for \"$query\"",
+                                fontSize = 16.sp,
+                                color = TextSecondary
+                            )
+                        }
                     }
                 }
                 else -> {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Show suggestions at the top if any
+                        if (suggestions.isNotEmpty()) {
+                            items(suggestions.take(3)) { suggestion ->
+                                SuggestionItem(
+                                    suggestion = suggestion,
+                                    onClick = {
+                                        viewModel.searchFromSuggestion(suggestion)
+                                        keyboardController?.hide()
+                                    }
+                                )
+                            }
+                            item {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = DarkSurface,
+                                    thickness = 0.5.dp
+                                )
+                            }
+                        }
+
                         item {
                             Text(
                                 text = "${searchResults.size} results",
@@ -271,6 +342,35 @@ fun SearchScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SuggestionItem(
+    suggestion: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = TextSecondary,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = suggestion,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

@@ -81,4 +81,43 @@ class SongRepositoryImpl @Inject constructor(
     override suspend fun getPlayableSong(songId: String): Song? {
         return getSongById(songId)
     }
+
+    override suspend fun getSearchSuggestions(query: String): List<String> {
+        return try {
+            val response = directApi.getSuggestions(query = query)
+            val suggestions = mutableListOf<String>()
+            
+            // Add top query if available
+            response.topquery?.data?.forEach { item ->
+                item.title?.let { suggestions.add(it) }
+            }
+            
+            // Add other suggestions and deduplicate
+            response.songs?.data?.forEach { item ->
+                item.title?.let { suggestions.add(it) }
+            }
+            response.albums?.data?.forEach { item ->
+                item.title?.let { suggestions.add(it) }
+            }
+            
+            suggestions.map { it.trim() }
+                .distinct()
+                .take(10)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    override suspend fun getTopSearches(): List<String> {
+        return try {
+            val response = directApi.getTopSearches()
+            response.mapNotNull { it.title?.trim() }
+                .distinct()
+                .take(10)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
 }

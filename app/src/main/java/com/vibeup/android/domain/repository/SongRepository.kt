@@ -8,4 +8,6 @@ interface SongRepository {
     suspend fun extractAudioUrl(youtubeUrl: String): String
     suspend fun getSongById(id: String): Song?
     suspend fun getPlayableSong(songId: String): Song?
+    suspend fun getSearchSuggestions(query: String): List<String>
+    suspend fun getTopSearches(): List<String>
 }

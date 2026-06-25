@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.vibeup.android.data.local.dao.SearchHistoryDao
 import com.vibeup.android.data.local.entity.SearchHistory
 import com.vibeup.android.domain.model.Song
+import com.vibeup.android.domain.usecase.GetSearchSuggestionsUseCase
+import com.vibeup.android.domain.usecase.GetTopSearchesUseCase
 import com.vibeup.android.domain.usecase.SearchSongsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -20,11 +22,19 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchSongsUseCase: SearchSongsUseCase,
+    private val getSearchSuggestionsUseCase: GetSearchSuggestionsUseCase,
+    private val getTopSearchesUseCase: GetTopSearchesUseCase,
     private val searchHistoryDao: SearchHistoryDao
 ) : ViewModel() {
 
     private val _searchResults = MutableStateFlow<List<Song>>(emptyList())
     val searchResults: StateFlow<List<Song>> = _searchResults.asStateFlow()
+
+    private val _suggestions = MutableStateFlow<List<String>>(emptyList())
+    val suggestions: StateFlow<List<String>> = _suggestions.asStateFlow()
+
+    private val _topSearches = MutableStateFlow<List<String>>(emptyList())
+    val topSearches: StateFlow<List<String>> = _topSearches.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -39,16 +49,45 @@ class SearchViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var searchJob: Job? = null
+    private var suggestionJob: Job? = null
+
+    init {
+        loadTopSearches()
+    }
+
+    private fun loadTopSearches() {
+        viewModelScope.launch {
+            try {
+                _topSearches.value = getTopSearchesUseCase()
+            } catch (e: Exception) {
+                _topSearches.value = emptyList()
+            }
+        }
+    }
 
     fun onQueryChange(newQuery: String) {
         _query.value = newQuery
         searchJob?.cancel()
+        suggestionJob?.cancel()
+
         if (newQuery.isBlank()) {
             _searchResults.value = emptyList()
+            _suggestions.value = emptyList()
             return
         }
+
+        // Fetch suggestions independently with shorter delay
+        suggestionJob = viewModelScope.launch {
+            delay(300)
+            try {
+                _suggestions.value = getSearchSuggestionsUseCase(newQuery)
+            } catch (e: Exception) {
+                _suggestions.value = emptyList()
+            }
+        }
+
         searchJob = viewModelScope.launch {
-            delay(500)
+            delay(800) // Longer delay for actual search to save data/power
             _isLoading.value = true
             try {
                 _searchResults.value = searchSongsUseCase(newQuery)
@@ -58,6 +97,24 @@ class SearchViewModel @Inject constructor(
                         SearchHistory(query = newQuery.trim())
                     )
                 }
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun searchFromSuggestion(suggestion: String) {
+        _query.value = suggestion
+        _suggestions.value = emptyList()
+        searchJob?.cancel()
+        suggestionJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                _searchResults.value = searchSongsUseCase(suggestion)
+                searchHistoryDao.insertSearch(
+                    SearchHistory(query = suggestion.trim())
+                )
             } finally {
                 _isLoading.value = false
             }
