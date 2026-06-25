@@ -203,6 +203,29 @@ class PlayerManager @Inject constructor(
         player.repeatMode = nextMode
     }
 
+    fun updateQueueItem(index: Int, song: Song) {
+        val currentQueue = _queue.value.toMutableList()
+        if (index < currentQueue.size) {
+            currentQueue[index] = song
+            _queue.value = currentQueue
+
+            // Update ExoPlayer media item
+            val mediaItem = MediaItem.Builder()
+                .setUri(song.audioUrl)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(song.title)
+                        .setArtist(song.artist)
+                        .setAlbumTitle(song.album)
+                        .setArtworkUri(song.imageUrl.toUri())
+                        .build()
+                )
+                .build()
+
+            exoPlayer?.replaceMediaItem(index, mediaItem)
+        }
+    }
+
     private fun startTracking() {
         progressJob?.cancel()
         progressJob = scope.launch {

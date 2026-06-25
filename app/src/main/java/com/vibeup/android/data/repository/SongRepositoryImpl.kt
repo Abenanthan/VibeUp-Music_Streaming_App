@@ -7,7 +7,9 @@ import com.vibeup.android.data.remote.mapper.toDomain as toDomainDirect
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.SongRepository
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class SongRepositoryImpl @Inject constructor(
     private val api: SaavnApiService,
     private val directApi: JioSaavnDirectApiService
@@ -74,5 +76,9 @@ class SongRepositoryImpl @Inject constructor(
             e.printStackTrace()
             null
         }
+    }
+
+    override suspend fun getPlayableSong(songId: String): Song? {
+        return getSongById(songId)
     }
 }

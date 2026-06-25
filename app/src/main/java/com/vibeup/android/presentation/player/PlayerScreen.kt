@@ -46,6 +46,7 @@ fun PlayerScreen(
     val duration by viewModel.duration.collectAsState()
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
     val repeatMode by viewModel.repeatMode.collectAsState()
+    val isResolvingUrl by viewModel.isResolvingUrl.collectAsState()
     val lyricsState by lyricsViewModel.lyricsState.collectAsState()
     val currentLineIndex by lyricsViewModel.currentLineIndex.collectAsState()
     val showSynced by lyricsViewModel.showSynced.collectAsState()
@@ -341,15 +342,23 @@ fun PlayerScreen(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = if (isPlaying)
-                                        Icons.Default.Pause
-                                    else
-                                        Icons.Default.PlayArrow,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(40.dp)
-                                )
+                                if (isResolvingUrl) {
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = if (isPlaying)
+                                            Icons.Default.Pause
+                                        else
+                                            Icons.Default.PlayArrow,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                }
                             }
                         }
 
