@@ -195,9 +195,9 @@ class HomeViewModel @Inject constructor(
     private suspend fun loadTrending() {
         try {
             val result = api.searchSongs(
-                "trending songs 2024", limit = 10
+                "trending songs 2025", limit = 30
             ).data?.results?.map { it.toDomain() } ?: emptyList()
-            _trendingSongs.value = result
+            _trendingSongs.value = deduplicate(result)
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "Trending: ${e.message}")
         }
@@ -205,10 +205,20 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadNewReleases() {
         try {
-            val result = api.searchSongs(
-                "new releases 2024", limit = 10
+            // ✅ Better query for new releases
+            val tamil = api.searchSongs(
+                "new tamil songs 2025", limit = 10
             ).data?.results?.map { it.toDomain() } ?: emptyList()
-            _newReleases.value = result
+
+            val hindi = api.searchSongs(
+                "new hindi songs 2025", limit = 10
+            ).data?.results?.map { it.toDomain() } ?: emptyList()
+
+            val telugu = api.searchSongs(
+                "new telugu songs 2025", limit = 10
+            ).data?.results?.map { it.toDomain() } ?: emptyList()
+
+            _newReleases.value = deduplicate((tamil + hindi + telugu).shuffled(), limit = 15)
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "NewReleases: ${e.message}")
         }
@@ -219,11 +229,11 @@ class HomeViewModel @Inject constructor(
         state: MutableStateFlow<List<Song>>
     ) {
         try {
-            val result = api.searchSongs(query, limit = 10)
+            val result = api.searchSongs(query, limit = 30)
                 .data?.results?.map { it.toDomain() } ?: emptyList()
-            state.value = result
+            state.value = deduplicate(result)
         } catch (e: Exception) {
-            android.util.Log.e("HomeVM", "Mood $query: ${e.message}")
+            android.util.Log.e("HomeVM", "Mood: ${e.message}")
         }
     }
 
@@ -232,28 +242,57 @@ class HomeViewModel @Inject constructor(
         state: MutableStateFlow<List<Song>>
     ) {
         try {
-            val result = api.searchSongs("$artist", limit = 10)
+            val result = api.searchSongs(artist, limit = 30)
                 .data?.results?.map { it.toDomain() } ?: emptyList()
-            state.value = result
+            state.value = deduplicate(result)
         } catch (e: Exception) {
-            android.util.Log.e("HomeVM", "Artist $artist: ${e.message}")
+            android.util.Log.e("HomeVM", "Artist: ${e.message}")
         }
     }
 
     private suspend fun loadLanguageSongs(language: String) {
         try {
             val result = api.searchSongs(
-                "$language hits", limit = 10
+                "$language hits 2025", limit = 30
             ).data?.results?.map { it.toDomain() } ?: emptyList()
-            when (language) {
-                "tamil"  -> _tamilSongs.value = result
-                "telugu" -> _teluguSongs.value = result
-                "hindi"  -> _hindiSongs.value = result
 
+            val unique = deduplicate(result)
+
+            when (language) {
+                "tamil"  -> _tamilSongs.value = unique
+                "telugu" -> _teluguSongs.value = unique
+                "hindi"  -> _hindiSongs.value = unique
             }
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "$language: ${e.message}")
         }
+    }
+
+    // ✅ Reusable dedup function
+    private fun deduplicate(songs: List<Song>, limit: Int = 12): List<Song> {
+        val seen = mutableSetOf<String>()
+        val unique = mutableListOf<Song>()
+        for (song in songs) {
+            val key = buildString {
+                append(
+                    song.title
+                        .lowercase()
+                        .replace(Regex("[^a-z0-9]"), "")
+                        .take(10)
+                )
+                append(
+                    song.artist
+                        .lowercase()
+                        .split(",", "&", "feat", "ft")
+                        .first()
+                        .replace(Regex("[^a-z0-9]"), "")
+                        .take(8)
+                )
+            }
+            if (seen.add(key)) unique.add(song)
+            if (unique.size >= limit) break
+        }
+        return unique
     }
 
     fun refresh() {
