@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
@@ -148,13 +149,14 @@ fun SearchScreen(
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                            items(topSearches) { suggestion ->
+                            items(topSearches.take(4)) { suggestion ->
                                 SuggestionItem(
                                     suggestion = suggestion,
                                     onClick = {
                                         viewModel.searchFromSuggestion(suggestion)
                                         keyboardController?.hide()
-                                    }
+                                    },
+                                    isPopular = true
                                 )
                             }
                             item {
@@ -348,7 +350,8 @@ fun SearchScreen(
 @Composable
 fun SuggestionItem(
     suggestion: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isPopular: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -358,7 +361,7 @@ fun SuggestionItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Default.Search,
+            imageVector = if (isPopular) Icons.AutoMirrored.Filled.TrendingUp else Icons.Default.Search,
             contentDescription = null,
             tint = TextSecondary,
             modifier = Modifier.size(18.dp)
