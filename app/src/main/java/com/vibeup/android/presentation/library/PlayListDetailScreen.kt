@@ -37,7 +37,8 @@ fun PlaylistDetailScreen(
     navController: NavController,
     playlistId: String,
     viewModel: LibraryViewModel = hiltViewModel(),
-    playerViewModel: PlayerViewModel = hiltViewModel()
+    playerViewModel: PlayerViewModel = hiltViewModel(),
+    downloadsViewModel: DownloadsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val playlists by viewModel.playlists.collectAsState()
@@ -605,6 +606,9 @@ fun PlaylistDetailScreen(
                             viewModel.removeSongFromPlaylist(
                                 playlistId, song.id
                             )
+                        },
+                        onDownload = { quality ->
+                            downloadsViewModel.downloadSong(song, quality)
                         }
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -622,9 +626,11 @@ fun PlaylistSongItem(
     context: android.content.Context,
     onClick: () -> Unit,
     onLike: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onDownload: (String) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showDownloadQualities by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -636,6 +642,7 @@ fun PlaylistSongItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        // ... (rest of the Row is same)
         // Index number
         Text(
             text = "$index",
@@ -691,7 +698,10 @@ fun PlaylistSongItem(
             }
             DropdownMenu(
                 expanded = showMenu,
-                onDismissRequest = { showMenu = false },
+                onDismissRequest = { 
+                    showMenu = false
+                    showDownloadQualities = false 
+                },
                 modifier = Modifier.background(Color(0xFF1C1C3A))
             ) {
                 DropdownMenuItem(
@@ -714,6 +724,40 @@ fun PlaylistSongItem(
                     },
                     onClick = { showMenu = false; onLike() }
                 )
+                
+                HorizontalDivider(color = Color(0xFF2A2A4A), thickness = 0.5.dp)
+
+                // Download section
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "📥 Download",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    },
+                    onClick = { showDownloadQualities = !showDownloadQualities }
+                )
+
+                if (showDownloadQualities) {
+                    listOf("320kbps", "160kbps", "96kbps").forEach { quality ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "   • $quality",
+                                    color = Color(0xFF9CA3AF),
+                                    fontSize = 13.sp
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                showDownloadQualities = false
+                                onDownload(quality)
+                            }
+                        )
+                    }
+                }
+
                 HorizontalDivider(
                     color = Color(0xFF2A2A4A),
                     thickness = 0.5.dp

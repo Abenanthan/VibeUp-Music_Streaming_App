@@ -34,6 +34,7 @@ import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.presentation.home.SongOptionsDialog
+import com.vibeup.android.presentation.library.DownloadsViewModel
 import com.vibeup.android.presentation.library.LibraryViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.theme.DarkCard
@@ -46,7 +47,8 @@ fun SearchScreen(
     navController: NavController,
     viewModel: SearchViewModel = hiltViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    libraryViewModel: LibraryViewModel = hiltViewModel()
+    libraryViewModel: LibraryViewModel = hiltViewModel(),
+    downloadsViewModel: DownloadsViewModel = hiltViewModel()
 ) {
     val query by viewModel.query.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
@@ -259,6 +261,9 @@ fun SearchScreen(
                                         playlistId,
                                         song
                                     )
+                                },
+                                onDownload = { quality ->
+                                    downloadsViewModel.downloadSong(song, quality)
                                 }
                             )
                         }
@@ -275,7 +280,8 @@ fun SearchSongItem(
     playlists: List<Playlist> = emptyList(),
     onClick: () -> Unit,
     onLike: () -> Unit = {},
-    onAddToPlaylist: (String) -> Unit = {}
+    onAddToPlaylist: (String) -> Unit = {},
+    onDownload: (String) -> Unit = {}
 ) {
     var showOptions by remember { mutableStateOf(false) }
 
@@ -285,7 +291,8 @@ fun SearchSongItem(
             playlists = playlists,
             onDismiss = { showOptions = false },
             onLike = onLike,
-            onAddToPlaylist = onAddToPlaylist
+            onAddToPlaylist = onAddToPlaylist,
+            onDownload = onDownload
         )
     }
 
