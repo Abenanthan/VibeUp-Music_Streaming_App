@@ -6,4 +6,5 @@ interface SongRepository {
     suspend fun searchSongs(query: String): List<Song>
     suspend fun getSongsByLanguage(language: String): List<Song>
     suspend fun extractAudioUrl(youtubeUrl: String): String
+    suspend fun getSongById(id: String): Song?
 }

@@ -23,8 +23,8 @@ class HomeViewModel @Inject constructor(
     private val libraryRepository: LibraryRepository
 ) : ViewModel() {
 
-    private val favouriteIds = listOf(
-        "GWwnRe0u", "rjkrTnma", "m1iXOUID", "mPTrDSun",
+    private val favouriteIds = listOf( //2 4
+        "GWwnRe0u", "cDHlLKvW", "m1iXOUID", "_KjTxjcC",
         "__YIeFT-", "uP7MlTHz", "eLm-JvK4", "SM-rvz75",
         "qcVqPqk5", "vRNpPA7_", "yBmo2qWU", "QWLY3Ls_",
         "QkFUdVod", "BH07HVc8", "kehuVn2F"
