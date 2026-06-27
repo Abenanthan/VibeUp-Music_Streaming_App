@@ -27,6 +27,9 @@ class LibraryViewModel @Inject constructor(
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
 
+    private val _recentlyPlayed = MutableStateFlow<List<Song>>(emptyList())
+    val recentlyPlayed: StateFlow<List<Song>> = _recentlyPlayed.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -39,12 +42,21 @@ class LibraryViewModel @Inject constructor(
     init {
         loadLikedSongs()
         loadPlaylists()
+        loadRecentlyPlayed()
     }
 
     private fun loadLikedSongs() {
         viewModelScope.launch {
             libraryRepository.getLikedSongs().collect {
                 _likedSongs.value = it
+            }
+        }
+    }
+
+    private fun loadRecentlyPlayed() {
+        viewModelScope.launch {
+            libraryRepository.getRecentlyPlayed().collect {
+                _recentlyPlayed.value = it
             }
         }
     }

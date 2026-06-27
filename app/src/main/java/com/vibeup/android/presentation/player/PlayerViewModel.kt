@@ -13,11 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.vibeup.android.domain.repository.LibraryRepository
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val playerManager: PlayerManager,
-    private val playSongUseCase: PlaySongUseCase
+    private val playSongUseCase: PlaySongUseCase,
+    private val libraryRepository: LibraryRepository
 ) : ViewModel() {
 
     val currentSong: StateFlow<Song?> = playerManager.currentSong
@@ -34,6 +36,35 @@ class PlayerViewModel @Inject constructor(
     // ✅ Track loading state
     private val _isResolvingUrl = MutableStateFlow(false)
     val isResolvingUrl: StateFlow<Boolean> = _isResolvingUrl.asStateFlow()
+
+    private val _isLiked = MutableStateFlow(false)
+    val isLiked: StateFlow<Boolean> = _isLiked.asStateFlow()
+
+    init {
+        // Watch current song and check liked status whenever it changes
+        viewModelScope.launch {
+            currentSong.collect { song ->
+                if (song != null) {
+                    _isLiked.value = libraryRepository.isLiked(song.id)
+                } else {
+                    _isLiked.value = false
+                }
+            }
+        }
+    }
+
+    fun toggleLike() {
+        val song = currentSong.value ?: return
+        viewModelScope.launch {
+            if (_isLiked.value) {
+                libraryRepository.unlikeSong(song.id)
+                _isLiked.value = false
+            } else {
+                libraryRepository.likeSong(song)
+                _isLiked.value = true
+            }
+        }
+    }
 
     fun playSong(song: Song, queue: List<Song> = emptyList()) {
         viewModelScope.launch {
@@ -85,6 +116,8 @@ class PlayerViewModel @Inject constructor(
             }
         }
     }
+
+
 
     fun playPrevious() = playerManager.playPrevious()
 

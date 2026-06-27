@@ -52,7 +52,7 @@ fun PlayerScreen(
     val currentLineIndex by lyricsViewModel.currentLineIndex.collectAsState()
     val showSynced by lyricsViewModel.showSynced.collectAsState()
 
-    var isLiked by remember { mutableStateOf(false) }
+    val isLiked by viewModel.isLiked.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -230,7 +230,7 @@ fun PlayerScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        IconButton(onClick = { isLiked = !isLiked }) {
+                        IconButton(onClick = { viewModel.toggleLike()}) {
                             Icon(
                                 imageVector = if (isLiked)
                                     Icons.Default.Favorite

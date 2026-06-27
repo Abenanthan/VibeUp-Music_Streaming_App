@@ -15,12 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.vibeup.android.Screen
 import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
@@ -38,6 +40,7 @@ fun LibraryScreen(
 ) {
     val likedSongs by viewModel.likedSongs.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val message by viewModel.message.collectAsState()
 
@@ -464,7 +467,7 @@ fun LibraryScreen(
                         }
                     } else {
                         items(likedSongs) { song ->
-                            LikedSongItem(
+                            LibrarySongItem(
                                 song = song,
                                 onPlay = {
                                     playerViewModel.playSong(song, likedSongs)
@@ -488,20 +491,34 @@ fun LibraryScreen(
                             color = Color(0xFFF3F4F6),
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF12122A)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Check Home screen\nfor recently played songs 🎵",
-                                color = Color(0xFF4B5563),
-                                fontSize = 13.sp,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    }
+                    if (recentlyPlayed.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF12122A)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "No recently played songs yet! 🎵",
+                                    color = Color(0xFF4B5563),
+                                    fontSize = 13.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        items(recentlyPlayed) { song ->
+                            LibrarySongItem(
+                                song = song,
+                                onPlay = {
+                                    playerViewModel.playSong(song, recentlyPlayed)
+                                }
                             )
+                            Spacer(modifier = Modifier.height(6.dp))
                         }
                     }
                 }
@@ -883,12 +900,12 @@ fun EmptyPlaylistCard(onClick: () -> Unit) {
     }
 }
 
-// ── Liked Song Item ──
+// ── Library Song Item ──
 @Composable
-fun LikedSongItem(
+fun LibrarySongItem(
     song: Song,
     onPlay: () -> Unit,
-    onUnlike: () -> Unit
+    onUnlike: (() -> Unit)? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -902,24 +919,14 @@ fun LikedSongItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Box(
+        AsyncImage(
+            model = song.imageUrl,
+            contentDescription = null,
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(PurplePrimary, BluePrimary)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.MusicNote,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(22.dp)
-            )
-        }
+                .clip(RoundedCornerShape(10.dp)),
+            contentScale = ContentScale.Crop
+        )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = song.title,
@@ -964,16 +971,18 @@ fun LikedSongItem(
                     },
                     onClick = { showMenu = false; onPlay() }
                 )
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            "Unlike",
-                            color = Color(0xFFEF4444),
-                            fontSize = 14.sp
-                        )
-                    },
-                    onClick = { showMenu = false; onUnlike() }
-                )
+                if (onUnlike != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "Unlike",
+                                color = Color(0xFFEF4444),
+                                fontSize = 14.sp
+                            )
+                        },
+                        onClick = { showMenu = false; onUnlike() }
+                    )
+                }
             }
         }
     }

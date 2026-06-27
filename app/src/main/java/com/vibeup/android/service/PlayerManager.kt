@@ -129,7 +129,6 @@ class PlayerManager @Inject constructor(
         return exoPlayer!!
     }
 
-
     // ✅ Smart shuffle — Spotify-style similarity scoring
     private fun smartShuffle(songs: List<Song>, currentSong: Song): List<Song> {
         if (songs.size <= 1) return songs
@@ -170,8 +169,6 @@ class PlayerManager @Inject constructor(
                 score += commonWords.size * 5f
 
                 // 2. Add "Entropy" (Randomness)
-                // Spotify's shuffle isn't pure logic; it injects weighted randomness
-                // to keep it feeling like a shuffle and not a sorted list.
                 val randomness = (0..30).random().toFloat()
                 
                 song to (score + randomness)
@@ -182,29 +179,35 @@ class PlayerManager @Inject constructor(
     }
 
     fun playSong(song: Song, queue: List<Song> = emptyList()) {
-        // ✅ Store original queue
         if (queue.isNotEmpty()) _queue.value = queue
-
         _currentSong.value = song
 
-        // ✅ Build active queue based on shuffle state
-        val activeQueue = when {
+        val startIndex: Int
+        val finalQueue: List<Song>
+
+        when {
             _isSmartShuffle.value -> {
-                listOf(song) + smartShuffle(_queue.value, song)
+                finalQueue = listOf(song) + smartShuffle(_queue.value, song)
+                startIndex = 0
             }
             _isShuffleEnabled.value -> {
-                listOf(song) + _queue.value
+                finalQueue = listOf(song) + _queue.value
                     .filter { it.id != song.id }
                     .shuffled()
+                startIndex = 0
             }
             else -> {
-                // ✅ Play from current song position in original queue
                 val index = _queue.value.indexOfFirst { it.id == song.id }
-                if (index >= 0) _queue.value
-                else listOf(song) + _queue.value
+                if (index >= 0) {
+                    finalQueue = _queue.value
+                    startIndex = index
+                } else {
+                    finalQueue = listOf(song) + _queue.value
+                    startIndex = 0
+                }
             }
         }
-        _activeQueue.value = activeQueue
+        _activeQueue.value = finalQueue
 
         try {
             context.startForegroundService(
@@ -215,7 +218,7 @@ class PlayerManager @Inject constructor(
         val player = getExoPlayer()
         audioEffectsManager.initialize(player.audioSessionId)
 
-        val items = activeQueue.map { s ->
+        val items = finalQueue.map { s ->
             MediaItem.Builder()
                 .setUri(s.audioUrl)
                 .setMediaMetadata(
@@ -224,20 +227,14 @@ class PlayerManager @Inject constructor(
                         .setArtist(s.artist)
                         .setAlbumTitle(s.album)
                         .setArtworkUri(s.imageUrl.toUri())
-                        .setDisplayTitle(s.title)
-                        .setSubtitle(s.artist)
                         .build()
                 )
                 .build()
         }
 
-        // ✅ Always start from index 0 (current song is first)
-        player.setMediaItems(items, 0, 0L)
-
-        // ✅ Set repeat ALL so it loops
+        player.setMediaItems(items, startIndex, 0L)
         player.repeatMode = Player.REPEAT_MODE_ALL
         _repeatMode.value = Player.REPEAT_MODE_ALL
-
         player.prepare()
         player.play()
 
@@ -277,24 +274,20 @@ class PlayerManager @Inject constructor(
         val wasShuffle = _isShuffleEnabled.value
 
         when {
-            // OFF → Smart Shuffle
             !wasShuffle && !wasSmartShuffle -> {
                 _isSmartShuffle.value = true
                 _isShuffleEnabled.value = false
             }
-            // Smart Shuffle → Normal Shuffle
             wasSmartShuffle -> {
                 _isSmartShuffle.value = false
                 _isShuffleEnabled.value = true
             }
-            // Normal Shuffle → OFF
             wasShuffle -> {
                 _isShuffleEnabled.value = false
                 _isSmartShuffle.value = false
             }
         }
 
-        // Apply to current playback if active
         val currentSong = _currentSong.value
         if (currentSong != null) {
             when {
@@ -306,26 +299,22 @@ class PlayerManager @Inject constructor(
     }
 
     private fun applySmartShuffle(currentSong: Song) {
-        val newQueue = listOf(currentSong) +
-                smartShuffle(_queue.value, currentSong)
+        val newQueue = listOf(currentSong) + smartShuffle(_queue.value, currentSong)
         _activeQueue.value = newQueue
         reloadPlayerQueue(newQueue, 0)
     }
 
     private fun applyNormalShuffle(currentSong: Song) {
-        val newQueue = listOf(currentSong) +
-                _queue.value.filter { it.id != currentSong.id }.shuffled()
+        val newQueue = listOf(currentSong) + _queue.value.filter { it.id != currentSong.id }.shuffled()
         _activeQueue.value = newQueue
         reloadPlayerQueue(newQueue, 0)
     }
 
     private fun restoreLinearQueue(currentSong: Song) {
         val index = _queue.value.indexOfFirst { it.id == currentSong.id }
-        val newQueue = if (index >= 0) _queue.value
-        else listOf(currentSong) + _queue.value
+        val newQueue = if (index >= 0) _queue.value else listOf(currentSong) + _queue.value
         _activeQueue.value = newQueue
-        val startIndex = newQueue.indexOfFirst { it.id == currentSong.id }
-            .coerceAtLeast(0)
+        val startIndex = newQueue.indexOfFirst { it.id == currentSong.id }.coerceAtLeast(0)
         reloadPlayerQueue(newQueue, startIndex)
     }
 
@@ -367,7 +356,6 @@ class PlayerManager @Inject constructor(
             currentQueue[index] = song
             _activeQueue.value = currentQueue
 
-            // Update ExoPlayer media item
             val mediaItem = MediaItem.Builder()
                 .setUri(song.audioUrl)
                 .setMediaMetadata(
@@ -399,10 +387,6 @@ class PlayerManager @Inject constructor(
 
     private fun stopTracking() {
         progressJob?.cancel()
-    }
-
-    fun saveCurrentState() {
-        android.util.Log.d("PlayerManager", "State save called")
     }
 
     fun resetState() {
