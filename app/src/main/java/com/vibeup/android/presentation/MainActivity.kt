@@ -113,15 +113,34 @@ class MainActivity : ComponentActivity() {
                                     containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     bottomNavItems.forEach { item ->
+                                        val isSelected = when (item.route) {
+                                            Screen.Home.route -> currentRoute == Screen.Home.route || 
+                                                                currentRoute?.startsWith(Screen.Playlist.route) == true ||
+                                                                currentRoute == Screen.Profile.route ||
+                                                                currentRoute == Screen.AudioEffects.route ||
+                                                                currentRoute == Screen.Lyrics.route
+                                            Screen.Library.route -> currentRoute == Screen.Library.route || 
+                                                                   currentRoute == Screen.Downloads.route ||
+                                                                   currentRoute?.startsWith(Screen.AddSongs.route) == true
+                                            else -> currentRoute == item.route
+                                        }
+
                                         NavigationBarItem(
-                                            selected = currentRoute == item.route,
+                                            selected = isSelected,
                                             onClick = {
-                                                navController.navigate(item.route) {
-                                                    popUpTo(Screen.Home.route) {
-                                                        saveState = true
+                                                if (isSelected) {
+                                                    // If already on this tab or its sub-screen, pop to root
+                                                    if (currentRoute != item.route) {
+                                                        navController.popBackStack(item.route, inclusive = false)
                                                     }
-                                                    launchSingleTop = true
-                                                    restoreState = true
+                                                } else {
+                                                    navController.navigate(item.route) {
+                                                        popUpTo(Screen.Home.route) {
+                                                            saveState = true
+                                                        }
+                                                        launchSingleTop = true
+                                                        restoreState = true
+                                                    }
                                                 }
                                             },
                                             icon = {
