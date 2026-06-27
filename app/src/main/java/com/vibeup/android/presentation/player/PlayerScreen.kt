@@ -45,6 +45,7 @@ fun PlayerScreen(
     val currentPosition by viewModel.currentPosition.collectAsState()
     val duration by viewModel.duration.collectAsState()
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
+    val isSmartShuffle by viewModel.isSmartShuffle.collectAsState()
     val repeatMode by viewModel.repeatMode.collectAsState()
     val isResolvingUrl by viewModel.isResolvingUrl.collectAsState()
     val lyricsState by lyricsViewModel.lyricsState.collectAsState()
@@ -296,18 +297,33 @@ fun PlayerScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
-                            onClick = { viewModel.toggleShuffle() }
-                        ) {
-                            Icon(
-                                Icons.Default.Shuffle,
-                                contentDescription = "Shuffle",
-                                tint = if (isShuffleEnabled)
-                                    PurplePrimary
-                                else
-                                    Color.White,
-                                modifier = Modifier.size(26.dp)
-                            )
+                        // ✅ Smart Shuffle button with 3 states
+                        IconButton(onClick = { viewModel.toggleShuffle() }) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shuffle,
+                                    contentDescription = "Shuffle",
+                                    tint = when {
+                                        isSmartShuffle -> Color(0xFF10B981) // green = smart
+                                        isShuffleEnabled -> PurplePrimary   // purple = normal
+                                        else -> Color.White                  // white = off
+                                    },
+                                    modifier = Modifier.size(26.dp)
+                                )
+                                // ✅ Show mode label
+                                if (isSmartShuffle || isShuffleEnabled) {
+                                    Text(
+                                        text = if (isSmartShuffle) "Smart" else "Shuffle",
+                                        fontSize = 8.sp,
+                                        color = if (isSmartShuffle)
+                                            Color(0xFF10B981)
+                                        else
+                                            PurplePrimary
+                                    )
+                                }
+                            }
                         }
 
                         IconButton(

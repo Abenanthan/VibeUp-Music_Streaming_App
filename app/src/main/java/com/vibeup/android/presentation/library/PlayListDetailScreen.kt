@@ -46,6 +46,8 @@ fun PlaylistDetailScreen(
     val playlistSongs by viewModel.getPlaylistSongs(playlistId)
         .collectAsState(initial = emptyList())
     val sortOrder by viewModel.sortOrder.collectAsState()
+    val isShuffleEnabled by playerViewModel.isShuffleEnabled.collectAsState()
+    val isSmartShuffle by playerViewModel.isSmartShuffle.collectAsState()
 
     val sortedSongs = remember(playlistSongs, sortOrder) {
         when (sortOrder) {
@@ -71,7 +73,6 @@ fun PlaylistDetailScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(playlist?.name ?: "") }
-    var isShuffled by remember { mutableStateOf(false) }
 
     if (showRenameDialog) {
         AlertDialog(
@@ -378,22 +379,20 @@ fun PlaylistDetailScreen(
 
                     // Shuffle
                     Button(
-                        onClick = {
-                            isShuffled = !isShuffled
-                            if (filteredSongs.isNotEmpty()) {
-                                val shuffled = filteredSongs.shuffled()
-                                playerViewModel.playSong(
-                                    shuffled.first(),
-                                    shuffled
-                                )
+                        onClick = { 
+                            playerViewModel.toggleShuffle() 
+                            // If not playing, start playing first song with new shuffle mode
+                            if (playerViewModel.currentSong.value == null && filteredSongs.isNotEmpty()) {
+                                playerViewModel.playSong(filteredSongs.shuffled().first(), filteredSongs)
                             }
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isShuffled)
-                                PurplePrimary.copy(alpha = 0.3f)
-                            else
-                                Color(0xFF12122A)
+                            containerColor = when {
+                                isSmartShuffle -> Color(0xFF10B981).copy(alpha = 0.2f)
+                                isShuffleEnabled -> PurplePrimary.copy(alpha = 0.2f)
+                                else -> Color(0xFF12122A)
+                            }
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -404,14 +403,24 @@ fun PlaylistDetailScreen(
                             Icon(
                                 Icons.Default.Shuffle,
                                 contentDescription = null,
-                                tint = if (isShuffled) PurplePrimary
-                                else Color(0xFF9CA3AF),
+                                tint = when {
+                                    isSmartShuffle -> Color(0xFF10B981)
+                                    isShuffleEnabled -> PurplePrimary
+                                    else -> Color(0xFF9CA3AF)
+                                },
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                "Shuffle",
-                                color = if (isShuffled) PurplePrimary
-                                else Color(0xFF9CA3AF),
+                                text = when {
+                                    isSmartShuffle -> "Smart"
+                                    isShuffleEnabled -> "Shuffle"
+                                    else -> "Shuffle"
+                                },
+                                color = when {
+                                    isSmartShuffle -> Color(0xFF10B981)
+                                    isShuffleEnabled -> PurplePrimary
+                                    else -> Color(0xFF9CA3AF)
+                                },
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -597,7 +606,8 @@ fun PlaylistDetailScreen(
                         index = sortedSongs.indexOf(song) + 1,
                         context = context,
                         onClick = {
-                            playerViewModel.playSong(song, filteredSongs)
+                            // ✅ Play full playlist queue starting from this song
+                            playerViewModel.playSong(song, sortedSongs)
                         },
                         onLike = {
                             viewModel.likeSong(song)

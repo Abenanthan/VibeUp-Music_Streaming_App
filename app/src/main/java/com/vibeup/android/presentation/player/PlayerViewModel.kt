@@ -25,7 +25,9 @@ class PlayerViewModel @Inject constructor(
     val currentPosition: StateFlow<Long> = playerManager.currentPosition
     val duration: StateFlow<Long> = playerManager.duration
     val queue: StateFlow<List<Song>> = playerManager.queue
+    val activeQueue: StateFlow<List<Song>> = playerManager.activeQueue
     val isShuffleEnabled: StateFlow<Boolean> = playerManager.isShuffleEnabled
+    val isSmartShuffle: StateFlow<Boolean> = playerManager.isSmartShuffle
     val repeatMode: StateFlow<Int> = playerManager.repeatMode
     val isRestored = playerManager.isRestored
 
@@ -43,20 +45,18 @@ class PlayerViewModel @Inject constructor(
                 }
 
                 // ✅ Also resolve URLs for queue items
-                // (resolve first 3 items eagerly, rest lazily)
                 val resolvedQueue = if (queue.isEmpty()) {
                     listOf(playableSong)
                 } else {
                     queue.map { queueSong ->
                         if (queueSong.id == song.id) playableSong
-                        else queueSong // resolve others when needed
+                        else queueSong
                     }
                 }
 
                 playerManager.playSong(playableSong, resolvedQueue)
             } catch (e: Exception) {
                 android.util.Log.e("PlayerVM", "PlaySong error: ${e.message}")
-                // Fallback — try playing with original URL
                 playerManager.playSong(song, queue)
             } finally {
                 _isResolvingUrl.value = false
@@ -72,17 +72,14 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val player = playerManager.getExoPlayer()
             val nextIndex = player.currentMediaItemIndex + 1
-            val queue = playerManager.queue.value
+            val active = playerManager.activeQueue.value
 
-            if (nextIndex < queue.size) {
-                val nextSong = queue[nextIndex]
+            if (nextIndex < active.size) {
+                val nextSong = active[nextIndex]
                 // ✅ Resolve URL for next song before playing
                 val playable = withContext(Dispatchers.IO) {
                     playSongUseCase(nextSong)
                 }
-                // Update queue with resolved song
-                val updatedQueue = queue.toMutableList()
-                updatedQueue[nextIndex] = playable
                 playerManager.updateQueueItem(nextIndex, playable)
                 player.seekToNextMediaItem()
             }
