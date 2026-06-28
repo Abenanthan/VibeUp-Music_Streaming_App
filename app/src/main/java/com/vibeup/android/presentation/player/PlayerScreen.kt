@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.vibeup.android.Screen
+import com.vibeup.android.presentation.library.DownloadsViewModel
 import com.vibeup.android.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 fun PlayerScreen(
     navController: NavController,
     viewModel: PlayerViewModel = hiltViewModel(),
+    downloadsViewModel: DownloadsViewModel = hiltViewModel(),
     lyricsViewModel: LyricsViewModel = activityViewModel()
 ) {
     val currentSong by viewModel.currentSong.collectAsState()
@@ -56,6 +58,21 @@ fun PlayerScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val activeQueue by viewModel.activeQueue.collectAsState()
+
+    val downloads by downloadsViewModel.downloads.collectAsState(initial = emptyList())
+    val isDownloaded = remember(currentSong, downloads) {
+        downloads.any { it.id == currentSong?.id }
+    }
+
+    var showDownloadQualities by remember { mutableStateOf(false) }
+    val downloadMessage by downloadsViewModel.message.collectAsState()
+
+    LaunchedEffect(downloadMessage) {
+        if (downloadMessage != null) {
+            kotlinx.coroutines.delay(3000)
+            downloadsViewModel.clearMessage()
+        }
+    }
 
     // ✅ Load lyrics as soon as song is available
     /*LaunchedEffect(currentSong?.id) {
@@ -243,7 +260,7 @@ fun PlayerScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        IconButton(onClick = { viewModel.toggleLike()}) {
+                        IconButton(onClick = { viewModel.toggleLike() }) {
                             Icon(
                                 imageVector = if (isLiked)
                                     Icons.Default.Favorite
@@ -256,6 +273,41 @@ fun PlayerScreen(
                                     Color.White,
                                 modifier = Modifier.size(28.dp)
                             )
+                        }
+
+                        Box {
+                            IconButton(onClick = { showDownloadQualities = true }) {
+                                Icon(
+                                    imageVector = if (isDownloaded) 
+                                        Icons.Default.DownloadDone 
+                                    else 
+                                        Icons.Default.Download,
+                                    contentDescription = "Download",
+                                    tint = if (isDownloaded) Color(0xFF10B981) else Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showDownloadQualities,
+                                onDismissRequest = { showDownloadQualities = false },
+                                modifier = Modifier.background(Color(0xFF1C1C3A))
+                            ) {
+                                listOf("320kbps", "160kbps", "96kbps").forEach { quality ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                quality,
+                                                color = Color.White,
+                                                fontSize = 14.sp
+                                            )
+                                        },
+                                        onClick = {
+                                            showDownloadQualities = false
+                                            downloadsViewModel.downloadSong(song, quality)
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
@@ -676,42 +728,30 @@ fun PlayerScreen(
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         } ?: run {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            // No track selection UI placeholder
+        }
+
+        // ✅ Download Status Feedback
+        downloadMessage?.let { msg ->
+            Card(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .padding(bottom = 80.dp) 
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = PurplePrimary
+                )
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(32.dp)
-                ) {
-                    Text("🎵", fontSize = 64.sp)
-                    Text(
-                        "No track selected",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        "Pick a song to start the vibe!",
-                        color = TextSecondary,
-                        fontSize = 14.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { navController.popBackStack() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PurplePrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            "Explore Music",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+                Text(
+                    text = msg,
+                    modifier = Modifier.padding(14.dp),
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

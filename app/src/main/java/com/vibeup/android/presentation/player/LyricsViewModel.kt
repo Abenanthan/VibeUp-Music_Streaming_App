@@ -108,109 +108,94 @@ class LyricsViewModel @Inject constructor(
 
     private suspend fun fetchLyrics(song: Song): LyricsState {
         return withContext(Dispatchers.IO) {
-            // ✅ Step 1 — Check local Room cache (instant)
+            // ✅ Step 1 — Check local Room cache
             val cached = lyricsDao.getLyrics(song.id)
             if (cached != null) {
-                android.util.Log.d("Lyrics", "Cache hit: ${song.title}")
                 return@withContext buildStateFromCache(cached)
             }
 
-            android.util.Log.d("Lyrics", "Fetching: ${song.title}")
-
-            // ✅ Step 2 — Fetch from BOTH providers in parallel
-            val lrclibDeferred = async {
-                withTimeoutOrNull(5000) {
-                    fetchFromLrclib(song)
+            // ✅ Step 2 — Try with original details first
+            var result = tryFetchAll(song.artist, song.title, song.album)
+            
+            // ✅ Step 3 — Fallback: Try with cleaned details if not found
+            if (result is LyricsState.NotFound) {
+                val cleanedArtist = cleanArtist(song.artist)
+                val cleanedTitle = cleanTitle(song.title)
+                
+                if (cleanedArtist != song.artist || cleanedTitle != song.title) {
+                    android.util.Log.d("Lyrics", "Retrying with cleaned: $cleanedArtist - $cleanedTitle")
+                    result = tryFetchAll(cleanedArtist, cleanedTitle, null)
                 }
             }
-            val ovhDeferred = async {
-                withTimeoutOrNull(5000) {
-                    fetchFromLyricsOvh(song)
-                }
+
+            // ✅ Cache to Room DB
+            if (result !is LyricsState.Loading && result !is LyricsState.Idle) {
+                saveToDB(song.id, result)
             }
 
-            // ✅ Use first synced result, fallback to plain
-            val lrclibResult = lrclibDeferred.await()
-            val ovhResult = ovhDeferred.await()
-
-            val finalResult = when {
-                // Prefer synced from LRCLIB
-                lrclibResult is LyricsState.SyncedLoaded -> lrclibResult
-                // Then plain from LRCLIB
-                lrclibResult is LyricsState.PlainLoaded -> lrclibResult
-                // Then lyrics.ovh
-                ovhResult is LyricsState.PlainLoaded -> ovhResult
-                // Instrumental
-                lrclibResult is LyricsState.Instrumental -> lrclibResult
-                // Not found
-                else -> LyricsState.NotFound
-            }
-
-            // ✅ Cache to Room DB for future instant load
-            saveToDB(song.id, finalResult)
-
-            finalResult
+            result
         }
     }
 
-    private suspend fun fetchFromLrclib(song: Song): LyricsState {
+    private suspend fun tryFetchAll(artist: String, title: String, album: String?): LyricsState {
+        // Fetch from BOTH providers in parallel
+        val lrclibDeferred = viewModelScope.async(Dispatchers.IO) {
+            withTimeoutOrNull(5000) { fetchFromLrclib(artist, title, album) }
+        }
+        val ovhDeferred = viewModelScope.async(Dispatchers.IO) {
+            withTimeoutOrNull(5000) { fetchFromLyricsOvh(artist, title) }
+        }
+
+        val lrclibResult = lrclibDeferred.await()
+        val ovhResult = ovhDeferred.await()
+
+        return when {
+            lrclibResult is LyricsState.SyncedLoaded -> lrclibResult
+            lrclibResult is LyricsState.PlainLoaded -> lrclibResult
+            ovhResult is LyricsState.PlainLoaded -> ovhResult
+            lrclibResult is LyricsState.Instrumental -> lrclibResult
+            else -> LyricsState.NotFound
+        }
+    }
+
+    private suspend fun fetchFromLrclib(artist: String, title: String, album: String?): LyricsState {
         return try {
             val response = lyricsApiService.getLyrics(
-                artistName = cleanArtist(song.artist),
-                trackName = cleanTitle(song.title),
-                albumName = song.album
+                artistName = artist,
+                trackName = title,
+                albumName = album ?: ""
             )
 
             when {
-                response.instrumental == true ->
-                    LyricsState.Instrumental
-
+                response.instrumental == true -> LyricsState.Instrumental
                 response.syncedLyrics != null -> {
                     val lines = parseSyncedLyrics(response.syncedLyrics)
-                    if (lines.isNotEmpty())
-                        LyricsState.SyncedLoaded(lines)
-                    else if (response.plainLyrics != null)
-                        LyricsState.PlainLoaded(response.plainLyrics)
-                    else
-                        searchLrclib(song)
+                    if (lines.isNotEmpty()) LyricsState.SyncedLoaded(lines)
+                    else if (response.plainLyrics != null) LyricsState.PlainLoaded(response.plainLyrics)
+                    else searchLrclib(artist, title)
                 }
-
-                response.plainLyrics != null ->
-                    LyricsState.PlainLoaded(response.plainLyrics)
-
-                else -> searchLrclib(song)
+                response.plainLyrics != null -> LyricsState.PlainLoaded(response.plainLyrics)
+                else -> searchLrclib(artist, title)
             }
         } catch (e: Exception) {
-            searchLrclib(song)
+            searchLrclib(artist, title)
         }
     }
 
-    private suspend fun searchLrclib(song: Song): LyricsState {
+    private suspend fun searchLrclib(artist: String, title: String): LyricsState {
         return try {
-            val results = lyricsApiService.searchLyrics(
-                artistName = cleanArtist(song.artist),
-                trackName = cleanTitle(song.title)
-            )
-            val first = results.firstOrNull()
-                ?: return LyricsState.NotFound
+            val results = lyricsApiService.searchLyrics(artistName = artist, trackName = title)
+            val first = results.firstOrNull() ?: return LyricsState.NotFound
 
             when {
-                first.instrumental == true ->
-                    LyricsState.Instrumental
-
+                first.instrumental == true -> LyricsState.Instrumental
                 first.syncedLyrics != null -> {
                     val lines = parseSyncedLyrics(first.syncedLyrics)
-                    if (lines.isNotEmpty())
-                        LyricsState.SyncedLoaded(lines)
-                    else if (first.plainLyrics != null)
-                        LyricsState.PlainLoaded(first.plainLyrics)
-                    else
-                        LyricsState.NotFound
+                    if (lines.isNotEmpty()) LyricsState.SyncedLoaded(lines)
+                    else if (first.plainLyrics != null) LyricsState.PlainLoaded(first.plainLyrics)
+                    else LyricsState.NotFound
                 }
-
-                first.plainLyrics != null ->
-                    LyricsState.PlainLoaded(first.plainLyrics)
-
+                first.plainLyrics != null -> LyricsState.PlainLoaded(first.plainLyrics)
                 else -> LyricsState.NotFound
             }
         } catch (e: Exception) {
@@ -218,12 +203,9 @@ class LyricsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchFromLyricsOvh(song: Song): LyricsState {
+    private suspend fun fetchFromLyricsOvh(artist: String, title: String): LyricsState {
         return try {
-            val response = lyricsOvhApiService.getLyrics(
-                artist = cleanArtist(song.artist),
-                title = cleanTitle(song.title)
-            )
+            val response = lyricsOvhApiService.getLyrics(artist = artist, title = title)
             if (!response.lyrics.isNullOrBlank()) {
                 LyricsState.PlainLoaded(response.lyrics.trim())
             } else {
@@ -317,14 +299,21 @@ class LyricsViewModel @Inject constructor(
         return lines.sortedBy { it.timeMs }
     }
 
-    private fun cleanArtist(artist: String) =
-        artist.split(",", "&", "feat.", "ft.", "Feat.", "Ft.")
-            .first().trim()
-
-    private fun cleanTitle(title: String) =
-        title.replace(Regex("\\(.*?\\)"), "")
-            .replace(Regex("\\[.*?\\]"), "")
+    private fun cleanArtist(artist: String): String {
+        return artist.split(",", "&", "feat.", "ft.", "Feat.", "Ft.", "By", "by", "|")
+            .first()
+            .replace(Regex("[^a-zA-Z0-9 ]"), "")
             .trim()
+    }
+
+    private fun cleanTitle(title: String): String {
+        return title.replace(Regex("\\(.*?\\)"), "")
+            .replace(Regex("\\[.*?\\]"), "")
+            .replace(Regex("- From \".*?\""), "")
+            .replace(Regex("- .*?$"), "")
+            .replace(Regex("[^a-zA-Z0-9 ]"), "")
+            .trim()
+    }
 
     fun toggleDisplayMode() {
         _showSynced.value = !_showSynced.value
