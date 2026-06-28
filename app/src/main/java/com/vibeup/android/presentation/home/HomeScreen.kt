@@ -179,10 +179,12 @@ fun HomeScreen(
                         context = context,
                         playlists = libraryPlaylists,
                         onSongClick = { 
+                            // ✅ Normal Shuffle for curated sections
                             if (!isShuffleEnabled && !isSmartShuffle) {
-                                playerViewModel.toggleShuffle() // Set to Smart Shuffle
+                                playerViewModel.toggleShuffle() // Moves to Smart
+                                playerViewModel.toggleShuffle() // Moves to Normal
                             }
-                            playerViewModel.playSong(it, favouriteSongs) 
+                            playerViewModel.playSong(it, favouriteSongs, "home_favs")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
@@ -210,7 +212,7 @@ fun HomeScreen(
                             playlists = libraryPlaylists,
                             onSongClick = { 
                                 // Keep linear for recently played
-                                playerViewModel.playSong(it, recentlyPlayed) 
+                                playerViewModel.playSong(it, recentlyPlayed, "home_recent")
                             },
                             onLike = { libraryViewModel.likeSong(it) },
                             onAddToPlaylist = { id, song ->
@@ -234,12 +236,13 @@ fun HomeScreen(
                         moods = moods,
                         onMoodClick = { songs ->
                             if (songs.isNotEmpty()) {
-                                // ✅ Ensure shuffle is ON for moods and start with a random song
+                                // ✅ Normal Shuffle for moods
                                 if (!isShuffleEnabled && !isSmartShuffle) {
-                                    playerViewModel.toggleShuffle() // Set to Smart Shuffle
+                                    playerViewModel.toggleShuffle()
+                                    playerViewModel.toggleShuffle()
                                 }
                                 val randomStart = songs.random()
-                                playerViewModel.playSong(randomStart, songs)
+                                playerViewModel.playSong(randomStart, songs, "home_moods")
                             }
                         }
                     )
@@ -259,8 +262,9 @@ fun HomeScreen(
                         onSongClick = { 
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
+                                playerViewModel.toggleShuffle()
                             }
-                            playerViewModel.playSong(it, trendingSongs) 
+                            playerViewModel.playSong(it, trendingSongs, "home_trending")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
@@ -286,8 +290,9 @@ fun HomeScreen(
                         onSongClick = { 
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
+                                playerViewModel.toggleShuffle()
                             }
-                            playerViewModel.playSong(it, newReleases) 
+                            playerViewModel.playSong(it, newReleases, "home_new")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
@@ -322,8 +327,9 @@ fun HomeScreen(
                         onSongClick = { song, queue ->
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
+                                playerViewModel.toggleShuffle()
                             }
-                            playerViewModel.playSong(song, queue)
+                            playerViewModel.playSong(song, queue, "home_artists")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
@@ -349,8 +355,9 @@ fun HomeScreen(
                         onSongClick = { 
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
+                                playerViewModel.toggleShuffle()
                             }
-                            playerViewModel.playSong(it, tamilSongs) 
+                            playerViewModel.playSong(it, tamilSongs, "home_tamil")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
@@ -376,8 +383,9 @@ fun HomeScreen(
                         onSongClick = { 
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
+                                playerViewModel.toggleShuffle()
                             }
-                            playerViewModel.playSong(it, teluguSongs) 
+                            playerViewModel.playSong(it, teluguSongs, "home_telugu")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->
@@ -403,8 +411,9 @@ fun HomeScreen(
                         onSongClick = { 
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
+                                playerViewModel.toggleShuffle()
                             }
-                            playerViewModel.playSong(it, hindiSongs) 
+                            playerViewModel.playSong(it, hindiSongs, "home_hindi")
                         },
                         onLike = { libraryViewModel.likeSong(it) },
                         onAddToPlaylist = { id, song ->

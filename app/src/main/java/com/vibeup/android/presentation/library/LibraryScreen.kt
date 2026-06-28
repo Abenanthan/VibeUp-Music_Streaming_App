@@ -470,7 +470,7 @@ fun LibraryScreen(
                             LibrarySongItem(
                                 song = song,
                                 onPlay = {
-                                    playerViewModel.playSong(song, likedSongs)
+                                    playerViewModel.playSong(song, likedSongs, "library_liked")
                                 },
                                 onUnlike = {
                                     viewModel.unlikeSong(song.id)
@@ -515,7 +515,7 @@ fun LibraryScreen(
                             LibrarySongItem(
                                 song = song,
                                 onPlay = {
-                                    playerViewModel.playSong(song, recentlyPlayed)
+                                    playerViewModel.playSong(song, recentlyPlayed, "library_recent")
                                 }
                             )
                             Spacer(modifier = Modifier.height(6.dp))

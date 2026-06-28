@@ -31,6 +31,7 @@ class PlayerViewModel @Inject constructor(
     val isShuffleEnabled: StateFlow<Boolean> = playerManager.isShuffleEnabled
     val isSmartShuffle: StateFlow<Boolean> = playerManager.isSmartShuffle
     val repeatMode: StateFlow<Int> = playerManager.repeatMode
+    val currentQueueId: StateFlow<String?> = playerManager.currentQueueId
     val isRestored = playerManager.isRestored
 
     // ✅ Track loading state
@@ -66,7 +67,7 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun playSong(song: Song, queue: List<Song> = emptyList()) {
+    fun playSong(song: Song, queue: List<Song> = emptyList(), queueId: String? = null) {
         viewModelScope.launch {
             _isResolvingUrl.value = true
             try {
@@ -85,10 +86,10 @@ class PlayerViewModel @Inject constructor(
                     }
                 }
 
-                playerManager.playSong(playableSong, resolvedQueue)
+                playerManager.playSong(playableSong, resolvedQueue, queueId)
             } catch (e: Exception) {
                 android.util.Log.e("PlayerVM", "PlaySong error: ${e.message}")
-                playerManager.playSong(song, queue)
+                playerManager.playSong(song, queue, queueId)
             } finally {
                 _isResolvingUrl.value = false
             }

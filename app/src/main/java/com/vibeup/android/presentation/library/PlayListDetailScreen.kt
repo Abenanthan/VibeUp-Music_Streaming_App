@@ -48,6 +48,7 @@ fun PlaylistDetailScreen(
     val sortOrder by viewModel.sortOrder.collectAsState()
     val isShuffleEnabled by playerViewModel.isShuffleEnabled.collectAsState()
     val isSmartShuffle by playerViewModel.isSmartShuffle.collectAsState()
+    val currentQueueId by playerViewModel.currentQueueId.collectAsState()
 
     val sortedSongs = remember(playlistSongs, sortOrder) {
         when (sortOrder) {
@@ -326,79 +327,76 @@ fun PlaylistDetailScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Play All
-                    Button(
+                    // ✅ Spotify-style Circular Play Button (Now on the Left)
+                    Surface(
                         onClick = {
                             if (filteredSongs.isNotEmpty()) {
-                                playerViewModel.playSong(
-                                    filteredSongs.first(),
-                                    filteredSongs
-                                )
+                                val isThisPlaylistPlaying = currentQueueId == playlistId
+
+                                if (isThisPlaylistPlaying) {
+                                    playerViewModel.togglePlayPause()
+                                } else {
+                                    // Start playing based on user preference
+                                    val startSong = when {
+                                        isSmartShuffle || isShuffleEnabled -> filteredSongs.random()
+                                        else -> filteredSongs.first()
+                                    }
+                                    playerViewModel.playSong(startSong, filteredSongs, playlistId)
+                                }
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        ),
-                        contentPadding = PaddingValues(0.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = CircleShape,
+                        color = Color.Transparent,
+                        modifier = Modifier.size(56.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
+                                .fillMaxSize()
                                 .background(
                                     Brush.linearGradient(
                                         colors = listOf(PurplePrimary, BluePrimary)
                                     ),
-                                    RoundedCornerShape(12.dp)
+                                    CircleShape
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
+                            val isPlaying by playerViewModel.isPlaying.collectAsState()
+                            val isThisPlaylistPlaying = currentQueueId == playlistId
+
+                            Icon(
+                                imageVector = if (isPlaying && isThisPlaylistPlaying) 
+                                    Icons.Default.Pause 
+                                else 
                                     Icons.Default.PlayArrow,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    "Play All",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                            }
+                                contentDescription = "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
                     }
 
-                    // Shuffle
-                    Button(
-                        onClick = { 
-                            playerViewModel.toggleShuffle() 
-                            // If not playing, start playing first song with new shuffle mode
-                            if (playerViewModel.currentSong.value == null && filteredSongs.isNotEmpty()) {
-                                playerViewModel.playSong(filteredSongs.shuffled().first(), filteredSongs)
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = when {
-                                isSmartShuffle -> Color(0xFF10B981).copy(alpha = 0.2f)
-                                isShuffleEnabled -> PurplePrimary.copy(alpha = 0.2f)
-                                else -> Color(0xFF12122A)
-                            }
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // Shuffle Mode Toggle (Setting)
+                        Button(
+                            onClick = { 
+                                playerViewModel.toggleShuffle() 
+                                // ✅ Switch context to THIS playlist if not playing
+                                if (currentQueueId != playlistId && filteredSongs.isNotEmpty()) {
+                                    playerViewModel.playSong(filteredSongs.random(), filteredSongs, playlistId)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = when {
+                                    isSmartShuffle -> Color(0xFF10B981).copy(alpha = 0.2f)
+                                    isShuffleEnabled -> PurplePrimary.copy(alpha = 0.2f)
+                                    else -> Color(0xFF12122A)
+                                }
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(40.dp)
                         ) {
                             Icon(
                                 Icons.Default.Shuffle,
@@ -410,51 +408,37 @@ fun PlaylistDetailScreen(
                                 },
                                 modifier = Modifier.size(16.dp)
                             )
+                            Spacer(Modifier.width(6.dp))
                             Text(
                                 text = when {
                                     isSmartShuffle -> "Smart"
                                     isShuffleEnabled -> "Shuffle"
-                                    else -> "Shuffle"
+                                    else -> "Off"
                                 },
                                 color = when {
                                     isSmartShuffle -> Color(0xFF10B981)
                                     isShuffleEnabled -> PurplePrimary
                                     else -> Color(0xFF9CA3AF)
                                 },
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-                    }
 
-                    // Add Songs
-                    Button(
-                        onClick = {
-                            navController.navigate(
-                                "${Screen.AddSongs.route}/$playlistId"
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PurplePrimary.copy(alpha = 0.15f)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        // Add Songs
+                        IconButton(
+                            onClick = {
+                                navController.navigate("${Screen.AddSongs.route}/$playlistId")
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color(0xFF12122A), RoundedCornerShape(12.dp))
                         ) {
                             Icon(
                                 Icons.Default.Add,
-                                contentDescription = null,
+                                contentDescription = "Add",
                                 tint = PurplePrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                "Add",
-                                color = PurplePrimary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -601,13 +585,18 @@ fun PlaylistDetailScreen(
                     items = filteredSongs,
                     key = { it.id }
                 ) { song ->
+                    val isCurrentSong = playerViewModel.currentSong.collectAsState().value?.id == song.id
+                    val isPlaying by playerViewModel.isPlaying.collectAsState()
+
                     PlaylistSongItem(
                         song = song,
                         index = sortedSongs.indexOf(song) + 1,
                         context = context,
+                        isCurrent = isCurrentSong,
+                        isPlaying = isPlaying && isCurrentSong,
                         onClick = {
-                            // ✅ Play full playlist queue starting from this song
-                            playerViewModel.playSong(song, sortedSongs)
+                            // ✅ Play full playlist queue starting from this song and mark context
+                            playerViewModel.playSong(song, sortedSongs, playlistId)
                         },
                         onLike = {
                             viewModel.likeSong(song)
@@ -634,6 +623,8 @@ fun PlaylistSongItem(
     song: Song,
     index: Int,
     context: android.content.Context,
+    isCurrent: Boolean = false,
+    isPlaying: Boolean = false,
     onClick: () -> Unit,
     onLike: () -> Unit,
     onRemove: () -> Unit,
@@ -646,21 +637,35 @@ fun PlaylistSongItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(
+                if (isCurrent) 
+                    PurplePrimary.copy(alpha = 0.1f) 
+                else 
+                    Color(0xFF0D0D2B)
+            )
             .clickable { onClick() }
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // ... (rest of the Row is same)
-        // Index number
-        Text(
-            text = "$index",
-            fontSize = 12.sp,
-            color = Color(0xFF4B5563),
-            modifier = Modifier.width(20.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
+        // Index number or Playing Icon
+        if (isPlaying) {
+            Icon(
+                Icons.Default.GraphicEq,
+                contentDescription = null,
+                tint = PurplePrimary,
+                modifier = Modifier.size(16.dp)
+            )
+        } else {
+            Text(
+                text = "$index",
+                fontSize = 12.sp,
+                color = if (isCurrent) PurplePrimary else Color(0xFF4B5563),
+                modifier = Modifier.width(20.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
 
         // Album Art
         AsyncImage(
@@ -681,14 +686,14 @@ fun PlaylistSongItem(
                 text = song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFF3F4F6),
+                color = if (isCurrent) PurplePrimary else Color(0xFFF3F4F6),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = "${song.artist} • ${formatDuration(song.duration)}",
                 fontSize = 11.sp,
-                color = Color(0xFF6B7280),
+                color = if (isCurrent) PurplePrimary.copy(alpha = 0.7f) else Color(0xFF6B7280),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

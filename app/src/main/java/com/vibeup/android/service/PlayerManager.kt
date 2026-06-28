@@ -48,6 +48,10 @@ class PlayerManager @Inject constructor(
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
+    // ✅ Track the ID of the current queue (playlist ID, home section ID, etc)
+    private val _currentQueueId = MutableStateFlow<String?>(null)
+    val currentQueueId: StateFlow<String?> = _currentQueueId.asStateFlow()
+
     // ✅ Original queue (never modified)
     private val _queue = MutableStateFlow<List<Song>>(emptyList())
     val queue: StateFlow<List<Song>> = _queue.asStateFlow()
@@ -178,9 +182,10 @@ class PlayerManager @Inject constructor(
         return scoredSongs.sortedByDescending { it.second }.map { it.first }
     }
 
-    fun playSong(song: Song, queue: List<Song> = emptyList()) {
+    fun playSong(song: Song, queue: List<Song> = emptyList(), queueId: String? = null) {
         if (queue.isNotEmpty()) _queue.value = queue
         _currentSong.value = song
+        _currentQueueId.value = queueId
 
         val startIndex: Int
         val finalQueue: List<Song>
@@ -282,7 +287,7 @@ class PlayerManager @Inject constructor(
                 _isSmartShuffle.value = false
                 _isShuffleEnabled.value = true
             }
-            wasShuffle -> {
+            else -> {
                 _isShuffleEnabled.value = false
                 _isSmartShuffle.value = false
             }
