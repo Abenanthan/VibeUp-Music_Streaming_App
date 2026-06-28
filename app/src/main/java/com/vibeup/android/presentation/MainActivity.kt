@@ -16,6 +16,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -27,11 +28,14 @@ import com.vibeup.android.presentation.auth.AuthViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.components.MiniPlayer
 import com.vibeup.android.ui.theme.VibeUpTheme
+import com.vibeup.android.presentation.player.LyricsViewModel
+import com.vibeup.android.presentation.player.activityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.vibeup.android.service.PlayerManager
 import javax.inject.Inject
+
 
 data class BottomNavItem(
     val label: String,
@@ -69,8 +73,14 @@ class MainActivity : ComponentActivity() {
 
                 val playerViewModel: PlayerViewModel = hiltViewModel()
                 val authViewModel: AuthViewModel = hiltViewModel()
+                val lyricsViewModel: LyricsViewModel = activityViewModel()
 
                 val currentSong by playerViewModel.currentSong.collectAsState()
+
+                // Observe song changes → load lyrics immediately
+                LaunchedEffect(currentSong?.id) {
+                    currentSong?.let { lyricsViewModel.loadLyrics(it) }
+                }
                 val isPlaying by playerViewModel.isPlaying.collectAsState()
                 val currentUser by authViewModel.currentUser.collectAsState()
                 //val isPlayerActive by playerViewModel.isPlayerActive.collectAsState()

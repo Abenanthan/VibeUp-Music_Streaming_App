@@ -11,10 +11,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import com.vibeup.android.data.local.dao.DownloadDao
+import com.vibeup.android.data.local.dao.LyricsDao
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DatabaseModule {
+object DatabaseModule
+{
 
     @Provides
     @Singleton
@@ -42,5 +44,11 @@ object DatabaseModule {
     @Singleton
     fun provideDownloadDao(database: VibeUpDatabase): DownloadDao {
         return database.downloadDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLyricsDao(database: VibeUpDatabase): LyricsDao {
+        return database.lyricsDao()
     }
 }

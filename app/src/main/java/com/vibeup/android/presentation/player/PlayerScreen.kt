@@ -55,6 +55,7 @@ fun PlayerScreen(
     val isLiked by viewModel.isLiked.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val activeQueue by viewModel.activeQueue.collectAsState()
 
     // ✅ Load lyrics as soon as song is available
     /*LaunchedEffect(currentSong?.id) {
@@ -70,6 +71,18 @@ fun PlayerScreen(
                 lyricsViewModel.loadLyrics(song)
             } else if (lyricsViewModel.lastLoadedSongId != song.id) {
                 lyricsViewModel.loadLyrics(song)
+            }
+        }
+    }
+
+    LaunchedEffect(currentSong?.id, activeQueue) {
+        val currentIndex = activeQueue.indexOfFirst {
+            it.id == currentSong?.id
+        }
+        if (currentIndex >= 0) {
+            val upcoming = activeQueue.drop(currentIndex + 1).take(3)
+            if (upcoming.isNotEmpty()) {
+                lyricsViewModel.prefetchLyrics(upcoming)
             }
         }
     }
