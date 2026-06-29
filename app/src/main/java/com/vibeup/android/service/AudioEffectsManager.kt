@@ -170,9 +170,8 @@ class AudioEffectsManager @Inject constructor(
                 "AudioEffects",
                 "Init failed: ${e.message}"
             )
-            // ✅ If init fails, reset all effects to safe state
+            // ✅ Only release objects, DO NOT wipe user settings in SharedPreferences
             releaseEffects()
-            resetAllEffectStates()
         }
     }
 
@@ -320,6 +319,8 @@ class AudioEffectsManager @Inject constructor(
             apply()
         }
     }
+
+    fun getAudioSessionId(): Int = currentAudioSessionId
 
     fun releaseEffects() {
         try {

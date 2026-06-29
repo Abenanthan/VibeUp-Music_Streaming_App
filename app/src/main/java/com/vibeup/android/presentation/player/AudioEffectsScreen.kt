@@ -29,6 +29,7 @@ import com.vibeup.android.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import android.media.audiofx.PresetReverb
+import androidx.compose.ui.platform.LocalContext
 
 // ── ViewModel ──
 @HiltViewModel
@@ -57,6 +58,8 @@ fun AudioEffectsScreen(
     val eqPreset by efx.eqPreset.collectAsState()
 
     val frequencies = efx.getEqBandFrequencies()
+    val context = LocalContext.current
+    val audioSessionId = efx.getAudioSessionId()
 
     val reverbPresets = listOf(
         "None" to PresetReverb.PRESET_NONE.toInt(),
@@ -118,6 +121,104 @@ fun AudioEffectsScreen(
                     )
                 }
             }
+
+            // ── System Audio Engine Card ──────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF1A1A3A),
+                                Color(0xFF0D1B3A)
+                            )
+                        )
+                    )
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "🎛️ Device Audio Engine",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF3F4F6)
+                        )
+                        Text(
+                            "Deepfield · Dolby · Hi-Res · Dirac",
+                            fontSize = 11.sp,
+                            color = Color(0xFF4B5563)
+                        )
+                    }
+                    Button(
+                        onClick = { launchSystemEqualizer(context, audioSessionId) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        ),
+                        contentPadding = PaddingValues(0.dp),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(PurplePrimary, BluePrimary)
+                                )
+                            )
+                    ) {
+                        Text(
+                            "Open",
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Device branding hint
+                val deviceHint = remember {
+                    val brand = android.os.Build.MANUFACTURER.lowercase()
+                    when {
+                        brand.contains("vivo")     -> "✨ Deepfield Audio detected"
+                        brand.contains("samsung")  -> "✨ Dolby Atmos detected"
+                        brand.contains("oneplus")  -> "✨ Dolby Atmos detected"
+                        brand.contains("sony")     -> "✨ Hi-Res Audio detected"
+                        brand.contains("xiaomi") ||
+                                brand.contains("poco") ||
+                                brand.contains("redmi")    -> "✨ Dirac HD Sound detected"
+                        brand.contains("oppo") ||
+                                brand.contains("realme")   -> "✨ Dolby Audio detected"
+                        brand.contains("lg")       -> "✨ Hi-Fi Quad DAC detected"
+                        else                       -> "Opens your device's built-in audio engine"
+                    }
+                }
+
+                Text(
+                    deviceHint,
+                    fontSize = 11.sp,
+                    color = Color(0xFF6366F1),
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    "Note: Device audio engine and VibeUp EQ work together. " +
+                            "Device engine processes output after VibeUp's effects.",
+                    fontSize = 10.sp,
+                    color = Color(0xFF374151),
+                    lineHeight = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            // ── end System Audio Engine Card ─────────────────────────────────────────
 
             // ── Equalizer ──
             EffectCard(
@@ -370,6 +471,48 @@ fun AudioEffectsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+private fun launchSystemEqualizer(context: android.content.Context, audioSessionId: Int) {
+    try {
+        // Standard Android intent — triggers Deepfield on Vivo, Dolby on Samsung/OnePlus,
+        // Hi-Res on Sony, Dirac on Xiaomi, etc.
+        val intent = android.content.Intent(
+            android.media.audiofx.AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL
+        ).apply {
+            putExtra(
+                android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION,
+                audioSessionId
+            )
+            putExtra(
+                android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE,
+                android.media.audiofx.AudioEffect.CONTENT_TYPE_MUSIC
+            )
+            putExtra(
+                android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME,
+                context.packageName
+            )
+        }
+
+        // Check if device has a system equalizer before launching
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            // Device has no system EQ — show a toast
+            android.widget.Toast.makeText(
+                context,
+                "No system equalizer found on this device",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    } catch (e: Exception) {
+        android.util.Log.e("AudioEffects", "System EQ launch failed: ${e.message}")
+        android.widget.Toast.makeText(
+            context,
+            "Could not open system equalizer",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
     }
 }
 

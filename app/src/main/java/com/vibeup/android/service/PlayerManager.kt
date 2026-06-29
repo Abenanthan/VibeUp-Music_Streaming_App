@@ -94,7 +94,6 @@ class PlayerManager @Inject constructor(
                         override fun onPlaybackStateChanged(state: Int) {
                             if (state == Player.STATE_READY) {
                                 _duration.value = duration
-                                audioEffectsManager.initialize(audioSessionId)
                             }
                         }
 
@@ -107,6 +106,11 @@ class PlayerManager @Inject constructor(
                         override fun onRepeatModeChanged(repeatMode: Int) {
                             _repeatMode.value = repeatMode
                         }
+
+                        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+                            audioEffectsManager.initialize(audioSessionId)
+                        }
+
                         override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                             android.util.Log.e("PlayerManager", "ExoPlayer error: ${error.message}")
                             // ✅ Don't crash — just stop playback gracefully
@@ -139,7 +143,6 @@ class PlayerManager @Inject constructor(
                         }
                     })
                 }
-            audioEffectsManager.initialize(exoPlayer!!.audioSessionId)
         }
         return exoPlayer!!
     }
@@ -232,7 +235,6 @@ class PlayerManager @Inject constructor(
         } catch (e: Exception) { }
 
         val player = getExoPlayer()
-        audioEffectsManager.initialize(player.audioSessionId)
 
         val items = finalQueue.map { s ->
             MediaItem.Builder()
