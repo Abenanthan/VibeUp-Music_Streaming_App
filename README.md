@@ -10,6 +10,7 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
   - 5-Band Equalizer with curated presets (Rock, Pop, Jazz, etc.).
   - Bass Boost and Virtualizer (Surround Sound).
   - Loudness Enhancer and Reverb presets.
+  - Utilize Device's own Audio Effects.
 - **Dynamic Lyrics**: Supports both synced (LRC) and plain text lyrics with tap-to-seek functionality.
 - **Multilingual Lyrics (Native Languages)**: Display lyrics in the user's native language when available. Features include:
   - Support for multiple language tracks per song (original and translations).
