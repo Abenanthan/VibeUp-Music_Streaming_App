@@ -7,6 +7,7 @@ import com.vibeup.android.data.remote.dto.toDomain
 import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.LibraryRepository
+import com.vibeup.android.util.NetworkMonitor          // 👈 ADD
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -20,31 +21,33 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val api: SaavnApiService,
-    private val libraryRepository: LibraryRepository
+    private val libraryRepository: LibraryRepository,
+    private val networkMonitor: NetworkMonitor          // 👈 ADD
 ) : ViewModel() {
 
-    private val favouriteIds = listOf( //2 4
+    // 👇 ADD — expose network state to UI
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
+
+    // ... all your existing state flows stay exactly the same ...
+    private val favouriteIds = listOf(
         "GWwnRe0u", "rjkrTnma", "m1iXOUID", "mPTrDSun",
         "__YIeFT-", "uP7MlTHz", "eLm-JvK4", "SM-rvz75",
         "qcVqPqk5", "vRNpPA7_", "yBmo2qWU", "QWLY3Ls_",
         "QkFUdVod", "BH07HVc8", "kehuVn2F", "cDHlLKvW", "_KjTxjcC"
     )
 
-    // Wave 1
     private val _favouriteSongs = MutableStateFlow<List<Song>>(emptyList())
     val favouriteSongs: StateFlow<List<Song>> = _favouriteSongs.asStateFlow()
 
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
 
-    // Wave 2
     private val _recentlyPlayed = MutableStateFlow<List<Song>>(emptyList())
     val recentlyPlayed: StateFlow<List<Song>> = _recentlyPlayed.asStateFlow()
 
     private val _trendingSongs = MutableStateFlow<List<Song>>(emptyList())
     val trendingSongs: StateFlow<List<Song>> = _trendingSongs.asStateFlow()
 
-    // Wave 3
     private val _newReleases = MutableStateFlow<List<Song>>(emptyList())
     val newReleases: StateFlow<List<Song>> = _newReleases.asStateFlow()
 
@@ -97,6 +100,19 @@ class HomeViewModel @Inject constructor(
         observeRecentlyPlayed()
         observePlaylists()
         loadWave1()
+        // 👇 ADD — auto-reload when network comes back
+        viewModelScope.launch {
+            var wasOffline = false
+            networkMonitor.isOnline.collect { online ->
+                if (!online) {
+                    wasOffline = true
+                } else if (wasOffline) {
+                    // Came back online — reload everything
+                    wasOffline = false
+                    refresh()
+                }
+            }
+        }
     }
 
     private fun observeRecentlyPlayed() {
@@ -123,16 +139,16 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // 👇 REPLACE loadWave1 — skip network if offline
     private fun loadWave1() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                withContext(Dispatchers.IO) {
-                    loadFavourites()
+                if (networkMonitor.isOnline.value) {
+                    withContext(Dispatchers.IO) { loadFavourites() }
                 }
                 _isLoading.value = false
-                // Load wave 2 in background
-                loadWave2()
+                if (networkMonitor.isOnline.value) loadWave2()
             } catch (e: Exception) {
                 _error.value = e.message
                 _isLoading.value = false
@@ -145,9 +161,7 @@ class HomeViewModel @Inject constructor(
             try {
                 val t = async { loadTrending() }
                 val n = async { loadNewReleases() }
-                t.await()
-                n.await()
-                // Load wave 3 after wave 2
+                t.await(); n.await()
                 loadWave3()
             } catch (e: Exception) {
                 android.util.Log.e("HomeVM", "Wave2: ${e.message}")
@@ -158,10 +172,10 @@ class HomeViewModel @Inject constructor(
     private fun loadWave3() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val r = async { loadMoodSongs("romantic love songs", _romanticSongs) }
-                val p = async { loadMoodSongs("party dance songs", _partySongs) }
-                val c = async { loadMoodSongs("chill relaxing songs", _chillSongs) }
-                val s = async { loadMoodSongs("sad emotional songs", _sadSongs) }
+                val r  = async { loadMoodSongs("romantic love songs", _romanticSongs) }
+                val p  = async { loadMoodSongs("party dance songs", _partySongs) }
+                val c  = async { loadMoodSongs("chill relaxing songs", _chillSongs) }
+                val s  = async { loadMoodSongs("sad emotional songs", _sadSongs) }
                 val ar = async { loadArtistSongs("AR Rahman", _arRahmanSongs) }
                 val an = async { loadArtistSongs("Anirudh Ravichander", _anirudhSongs) }
                 val si = async { loadArtistSongs("Sid Sriram", _sidSriramSongs) }
@@ -185,8 +199,7 @@ class HomeViewModel @Inject constructor(
         try {
             val allIds = favouriteIds.joinToString(",")
             val response = api.getSongById(allIds)
-            _favouriteSongs.value = response.data
-                ?.map { it.toDomain() } ?: emptyList()
+            _favouriteSongs.value = response.data?.map { it.toDomain() } ?: emptyList()
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "Favourites: ${e.message}")
         }
@@ -194,9 +207,8 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadTrending() {
         try {
-            val result = api.searchSongs(
-                "trending songs 2025", limit = 30
-            ).data?.results?.map { it.toDomain() } ?: emptyList()
+            val result = api.searchSongs("trending songs 2025", limit = 30)
+                .data?.results?.map { it.toDomain() } ?: emptyList()
             _trendingSongs.value = deduplicate(result)
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "Trending: ${e.message}")
@@ -205,45 +217,27 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadNewReleases() {
         try {
-            // ✅ Better query for new releases
-            val tamil = api.searchSongs(
-                "new tamil songs 2025", limit = 10
-            ).data?.results?.map { it.toDomain() } ?: emptyList()
-
-            val hindi = api.searchSongs(
-                "new hindi songs 2025", limit = 10
-            ).data?.results?.map { it.toDomain() } ?: emptyList()
-
-            val telugu = api.searchSongs(
-                "new telugu songs 2025", limit = 10
-            ).data?.results?.map { it.toDomain() } ?: emptyList()
-
+            val tamil  = api.searchSongs("new tamil songs 2025", limit = 10).data?.results?.map { it.toDomain() } ?: emptyList()
+            val hindi  = api.searchSongs("new hindi songs 2025", limit = 10).data?.results?.map { it.toDomain() } ?: emptyList()
+            val telugu = api.searchSongs("new telugu songs 2025", limit = 10).data?.results?.map { it.toDomain() } ?: emptyList()
             _newReleases.value = deduplicate((tamil + hindi + telugu).shuffled(), limit = 15)
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "NewReleases: ${e.message}")
         }
     }
 
-    private suspend fun loadMoodSongs(
-        query: String,
-        state: MutableStateFlow<List<Song>>
-    ) {
+    private suspend fun loadMoodSongs(query: String, state: MutableStateFlow<List<Song>>) {
         try {
-            val result = api.searchSongs(query, limit = 30)
-                .data?.results?.map { it.toDomain() } ?: emptyList()
+            val result = api.searchSongs(query, limit = 30).data?.results?.map { it.toDomain() } ?: emptyList()
             state.value = deduplicate(result)
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "Mood: ${e.message}")
         }
     }
 
-    private suspend fun loadArtistSongs(
-        artist: String,
-        state: MutableStateFlow<List<Song>>
-    ) {
+    private suspend fun loadArtistSongs(artist: String, state: MutableStateFlow<List<Song>>) {
         try {
-            val result = api.searchSongs(artist, limit = 30)
-                .data?.results?.map { it.toDomain() } ?: emptyList()
+            val result = api.searchSongs(artist, limit = 30).data?.results?.map { it.toDomain() } ?: emptyList()
             state.value = deduplicate(result)
         } catch (e: Exception) {
             android.util.Log.e("HomeVM", "Artist: ${e.message}")
@@ -252,12 +246,9 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadLanguageSongs(language: String) {
         try {
-            val result = api.searchSongs(
-                "$language hits 2025", limit = 30
-            ).data?.results?.map { it.toDomain() } ?: emptyList()
-
+            val result = api.searchSongs("$language hits 2025", limit = 30)
+                .data?.results?.map { it.toDomain() } ?: emptyList()
             val unique = deduplicate(result)
-
             when (language) {
                 "tamil"  -> _tamilSongs.value = unique
                 "telugu" -> _teluguSongs.value = unique
@@ -268,26 +259,13 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ✅ Reusable dedup function
     private fun deduplicate(songs: List<Song>, limit: Int = 12): List<Song> {
         val seen = mutableSetOf<String>()
         val unique = mutableListOf<Song>()
         for (song in songs) {
             val key = buildString {
-                append(
-                    song.title
-                        .lowercase()
-                        .replace(Regex("[^a-z0-9]"), "")
-                        .take(10)
-                )
-                append(
-                    song.artist
-                        .lowercase()
-                        .split(",", "&", "feat", "ft")
-                        .first()
-                        .replace(Regex("[^a-z0-9]"), "")
-                        .take(8)
-                )
+                append(song.title.lowercase().replace(Regex("[^a-z0-9]"), "").take(10))
+                append(song.artist.lowercase().split(",", "&", "feat", "ft").first().replace(Regex("[^a-z0-9]"), "").take(8))
             }
             if (seen.add(key)) unique.add(song)
             if (unique.size >= limit) break

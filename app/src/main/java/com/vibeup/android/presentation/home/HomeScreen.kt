@@ -30,6 +30,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.vibeup.android.Screen
@@ -84,6 +90,23 @@ fun HomeScreen(
 
     val listState = rememberLazyListState()
 
+    val isOnline by viewModel.isOnline.collectAsState()
+
+// Track if we went offline at least once — so "back online" only shows after an offline event
+    var wentOffline by remember { mutableStateOf(false) }
+    var showBackOnline by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isOnline) {
+        if (!isOnline) {
+            wentOffline = true
+        } else if (wentOffline) {
+            // Just came back online
+            showBackOnline = true
+            kotlinx.coroutines.delay(3000)
+            showBackOnline = false
+        }
+    }
+
     val moods = remember(romanticSongs, partySongs, chillSongs, sadSongs) {
         listOf(
             MoodItem(
@@ -114,6 +137,71 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color(0xFF0A0A1A))
     ) {
+        AnimatedVisibility(
+            visible = !isOnline,
+            enter = expandVertically(),
+            exit = shrinkVertically(),
+            modifier = Modifier.align(Alignment.TopCenter).zIndex(10f)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF7F1D1D))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.WifiOff,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Column {
+                    Text(
+                        "No internet connection",
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "Downloaded songs are still available in Library",
+                        color = Color.White.copy(alpha = 0.75f),
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+
+        // ── Back Online Banner (top, shows for 3s) ────────────────────────────
+        AnimatedVisibility(
+            visible = showBackOnline,
+            enter = expandVertically(),
+            exit = shrinkVertically(),
+            modifier = Modifier.align(Alignment.TopCenter).zIndex(10f)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF14532D))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.Wifi,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    "Back online! Loading your music...",
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
         if (isLoading) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
