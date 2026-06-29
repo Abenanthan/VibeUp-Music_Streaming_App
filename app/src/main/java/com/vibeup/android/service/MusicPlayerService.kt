@@ -245,33 +245,39 @@ class MusicPlayerService : MediaLibraryService() {
         playerManager.getExoPlayer().playlistMetadata = metadata
     }
 
+    // Replace updateLegacyMetadata() entirely with this:
     private fun updateLegacyMetadata(song: com.vibeup.android.domain.model.Song) {
         metadataJob?.cancel()
         metadataJob = serviceScope.launch(Dispatchers.IO) {
             val bitmap = try {
-                BitmapFactory.decodeStream(URL(song.imageUrl).openStream())
-            } catch (e: Exception) { null }
-
-            val metadata = MediaMetadataCompat.Builder()
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.album)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, song.title)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, song.artist)
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration * 1000L)
-                .apply {
-                    bitmap?.let {
-                        putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, it)
-                        putBitmap(MediaMetadataCompat.METADATA_KEY_ART, it)
-                    }
-                }
-                .build()
+                if (song.imageUrl.startsWith("http")) {
+                    BitmapFactory.decodeStream(URL(song.imageUrl).openStream())
+                } else null
+            } catch (e: Exception) {
+                null // offline, bad URL, anything — never crash
+            }
 
             withContext(Dispatchers.Main) {
-                mediaSessionCompat?.setMetadata(metadata)
-                // Push a fresh playback state right after metadata so the
-                // duration reported in the notification is correct immediately.
-                updatePlaybackState(playerManager.getExoPlayer().isPlaying)
+                try {
+                    val metadata = MediaMetadataCompat.Builder()
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.album)
+                        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, song.title)
+                        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, song.artist)
+                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration * 1000L)
+                        .apply {
+                            bitmap?.let {
+                                putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, it)
+                                putBitmap(MediaMetadataCompat.METADATA_KEY_ART, it)
+                            }
+                        }
+                        .build()
+                    mediaSessionCompat?.setMetadata(metadata)
+                    updatePlaybackState(playerManager.getExoPlayer().isPlaying)
+                } catch (e: Exception) {
+                    android.util.Log.e("MusicService", "Metadata update failed: ${e.message}")
+                }
             }
         }
     }

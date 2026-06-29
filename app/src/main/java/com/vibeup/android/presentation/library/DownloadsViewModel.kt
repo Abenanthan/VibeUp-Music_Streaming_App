@@ -126,8 +126,10 @@ class DownloadsViewModel @Inject constructor(
         artist = downloaded.artist,
         album = downloaded.album,
         imageUrl = downloaded.imageUrl,
-        audioUrl = "file://${downloaded.localPath}",
+        // Store as raw absolute path — PlaySongUseCase will add file:// and verify existence
+        audioUrl = downloaded.localPath.removePrefix("file://"),
         duration = downloaded.duration,
         language = "local"
     )
+
 }

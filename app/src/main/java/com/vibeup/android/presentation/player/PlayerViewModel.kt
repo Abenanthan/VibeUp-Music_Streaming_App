@@ -3,6 +3,7 @@ package com.vibeup.android.presentation.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibeup.android.domain.model.Song
+import com.vibeup.android.domain.repository.LibraryRepository
 import com.vibeup.android.domain.usecase.PlaySongUseCase
 import com.vibeup.android.service.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import com.vibeup.android.domain.repository.LibraryRepository
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
@@ -34,22 +34,21 @@ class PlayerViewModel @Inject constructor(
     val currentQueueId: StateFlow<String?> = playerManager.currentQueueId
     val isRestored = playerManager.isRestored
 
-    // ✅ Track loading state
     private val _isResolvingUrl = MutableStateFlow(false)
     val isResolvingUrl: StateFlow<Boolean> = _isResolvingUrl.asStateFlow()
 
     private val _isLiked = MutableStateFlow(false)
     val isLiked: StateFlow<Boolean> = _isLiked.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     init {
-        // Watch current song and check liked status whenever it changes
         viewModelScope.launch {
             currentSong.collect { song ->
-                if (song != null) {
-                    _isLiked.value = libraryRepository.isLiked(song.id)
-                } else {
-                    _isLiked.value = false
-                }
+                _isLiked.value = if (song != null) {
+                    try { libraryRepository.isLiked(song.id) } catch (e: Exception) { false }
+                } else false
             }
         }
     }
@@ -57,12 +56,16 @@ class PlayerViewModel @Inject constructor(
     fun toggleLike() {
         val song = currentSong.value ?: return
         viewModelScope.launch {
-            if (_isLiked.value) {
-                libraryRepository.unlikeSong(song.id)
-                _isLiked.value = false
-            } else {
-                libraryRepository.likeSong(song)
-                _isLiked.value = true
+            try {
+                if (_isLiked.value) {
+                    libraryRepository.unlikeSong(song.id)
+                    _isLiked.value = false
+                } else {
+                    libraryRepository.likeSong(song)
+                    _isLiked.value = true
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerVM", "toggleLike failed: ${e.message}")
             }
         }
     }
@@ -71,58 +74,93 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             _isResolvingUrl.value = true
             try {
-                // ✅ Resolve playable URL for clicked song
                 val playableSong = withContext(Dispatchers.IO) {
                     playSongUseCase(song)
                 }
-
-                // ✅ Also resolve URLs for queue items
                 val resolvedQueue = if (queue.isEmpty()) {
                     listOf(playableSong)
                 } else {
-                    queue.map { queueSong ->
-                        if (queueSong.id == song.id) playableSong
-                        else queueSong
-                    }
+                    queue.map { if (it.id == song.id) playableSong else it }
                 }
-
                 playerManager.playSong(playableSong, resolvedQueue, queueId)
             } catch (e: Exception) {
-                android.util.Log.e("PlayerVM", "PlaySong error: ${e.message}")
-                playerManager.playSong(song, queue, queueId)
+                android.util.Log.e("PlayerVM", "playSong failed: ${e.message}")
+                // Last resort — play with original song, never crash
+                try { playerManager.playSong(song, queue, queueId) } catch (_: Exception) {}
             } finally {
                 _isResolvingUrl.value = false
             }
         }
     }
 
-    fun togglePlayPause() = playerManager.togglePlayPause()
+    fun togglePlayPause() {
+        try { playerManager.togglePlayPause() } catch (e: Exception) {
+            android.util.Log.e("PlayerVM", "togglePlayPause: ${e.message}")
+        }
+    }
 
-    fun seekTo(position: Long) = playerManager.seekTo(position)
+    fun seekTo(position: Long) {
+        try { playerManager.seekTo(position) } catch (e: Exception) {
+            android.util.Log.e("PlayerVM", "seekTo: ${e.message}")
+        }
+    }
 
     fun playNext() {
         viewModelScope.launch {
-            val player = playerManager.getExoPlayer()
-            val nextIndex = player.currentMediaItemIndex + 1
-            val active = playerManager.activeQueue.value
+            try {
+                val player = playerManager.getExoPlayer()
+                val active = playerManager.activeQueue.value
+                val nextIndex = player.currentMediaItemIndex + 1
 
-            if (nextIndex < active.size) {
-                val nextSong = active[nextIndex]
-                // ✅ Resolve URL for next song before playing
-                val playable = withContext(Dispatchers.IO) {
-                    playSongUseCase(nextSong)
+                if (nextIndex < active.size) {
+                    val nextSong = active[nextIndex]
+                    _isResolvingUrl.value = true
+
+                    val playable = try {
+                        withContext(Dispatchers.IO) { playSongUseCase(nextSong) }
+                    } catch (e: Exception) {
+                        android.util.Log.e("PlayerVM", "playNext resolve failed: ${e.message}")
+                        nextSong // use original if resolve fails — don't crash
+                    } finally {
+                        _isResolvingUrl.value = false
+                    }
+
+                    // Only update queue item if URL actually changed
+                    if (playable.audioUrl != nextSong.audioUrl) {
+                        try { playerManager.updateQueueItem(nextIndex, playable) }
+                        catch (e: Exception) {
+                            android.util.Log.e("PlayerVM", "updateQueueItem failed: ${e.message}")
+                        }
+                    }
+
+                    try { player.seekToNextMediaItem() }
+                    catch (e: Exception) {
+                        android.util.Log.e("PlayerVM", "seekToNext failed: ${e.message}")
+                    }
                 }
-                playerManager.updateQueueItem(nextIndex, playable)
-                player.seekToNextMediaItem()
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerVM", "playNext crashed: ${e.message}")
             }
         }
     }
 
+    fun playPrevious() {
+        try { playerManager.playPrevious() } catch (e: Exception) {
+            android.util.Log.e("PlayerVM", "playPrevious: ${e.message}")
+        }
+    }
 
+    fun toggleShuffle() {
+        try { playerManager.toggleShuffle() } catch (e: Exception) {
+            android.util.Log.e("PlayerVM", "toggleShuffle: ${e.message}")
+        }
+    }
 
-    fun playPrevious() = playerManager.playPrevious()
+    fun toggleRepeatMode() {
+        try { playerManager.toggleRepeatMode() } catch (e: Exception) {
+            android.util.Log.e("PlayerVM", "toggleRepeatMode: ${e.message}")
+        }
+    }
 
-    fun toggleShuffle() = playerManager.toggleShuffle()
-
-    fun toggleRepeatMode() = playerManager.toggleRepeatMode()
+    fun clearError() { _errorMessage.value = null }
 }

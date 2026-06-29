@@ -107,6 +107,17 @@ class PlayerManager @Inject constructor(
                         override fun onRepeatModeChanged(repeatMode: Int) {
                             _repeatMode.value = repeatMode
                         }
+                        override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                            android.util.Log.e("PlayerManager", "ExoPlayer error: ${error.message}")
+                            // ✅ Don't crash — just stop playback gracefully
+                            _isPlaying.value = false
+                        }
+
+                        override fun onPlayerErrorChanged(error: androidx.media3.common.PlaybackException?) {
+                            if (error != null) {
+                                android.util.Log.e("PlayerManager", "Player error changed: ${error.message}")
+                            }
+                        }
 
                         override fun onMediaItemTransition(
                             mediaItem: MediaItem?,
