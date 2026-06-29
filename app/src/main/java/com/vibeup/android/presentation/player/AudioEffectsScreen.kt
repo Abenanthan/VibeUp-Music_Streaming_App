@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
+import com.vibeup.android.Screen
 import com.vibeup.android.service.AudioEffectsManager
 import com.vibeup.android.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -219,6 +222,66 @@ fun AudioEffectsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
             // ── end System Audio Engine Card ─────────────────────────────────────────
+
+            // ✅ Software EQ Card
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                PurplePrimary.copy(alpha = 0.2f),
+                                BluePrimary.copy(alpha = 0.2f)
+                            )
+                        )
+                    )
+                    .clickable {
+                        navController.navigate(Screen.SoftwareEq.route)
+                    }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(PurplePrimary, BluePrimary)
+                            ),
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Equalizer,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "🎚️ Software Equalizer",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        "10-band · AutoEq import · All devices",
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
+                }
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
 
             // ── Equalizer ──
             EffectCard(

@@ -8,11 +8,14 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.LibraryRepository
+import com.vibeup.android.service.audio.SoftwareEqualizer
+import com.vibeup.android.util.NetworkMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +33,9 @@ import javax.inject.Singleton
 class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val libraryRepository: LibraryRepository,
-    private val audioEffectsManager: AudioEffectsManager
+    private val audioEffectsManager: AudioEffectsManager,
+    private val networkMonitor: NetworkMonitor,
+    private val softwareEqualizer: SoftwareEqualizer
 ) {
     private var exoPlayer: ExoPlayer? = null
     private val scope = CoroutineScope(Dispatchers.Main)
@@ -69,11 +74,27 @@ class PlayerManager @Inject constructor(
     private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
     val repeatMode: StateFlow<Int> = _repeatMode.asStateFlow()
 
+    private val _playbackError = MutableStateFlow<String?>(null)
+    val playbackError: StateFlow<String?> = _playbackError.asStateFlow()
+
     val isRestored = MutableStateFlow(false)
 
     fun getExoPlayer(): ExoPlayer {
         if (exoPlayer == null) {
-            exoPlayer = ExoPlayer.Builder(context)
+            val renderersFactory = object : androidx.media3.exoplayer.DefaultRenderersFactory(context) {
+                override fun buildAudioSink(
+                    context: Context,
+                    enableFloatOutput: Boolean,
+                    enableAudioTrackPlaybackParams: Boolean
+                ): androidx.media3.exoplayer.audio.AudioSink {
+                    return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
+                        .setAudioProcessors(arrayOf(softwareEqualizer))
+                        .build()
+                }
+            }
+            renderersFactory.setEnableDecoderFallback(true)
+
+            exoPlayer = ExoPlayer.Builder(context, renderersFactory)
                 .setAudioAttributes(
                     AudioAttributes.Builder()
                         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -111,16 +132,17 @@ class PlayerManager @Inject constructor(
                             audioEffectsManager.initialize(audioSessionId)
                         }
 
-                        override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                            android.util.Log.e("PlayerManager", "ExoPlayer error: ${error.message}")
-                            // ✅ Don't crash — just stop playback gracefully
-                            _isPlaying.value = false
-                        }
-
-                        override fun onPlayerErrorChanged(error: androidx.media3.common.PlaybackException?) {
-                            if (error != null) {
-                                android.util.Log.e("PlayerManager", "Player error changed: ${error.message}")
+                        override fun onPlayerError(error: PlaybackException) {
+                            android.util.Log.e("PlayerManager", "Player error: ${error.message}")
+                            _playbackError.value = when (error.errorCode) {
+                                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> "Network connection lost"
+                                PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
+                                PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> "Failed to load song"
+                                else -> "Playback error: ${error.errorCodeName}"
                             }
+                            _isPlaying.value = false
+                            stopTracking()
                         }
 
                         override fun onMediaItemTransition(
@@ -197,6 +219,24 @@ class PlayerManager @Inject constructor(
     }
 
     fun playSong(song: Song, queue: List<Song> = emptyList(), queueId: String? = null) {
+        _playbackError.value = null
+        
+        // ✅ 1. Network check for remote songs
+        val isLocal = song.audioUrl.startsWith("file://") || 
+                      song.audioUrl.startsWith("content://") ||
+                      song.language == "local"
+        
+        if (!isLocal && !networkMonitor.isOnline.value) {
+            _playbackError.value = "No network connection"
+            return
+        }
+
+        // ✅ 2. Basic URL validation
+        if (song.audioUrl.isBlank()) {
+            _playbackError.value = "Unable to play: No audio URL"
+            return
+        }
+
         if (queue.isNotEmpty()) _queue.value = queue
         _currentSong.value = song
         _currentQueueId.value = queueId
@@ -232,25 +272,46 @@ class PlayerManager @Inject constructor(
             context.startForegroundService(
                 Intent(context, MusicPlayerService::class.java)
             )
-        } catch (e: Exception) { }
+        } catch (e: Exception) { 
+            android.util.Log.e("PlayerManager", "Failed to start service: ${e.message}")
+        }
 
         val player = getExoPlayer()
 
-        val items = finalQueue.map { s ->
-            MediaItem.Builder()
-                .setUri(s.audioUrl)
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle(s.title)
-                        .setArtist(s.artist)
-                        .setAlbumTitle(s.album)
-                        .setArtworkUri(s.imageUrl.toUri())
-                        .build()
-                )
-                .build()
+        val items = finalQueue.mapNotNull { s ->
+            try {
+                if (s.audioUrl.isBlank()) return@mapNotNull null
+                
+                MediaItem.Builder()
+                    .setUri(s.audioUrl.toUri())
+                    .setMediaId(s.id)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(s.title)
+                            .setArtist(s.artist)
+                            .setAlbumTitle(s.album)
+                            .setArtworkUri(if (s.imageUrl.isNotBlank()) s.imageUrl.toUri() else null)
+                            .build()
+                    )
+                    .build()
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerManager", "Error building MediaItem for ${s.title}: ${e.message}")
+                null
+            }
         }
 
-        player.setMediaItems(items, startIndex, 0L)
+        if (items.isEmpty()) {
+            _playbackError.value = "Failed to load playlist"
+            return
+        }
+
+        // Adjust startIndex if we filtered out the original song
+        val adjustedIndex = if (startIndex < finalQueue.size) {
+            val targetId = finalQueue[startIndex].id
+            items.indexOfFirst { it.mediaId == targetId }.coerceAtLeast(0)
+        } else 0
+
+        player.setMediaItems(items, adjustedIndex, 0L)
         player.repeatMode = Player.REPEAT_MODE_ALL
         _repeatMode.value = Player.REPEAT_MODE_ALL
         player.prepare()
@@ -339,22 +400,34 @@ class PlayerManager @Inject constructor(
     private fun reloadPlayerQueue(queue: List<Song>, startIndex: Int) {
         val player = getExoPlayer()
         val wasPlaying = player.isPlaying
-        val items = queue.map { s ->
-            MediaItem.Builder()
-                .setUri(s.audioUrl)
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle(s.title)
-                        .setArtist(s.artist)
-                        .setAlbumTitle(s.album)
-                        .setArtworkUri(s.imageUrl.toUri())
-                        .build()
-                )
-                .build()
+        val items = queue.mapNotNull { s ->
+            try {
+                if (s.audioUrl.isBlank()) return@mapNotNull null
+                MediaItem.Builder()
+                    .setUri(s.audioUrl.toUri())
+                    .setMediaId(s.id)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(s.title)
+                            .setArtist(s.artist)
+                            .setAlbumTitle(s.album)
+                            .setArtworkUri(if (s.imageUrl.isNotBlank()) s.imageUrl.toUri() else null)
+                            .build()
+                    )
+                    .build()
+            } catch (e: Exception) { null }
         }
-        player.setMediaItems(items, startIndex, 0L)
-        player.prepare()
-        if (wasPlaying) player.play()
+        
+        if (items.isNotEmpty()) {
+            val adjustedIndex = if (startIndex < queue.size) {
+                val targetId = queue[startIndex].id
+                items.indexOfFirst { it.mediaId == targetId }.coerceAtLeast(0)
+            } else 0
+            
+            player.setMediaItems(items, adjustedIndex, 0L)
+            player.prepare()
+            if (wasPlaying) player.play()
+        }
     }
 
     fun toggleRepeatMode() {
@@ -374,19 +447,22 @@ class PlayerManager @Inject constructor(
             currentQueue[index] = song
             _activeQueue.value = currentQueue
 
-            val mediaItem = MediaItem.Builder()
-                .setUri(song.audioUrl)
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle(song.title)
-                        .setArtist(song.artist)
-                        .setAlbumTitle(song.album)
-                        .setArtworkUri(song.imageUrl.toUri())
-                        .build()
-                )
-                .build()
+            try {
+                val mediaItem = MediaItem.Builder()
+                    .setUri(song.audioUrl.toUri())
+                    .setMediaId(song.id)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(song.title)
+                            .setArtist(song.artist)
+                            .setAlbumTitle(song.album)
+                            .setArtworkUri(if (song.imageUrl.isNotBlank()) song.imageUrl.toUri() else null)
+                            .build()
+                    )
+                    .build()
 
-            exoPlayer?.replaceMediaItem(index, mediaItem)
+                exoPlayer?.replaceMediaItem(index, mediaItem)
+            } catch (e: Exception) { }
         }
     }
 
@@ -395,8 +471,10 @@ class PlayerManager @Inject constructor(
         progressJob = scope.launch {
             while (true) {
                 exoPlayer?.let {
-                    _currentPosition.value = it.currentPosition
-                    _duration.value = it.duration.coerceAtLeast(0L)
+                    if (it.playbackState != Player.STATE_IDLE) {
+                        _currentPosition.value = it.currentPosition
+                        _duration.value = it.duration.coerceAtLeast(0L)
+                    }
                 }
                 delay(500)
             }
@@ -422,11 +500,19 @@ class PlayerManager @Inject constructor(
         _activeQueue.value = emptyList()
         _isSmartShuffle.value = false
         _isShuffleEnabled.value = false
+        _playbackError.value = null
+    }
+
+    fun clearError() {
+        _playbackError.value = null
     }
 
     fun release() {
         progressJob?.cancel()
-        exoPlayer?.release()
+        exoPlayer?.let {
+            it.stop()
+            it.release()
+        }
         exoPlayer = null
     }
 }
