@@ -269,7 +269,7 @@ fun AudioEffectsScreen(
                         color = Color.White
                     )
                     Text(
-                        "10-band · AutoEq import · All devices",
+                        "32-band · AutoEq import · All devices",
                         fontSize = 11.sp,
                         color = TextSecondary
                     )
