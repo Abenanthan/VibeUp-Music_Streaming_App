@@ -7,6 +7,7 @@ fun SongDto.toDomain(): Song {
         id = id ?: "",
         title = name ?: "Unknown",
         artist = artists?.primary?.firstOrNull()?.name ?: "Unknown Artist",
+        artistId = artists?.primary?.firstOrNull()?.id ?: "",
         album = album?.name ?: "Unknown Album",
         duration = duration ?: 0,
         imageUrl = image?.lastOrNull()?.url ?: "",

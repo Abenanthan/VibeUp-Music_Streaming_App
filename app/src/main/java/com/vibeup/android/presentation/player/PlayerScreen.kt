@@ -257,7 +257,10 @@ fun PlayerScreen(
                                 fontSize = 16.sp,
                                 color = TextSecondary,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.clickable(enabled = song.artistId.isNotBlank()) {
+                                    navController.navigate(Screen.Artist.createRoute(song.artistId))
+                                }
                             )
                         }
                         IconButton(onClick = { viewModel.toggleLike() }) {

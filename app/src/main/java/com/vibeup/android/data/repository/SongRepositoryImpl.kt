@@ -4,15 +4,18 @@ import com.vibeup.android.data.remote.api.SaavnApiService
 import com.vibeup.android.data.remote.api.JioSaavnDirectApiService
 import com.vibeup.android.data.remote.dto.toDomain
 import com.vibeup.android.data.remote.mapper.toDomain as toDomainDirect
+import com.vibeup.android.data.remote.mapper.toDomain
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.SongRepository
+import com.vibeup.android.domain.model.Artist
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SongRepositoryImpl @Inject constructor(
     private val api: SaavnApiService,
-    private val directApi: JioSaavnDirectApiService
+    private val directApi: JioSaavnDirectApiService,
+    private val jioSaavnDirectApiService: JioSaavnDirectApiService
 ) : SongRepository {
 
     override suspend fun searchSongs(query: String): List<Song> {
@@ -118,6 +121,15 @@ class SongRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        }
+    }
+
+    suspend fun getArtistDetails(artistId: String): Artist? {
+        return try {
+            jioSaavnDirectApiService.getArtistDetails(artistId = artistId).toDomain()
+        } catch (e: Exception) {
+            android.util.Log.e("SongRepository", "getArtistDetails failed: ${e.message}")
+            null
         }
     }
 }

@@ -8,6 +8,7 @@ fun JioSaavnDirectSongDto.toDomain(): Song {
         id = id,
         title = title ?: "",
         artist = moreInfo?.artistMap?.primaryArtists?.joinToString(", ") { it.name ?: "" } ?: "",
+        artistId = moreInfo?.artistMap?.primaryArtists?.firstOrNull()?.id ?: "",
         album = moreInfo?.album ?: "",
         duration = moreInfo?.duration?.toIntOrNull() ?: 0,
         imageUrl = image ?: "",

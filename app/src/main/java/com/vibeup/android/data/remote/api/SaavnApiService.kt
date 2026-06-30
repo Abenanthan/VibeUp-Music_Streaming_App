@@ -4,6 +4,8 @@ import com.vibeup.android.data.remote.dto.SearchResponseDto
 import com.vibeup.android.data.remote.dto.SongByIdResponseDto
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Path
+import com.vibeup.android.data.remote.dto.ArtistDetailsResponseDto
 
 interface SaavnApiService {
 
@@ -24,4 +26,11 @@ interface SaavnApiService {
     suspend fun getSongById(
         @Query("ids") ids: String
     ): SongByIdResponseDto
+
+    @GET("api/artists/{id}")
+    suspend fun getArtistDetails(
+        @Path("id") artistId: String,
+        @Query("songCount") songCount: Int = 30,
+        @Query("albumCount") albumCount: Int = 10
+    ): ArtistDetailsResponseDto
 }

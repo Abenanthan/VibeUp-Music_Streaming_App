@@ -19,6 +19,9 @@ import com.vibeup.android.presentation.player.LyricsScreen
 import com.vibeup.android.presentation.library.DownloadsScreen
 import com.vibeup.android.presentation.player.SoftwareEqScreen
 import com.vibeup.android.presentation.player.QueueScreen
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
+import com.vibeup.android.presentation.artist.ArtistScreen
 
 sealed class Screen(val route: String) {
     object Auth    : Screen("auth")
@@ -42,6 +45,10 @@ sealed class Screen(val route: String) {
     object SoftwareEq : Screen("software_eq")
 
     object Queue : Screen("queue")
+
+    object Artist : Screen("artist/{artistId}") {
+        fun createRoute(artistId: String) = "artist/$artistId"
+    }
 }
 
 @Composable
@@ -112,6 +119,13 @@ fun VibeUpNavHost(
 
         composable(Screen.Queue.route) {
             QueueScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.Artist.route,
+            arguments = listOf(navArgument("artistId") { type = NavType.StringType })
+        ) {
+            ArtistScreen(navController = navController)
         }
 
     }
