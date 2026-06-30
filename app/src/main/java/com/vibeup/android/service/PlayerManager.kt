@@ -485,6 +485,60 @@ class PlayerManager @Inject constructor(
         progressJob?.cancel()
     }
 
+    // Moves a song from [fromIndex] to [toIndex] within the active queue and
+    // Keeps ExoPlayer's internal media item order in sync via moveMediaItem,
+    // Which is far cheaper than a full reloadPlayerQueue (no re-buffering).
+
+    fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        val current = _activeQueue.value.toMutableList()
+        if (fromIndex !in current.indices || toIndex !in current.indices) return
+
+        val song = current.removeAt(fromIndex)
+        current.add(toIndex, song)
+        _activeQueue.value = current
+
+        try {
+            getExoPlayer().moveMediaItem(fromIndex, toIndex)
+        } catch (e: Exception) {
+            android.util.Log.e("PlayerManager", "moveQueueItem failed: ${e.message}")
+        }
+    }
+
+    // * Removes a song from the queue by index. Refuses to remove the currently
+    // * playing item — UI should disable the swipe affordance on that row instead
+    // * of relying on this guard, but it's here as a safety net.
+
+    fun removeFromQueue(index: Int) {
+        val player = getExoPlayer()
+        if (index == player.currentMediaItemIndex) return
+
+        val current = _activeQueue.value.toMutableList()
+        if (index !in current.indices) return
+
+        current.removeAt(index)
+        _activeQueue.value = current
+
+        try {
+            player.removeMediaItem(index)
+        } catch (e: Exception) {
+            android.util.Log.e("PlayerManager", "removeFromQueue failed: ${e.message}")
+        }
+    }
+
+    // * Jumps playback directly to a song already in the active queue, by index.
+    // * Used when the user taps a row in the queue screen.
+
+    fun jumpToQueueIndex(index: Int) {
+        val player = getExoPlayer()
+        if (index !in _activeQueue.value.indices) return
+        try {
+            player.seekToDefaultPosition(index)
+            player.play()
+        } catch (e: Exception) {
+            android.util.Log.e("PlayerManager", "jumpToQueueIndex failed: ${e.message}")
+        }
+    }
+
     fun resetState() {
         progressJob?.cancel()
         audioEffectsManager.releaseEffects()

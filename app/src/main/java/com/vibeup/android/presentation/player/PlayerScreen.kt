@@ -274,6 +274,9 @@ fun PlayerScreen(
                                 modifier = Modifier.size(28.dp)
                             )
                         }
+                        IconButton(onClick = { navController.navigate(Screen.Queue.route) }) {
+                            Icon(Icons.Default.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                        }
 
                         Box {
                             IconButton(onClick = { showDownloadQualities = true }) {
@@ -454,6 +457,8 @@ fun PlayerScreen(
                                 modifier = Modifier.size(40.dp)
                             )
                         }
+
+
 
                         IconButton(
                             onClick = { viewModel.toggleRepeatMode() }
