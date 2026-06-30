@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -261,15 +262,18 @@ fun SoftwareEqScreen(
 
             // ── Presets (built-in + custom) ──
             item {
+                val contentAlpha = if (isEnabled) 1f else 0.35f
                 Text(
                     "Presets",
                     fontSize = 12.sp,
-                    color = TextSecondary,
+                    color = TextSecondary.copy(alpha = contentAlpha),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .alpha(contentAlpha)
                 ) {
                     items(allPresetNames) { preset ->
                         val isCustom = customPresets.containsKey(preset)
@@ -277,7 +281,7 @@ fun SoftwareEqScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(if (currentPreset == preset) PurplePrimary else DarkCard)
-                                .clickable { eq.applyPreset(preset) }
+                                .clickable(enabled = isEnabled) { eq.applyPreset(preset) }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -303,7 +307,7 @@ fun SoftwareEqScreen(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(PurplePrimary.copy(alpha = 0.15f))
-                                .clickable { showSavePresetDialog = true }
+                                .clickable(enabled = isEnabled) { showSavePresetDialog = true }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -319,12 +323,11 @@ fun SoftwareEqScreen(
                     }
                 }
 
-                // Delete row for custom presets — only shown if any exist
                 if (customPresets.isNotEmpty()) {
                     Text(
                         "Long-press a saved preset name below to delete it",
                         fontSize = 10.sp,
-                        color = Color(0xFF4B5563),
+                        color = Color(0xFF4B5563).copy(alpha = contentAlpha),
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
@@ -332,6 +335,7 @@ fun SoftwareEqScreen(
 
             // ── Pre-amp ──
             item {
+                val contentAlpha = if (isEnabled) 1f else 0.35f
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -340,11 +344,16 @@ fun SoftwareEqScreen(
                         .padding(16.dp)
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Pre-amp Gain", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Pre-amp Gain",
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = contentAlpha),
+                            fontWeight = FontWeight.Medium
+                        )
                         Text(
                             "${if (preAmp >= 0) "+" else ""}${String.format("%.1f", preAmp)} dB",
                             fontSize = 12.sp,
-                            color = PurplePrimary,
+                            color = PurplePrimary.copy(alpha = contentAlpha),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -352,16 +361,20 @@ fun SoftwareEqScreen(
                         value = preAmp.toFloat(),
                         onValueChange = { eq.setPreAmp(it.toDouble()) },
                         valueRange = -15f..15f,
+                        enabled = isEnabled,
                         colors = SliderDefaults.colors(
                             thumbColor = PurplePrimary,
                             activeTrackColor = PurplePrimary,
-                            inactiveTrackColor = DarkElevated
+                            inactiveTrackColor = DarkElevated,
+                            disabledThumbColor = Color(0xFF4B5563),
+                            disabledActiveTrackColor = Color(0xFF374151),
+                            disabledInactiveTrackColor = DarkElevated
                         )
                     )
                     Text(
                         "Lower pre-amp if you notice distortion when boosting bands.",
                         fontSize = 10.sp,
-                        color = TextSecondary
+                        color = TextSecondary.copy(alpha = contentAlpha)
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -369,12 +382,13 @@ fun SoftwareEqScreen(
 
             // ── Bezier curve visualizer ──
             item {
-                EqCurveVisualizer(bands = bands)
+                EqCurveVisualizer(bands = bands, isEnabled = isEnabled)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // ── 32 sliders ──
             item {
+                val contentAlpha = if (isEnabled) 1f else 0.35f
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -392,7 +406,7 @@ fun SoftwareEqScreen(
                             Text(
                                 text = formatFreq(band.frequency),
                                 fontSize = 9.sp,
-                                color = TextSecondary,
+                                color = TextSecondary.copy(alpha = contentAlpha),
                                 modifier = Modifier.width(36.dp)
                             )
                             Slider(
@@ -401,17 +415,21 @@ fun SoftwareEqScreen(
                                     eq.setBandGain(index, (gain * 10).roundToInt() / 10.0)
                                 },
                                 valueRange = -12f..12f,
+                                enabled = isEnabled,
                                 colors = SliderDefaults.colors(
                                     thumbColor = PurplePrimary,
                                     activeTrackColor = PurplePrimary,
-                                    inactiveTrackColor = DarkElevated
+                                    inactiveTrackColor = DarkElevated,
+                                    disabledThumbColor = Color(0xFF4B5563),
+                                    disabledActiveTrackColor = Color(0xFF374151),
+                                    disabledInactiveTrackColor = DarkElevated
                                 ),
                                 modifier = Modifier.weight(1f).height(28.dp)
                             )
                             Text(
                                 text = "${if (band.gainDb >= 0) "+" else ""}${String.format("%.1f", band.gainDb)}",
                                 fontSize = 9.sp,
-                                color = if (band.gainDb > 0) PurplePrimary else TextSecondary,
+                                color = (if (band.gainDb > 0) PurplePrimary else TextSecondary).copy(alpha = contentAlpha),
                                 modifier = Modifier.width(30.dp)
                             )
                         }
@@ -425,6 +443,7 @@ fun SoftwareEqScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
                         onClick = { eq.resetAll() },
+                        enabled = isEnabled,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -434,6 +453,7 @@ fun SoftwareEqScreen(
                     }
                     Button(
                         onClick = { showImportDialog = true },
+                        enabled = isEnabled,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(12.dp)
@@ -455,7 +475,8 @@ fun SoftwareEqScreen(
  * "spectrum analyzer" look found in dedicated EQ apps.
  */
 @Composable
-private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.SoftwareEqBand>) {
+private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.SoftwareEqBand>, isEnabled: Boolean) {
+    val contentAlpha = if (isEnabled) 1f else 0.35f
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -463,6 +484,7 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
             .clip(RoundedCornerShape(12.dp))
             .background(DarkCard)
             .padding(horizontal = 8.dp, vertical = 8.dp)
+            .alpha(contentAlpha)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width

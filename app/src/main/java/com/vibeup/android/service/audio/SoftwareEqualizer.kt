@@ -304,11 +304,13 @@ class SoftwareEqualizer @Inject constructor(
     }
 
     fun setPreAmp(gainDb: Double) {
+        if (!_isEnabled.value) return
         _preAmpGain.value = gainDb
         prefs.edit().putFloat("sw_preamp", gainDb.toFloat()).apply()
     }
 
     fun setBandGain(bandIndex: Int, gainDb: Double) {
+        if (!_isEnabled.value) return
         val current = _bands.value.toMutableList()
         if (bandIndex >= current.size) return
         current[bandIndex] = current[bandIndex].copy(gainDb = gainDb)
@@ -322,6 +324,7 @@ class SoftwareEqualizer @Inject constructor(
     }
 
     fun applyPreset(presetName: String) {
+        if (!_isEnabled.value) return
         val gains = PRESETS[presetName] ?: _customPresets.value[presetName] ?: return
         val current = _bands.value.toMutableList()
         gains.forEachIndexed { i, gain ->
