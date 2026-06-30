@@ -52,10 +52,6 @@ fun QueueScreen(
     // the source of truth and gets updated on drag-end, not on every frame.
     var localQueue by remember(activeQueue) { mutableStateOf(activeQueue) }
 
-    val currentIndex = remember(localQueue, currentSong) {
-        localQueue.indexOfFirst { it.id == currentSong?.id }.coerceAtLeast(0)
-    }
-
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -131,7 +127,7 @@ fun QueueScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 itemsIndexed(localQueue, key = { _, song -> song.id }) { index, song ->
-                    val isCurrent = index == currentIndex
+                    val isCurrent = song.id == currentSong?.id
                     val isDragging = draggingIndex == index
 
                     val offsetY = if (isDragging) dragOffsetY else 0f
@@ -143,9 +139,13 @@ fun QueueScreen(
                         isDragging = isDragging,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .zIndex(if (isDragging) 1f else 0f)
+                            .zIndex(if (isDragging) 100f else 0f)
+                            .animateItem()
                             .onGloballyPositioned { coords ->
-                                if (itemHeightPx == 0f) itemHeightPx = coords.size.height.toFloat()
+                                // Cache item height for drag calculations
+                                if (itemHeightPx == 0f && coords.size.height > 0) {
+                                    itemHeightPx = coords.size.height.toFloat()
+                                }
                             }
                             .graphicsLayerOffsetY(offsetY),
                         onClick = {
@@ -155,8 +155,6 @@ fun QueueScreen(
                         },
                         onRemove = {
                             if (!isCurrent) {
-                                val updated = localQueue.toMutableList().apply { removeAt(index) }
-                                localQueue = updated
                                 viewModel.removeFromQueue(index)
                             }
                         },
@@ -165,35 +163,27 @@ fun QueueScreen(
                             dragOffsetY = 0f
                         },
                         onDrag = { delta ->
+                            if (draggingIndex == null) return@QueueRow
                             dragOffsetY += delta
-
-                            // Compute how many rows we've crossed and swap
-                            // the local list live, so the UI reflows as the
-                            // user drags — classic reorderable-list feel.
-                            val rows = (dragOffsetY / itemHeightPx).roundToInt()
-                            if (rows != 0) {
-                                val from = index
-                                val to = (index + rows).coerceIn(0, localQueue.lastIndex)
-                                if (from != to && to != index) {
-                                    val updated = localQueue.toMutableList()
-                                    val item = updated.removeAt(from)
-                                    updated.add(to, item)
-                                    localQueue = updated
-                                    draggingIndex = to
-                                    dragOffsetY -= rows * itemHeightPx
-                                }
+                            
+                            val threshold = itemHeightPx * 0.6f
+                            if (dragOffsetY > threshold && index < localQueue.lastIndex) {
+                                // Moved down
+                                val toIndex = index + 1
+                                viewModel.moveQueueItem(index, toIndex)
+                                dragOffsetY -= itemHeightPx
+                                draggingIndex = toIndex
+                            } else if (dragOffsetY < -threshold && index > 0) {
+                                // Moved up
+                                val toIndex = index - 1
+                                viewModel.moveQueueItem(index, toIndex)
+                                dragOffsetY += itemHeightPx
+                                draggingIndex = toIndex
                             }
                         },
-                        onDragEnd = { finalIndex ->
+                        onDragEnd = {
                             draggingIndex = null
                             dragOffsetY = 0f
-                            // Reconcile PlayerManager's real queue with the
-                            // locally-reordered list in one shot by replaying
-                            // the move from the original index to final index.
-                            val originalIndex = activeQueue.indexOfFirst { it.id == song.id }
-                            if (originalIndex != -1 && originalIndex != finalIndex) {
-                                viewModel.moveQueueItem(originalIndex, finalIndex)
-                            }
                         }
                     )
                 }

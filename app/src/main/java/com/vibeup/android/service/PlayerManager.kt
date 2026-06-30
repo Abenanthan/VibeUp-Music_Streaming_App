@@ -143,23 +143,38 @@ class PlayerManager @Inject constructor(
                             }
                             _isPlaying.value = false
                             stopTracking()
+
+                            // ✅ Auto-skip if possible
+                            if (hasNextMediaItem()) {
+                                android.util.Log.d("PlayerManager", "Attempting auto-skip after error...")
+                                seekToNextMediaItem()
+                                prepare()
+                                play()
+                            }
                         }
 
                         override fun onMediaItemTransition(
                             mediaItem: MediaItem?,
                             reason: Int
                         ) {
-                            val index =
-                                exoPlayer?.currentMediaItemIndex ?: 0
+                            val mediaId = mediaItem?.mediaId
                             val active = _activeQueue.value
-                            if (active.isNotEmpty() && index < active.size) {
-                                val newSong = active[index]
-                                _currentSong.value = newSong
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    try {
-                                        libraryRepository
-                                            .addToRecentlyPlayed(newSong)
-                                    } catch (e: Exception) { }
+                            if (mediaId != null) {
+                                val song = active.find { it.id == mediaId }
+                                if (song != null) {
+                                    _currentSong.value = song
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            libraryRepository
+                                                .addToRecentlyPlayed(song)
+                                        } catch (e: Exception) { }
+                                    }
+                                }
+                            } else {
+                                // Fallback to index if mediaId is missing for some reason
+                                val index = exoPlayer?.currentMediaItemIndex ?: 0
+                                if (active.isNotEmpty() && index < active.size) {
+                                    _currentSong.value = active[index]
                                 }
                             }
                         }
