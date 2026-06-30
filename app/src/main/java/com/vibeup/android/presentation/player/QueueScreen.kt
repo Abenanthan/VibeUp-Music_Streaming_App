@@ -163,20 +163,20 @@ fun QueueScreen(
                             dragOffsetY = 0f
                         },
                         onDrag = { delta ->
-                            if (draggingIndex == null) return@QueueRow
+                            val currentDraggingIndex = draggingIndex ?: return@QueueRow
                             dragOffsetY += delta
                             
-                            val threshold = itemHeightPx * 0.6f
-                            if (dragOffsetY > threshold && index < localQueue.lastIndex) {
+                            val threshold = itemHeightPx * 0.5f
+                            if (dragOffsetY > threshold && currentDraggingIndex < localQueue.lastIndex) {
                                 // Moved down
-                                val toIndex = index + 1
-                                viewModel.moveQueueItem(index, toIndex)
+                                val toIndex = currentDraggingIndex + 1
+                                viewModel.moveQueueItem(currentDraggingIndex, toIndex)
                                 dragOffsetY -= itemHeightPx
                                 draggingIndex = toIndex
-                            } else if (dragOffsetY < -threshold && index > 0) {
+                            } else if (dragOffsetY < -threshold && currentDraggingIndex > 0) {
                                 // Moved up
-                                val toIndex = index - 1
-                                viewModel.moveQueueItem(index, toIndex)
+                                val toIndex = currentDraggingIndex - 1
+                                viewModel.moveQueueItem(currentDraggingIndex, toIndex)
                                 dragOffsetY += itemHeightPx
                                 draggingIndex = toIndex
                             }
@@ -205,6 +205,7 @@ private fun QueueRow(
     onDrag: (Float) -> Unit,
     onDragEnd: (Int) -> Unit
 ) {
+    val currentIndex by rememberUpdatedState(index)
     var swipeOffsetX by remember { mutableStateOf(0f) }
     val swipeThresholdPx = 180f
 
@@ -251,8 +252,8 @@ private fun QueueRow(
                             base.pointerInput(song.id) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = { onDragStart() },
-                                    onDragEnd = { onDragEnd(index) },
-                                    onDragCancel = { onDragEnd(index) },
+                                    onDragEnd = { onDragEnd(currentIndex) },
+                                    onDragCancel = { onDragEnd(currentIndex) },
                                     onDrag = { change, dragAmount ->
                                         change.consume()
                                         onDrag(dragAmount.y)
