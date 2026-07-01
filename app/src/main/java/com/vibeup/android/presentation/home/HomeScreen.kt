@@ -609,30 +609,7 @@ fun HomeHeader(navController: NavController) {
             )
         }
 
-        // In HomeHeader
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(PurplePrimary, BluePrimary)
-                    ),
-                    CircleShape
-                )
-                .clip(CircleShape)
-                .clickable {
-                    // ✅ Navigate to Stats (not Profile)
-                    navController.navigate(Screen.Stats.route)
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = "Stats",
-                tint = Color.White,
-                modifier = Modifier.size(22.dp)
-            )
-        }
+
     }
 }
 
