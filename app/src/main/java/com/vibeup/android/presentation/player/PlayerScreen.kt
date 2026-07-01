@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +33,7 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.vibeup.android.Screen
 import com.vibeup.android.presentation.library.DownloadsViewModel
+import com.vibeup.android.presentation.player.ArtistPreviewViewModel
 import com.vibeup.android.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -40,7 +42,8 @@ fun PlayerScreen(
     navController: NavController,
     viewModel: PlayerViewModel = hiltViewModel(),
     downloadsViewModel: DownloadsViewModel = hiltViewModel(),
-    lyricsViewModel: LyricsViewModel = activityViewModel()
+    lyricsViewModel: LyricsViewModel = activityViewModel(),
+    artistPreviewViewModel: ArtistPreviewViewModel = hiltViewModel()
 ) {
     val currentSong by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
@@ -55,6 +58,15 @@ fun PlayerScreen(
     val showSynced by lyricsViewModel.showSynced.collectAsState()
 
     val isLiked by viewModel.isLiked.collectAsState()
+
+    val artistPreview by artistPreviewViewModel.artist.collectAsState()
+
+    LaunchedEffect(currentSong?.artistId) {
+        currentSong?.artistId?.let { id ->
+            if (id.isNotBlank()) artistPreviewViewModel.loadArtistPreview(id)
+        }
+    }
+
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val activeQueue by viewModel.activeQueue.collectAsState()
@@ -732,6 +744,130 @@ fun PlayerScreen(
                     else -> {}
                 }
 
+                // ── About the Artist ────────────────────────────────────────────────────
+                artistPreview?.let { artist ->
+                    item {
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Text(
+                            text = "About the Artist",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = androidx.compose.ui.text.TextStyle(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(PurpleLight, BlueLight)
+                                )
+                            ),
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Cover image with credits
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp)
+                                .fillMaxWidth()
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable {
+                                    navController.navigate(Screen.Artist.createRoute(artist.id))
+                                }
+                        ) {
+                            AsyncImage(
+                                model = artist.imageUrl,
+                                contentDescription = artist.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                Color.Black.copy(alpha = 0.75f)
+                                            )
+                                        )
+                                    )
+                            )
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = artist.name,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                                if (artist.followerCount.isNotBlank() && artist.followerCount != "0") {
+                                    Text(
+                                        text = "${formatFollowerCountPlayer(artist.followerCount)} followers",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFD1D5DB)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Explore more — 3 songs only
+                        if (artist.songs.isNotEmpty()) {
+                            Text(
+                                text = "Explore more from ${artist.name}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF9CA3AF),
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            androidx.compose.foundation.lazy.LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(horizontal = 24.dp)
+                            ) {
+                                items(artist.songs.filter { it.id != song.id }.take(7)) { exploreSong ->
+                                    Column(
+                                        modifier = Modifier
+                                            .width(120.dp)
+                                            .clickable {
+                                                viewModel.playSong(exploreSong, artist.songs, "player_artist_explore")
+                                            }
+                                    ) {
+                                        AsyncImage(
+                                            model = exploreSong.imageUrl,
+                                            contentDescription = exploreSong.title,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(120.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Text(
+                                            exploreSong.title,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.White,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            exploreSong.album,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF6B7280),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Bottom padding
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }
@@ -771,4 +907,13 @@ fun formatDuration(ms: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+private fun formatFollowerCountPlayer(raw: String): String {
+    val count = raw.toLongOrNull() ?: return raw
+    return when {
+        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
+        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+        else -> count.toString()
+    }
 }
