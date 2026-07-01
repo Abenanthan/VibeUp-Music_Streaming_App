@@ -399,19 +399,50 @@ fun HomeScreen(
                         title = "🎤 Artists",
                         subtitle = "Your favourite musicians"
                     )
-                    val artistsData = remember(anirudhSongs, sidSriramSongs, arijitSongs, gvPrakashSongs, hipHopSongs) {
+                    val artistsData = remember(anirudhSongs, sidSriramSongs, arijitSongs, gvPrakashSongs, hipHopSongs, arRahmanSongs) {
                         listOf(
-                            ArtistData("Anirudh 🎸", anirudhSongs, "🎸", "https://c.saavncdn.com/artists/Anirudh_Ravichander_500x500.jpg"),
-                            ArtistData("Sid Sriram 🎤", sidSriramSongs, "🎤", "https://c.saavncdn.com/artists/Sid_Sriram_500x500.jpg"),
-                            ArtistData("Arijit Singh 💙", arijitSongs, "💙", "https://c.saavncdn.com/artists/Arijit_Singh_500x500.jpg"),
-                            ArtistData("GV Prakash 🎵", gvPrakashSongs, "🎵", "https://c.saavncdn.com/artists/G_V_Prakash_Kumar_500x500.jpg"),
-                            ArtistData("HHT 🔥", hipHopSongs, "🔥", "https://c.saavncdn.com/artists/Hiphop_Tamizha_500x500.jpg")
+                            ArtistData(
+                                name = "Anirudh",
+                                songs = anirudhSongs,
+                                emoji = "🎵",
+                                artistImageUrl = "https://c.saavncdn.com/artists/Anirudh_Ravichander_003_20260121134149_500x500.jpg",
+                                artistId = "455663"
+                            ),
+                            ArtistData(
+                                name = "Sid Sriram",
+                                songs = sidSriramSongs,
+                                emoji = "🎤",
+                                artistImageUrl = "https://c.saavncdn.com/artists/Sid_Sriram_005_20240425180600_500x500.jpg",
+                                artistId = "689580"
+                            ),
+                            ArtistData(
+                                name = "Arijit Singh",
+                                songs = arijitSongs,
+                                emoji = "🎶",
+                                artistImageUrl = "https://c.saavncdn.com/artists/Arijit_Singh_004_20241118063717_500x500.jpg",
+                                artistId = "459320"
+                            ),
+                            ArtistData(
+                                name = "GV Prakash",
+                                songs = gvPrakashSongs,
+                                emoji = "🎼",
+                                artistImageUrl = "https://c.saavncdn.com/artists/G_V__Prakash_Kumar_003_20251113063655_500x500.jpg",
+                                artistId = "455454"
+                            ),
+                            ArtistData(
+                                name = "HipHop Tamizha",
+                                songs = hipHopSongs,
+                                emoji = "🔥",
+                                artistImageUrl = "https://c.saavncdn.com/artists/Hiphop_Tamizha_002_20230315131424_500x500.jpg",
+                                artistId = "773021"
+                            )
                         )
                     }
                     ArtistsSection(
                         artists = artistsData,
                         context = context,
                         playlists = libraryPlaylists,
+                        navController = navController,
                         onSongClick = { song, queue ->
                             if (!isShuffleEnabled && !isSmartShuffle) {
                                 playerViewModel.toggleShuffle()
@@ -523,7 +554,8 @@ data class ArtistData(
     val name: String,
     val songs: List<Song>,
     val emoji: String,
-    val artistImageUrl: String
+    val artistImageUrl: String,
+    val artistId: String = ""
 )
 
 // ── Header ──
@@ -817,65 +849,31 @@ fun ArtistsSection(
     artists: List<ArtistData>,
     context: android.content.Context,
     playlists: List<Playlist>,
+    navController: NavController,                    // 👈 ADD
     onSongClick: (Song, List<Song>) -> Unit,
     onLike: (Song) -> Unit,
     onAddToPlaylist: (String, Song) -> Unit,
     onDownload: (Song, String) -> Unit
 ) {
-    // Artist avatars row
+    // ── Artist cards row ─────────────────────────────────────────────────
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(bottom = 16.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.padding(bottom = 20.dp)
     ) {
         items(artists, key = { it.name }) { artist ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.width(64.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(PurplePrimary, BluePrimary)
-                            ),
-                            CircleShape
-                        )
-                        .padding(2.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF12122A), CircleShape)
-                            .clip(CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data(artist.artistImageUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = artist.name,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+            ArtistCard(
+                artist = artist,
+                onClick = {
+                    if (artist.artistId.isNotBlank()) {
+                        navController.navigate(Screen.Artist.createRoute(artist.artistId))
                     }
                 }
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    text = artist.name.substringBefore(" ").trim(),
-                    fontSize = 10.sp,
-                    color = Color(0xFF9CA3AF),
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            )
         }
     }
 
-    // Songs per artist
+    // ── Songs per artist ─────────────────────────────────────────────────
     artists.forEach { artist ->
         if (artist.songs.isNotEmpty()) {
             Row(
@@ -883,30 +881,52 @@ fun ArtistsSection(
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .height(16.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(PurplePrimary, BluePrimary)
-                            ),
-                            RoundedCornerShape(2.dp)
-                        )
-                )
-                Text(
-                    text = artist.name,
-                    color = Color(0xFFE5E7EB),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(3.dp)
+                            .height(16.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(PurplePrimary, BluePrimary)
+                                ),
+                                RoundedCornerShape(2.dp)
+                            )
+                    )
+                    Text(
+                        text = artist.name,
+                        color = Color(0xFFE5E7EB),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                // "See all" → navigate to artist screen
+                if (artist.artistId.isNotBlank()) {
+                    Text(
+                        text = "See all",
+                        color = PurplePrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                navController.navigate(
+                                    Screen.Artist.createRoute(artist.artistId)
+                                )
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
             }
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 20.dp)
             ) {
                 items(
                     items = artist.songs,
@@ -923,6 +943,77 @@ fun ArtistsSection(
                     )
                 }
             }
+        }
+    }
+}
+
+// ── Artist Card ──────────────────────────────────────────────────────────
+@Composable
+fun ArtistCard(
+    artist: ArtistData,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(90.dp)
+            .clickable { onClick() }
+    ) {
+        // Image with gradient ring
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(PurplePrimary, BluePrimary)
+                    ),
+                    CircleShape
+                )
+                .padding(2.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF0A0A1A), CircleShape)
+                    .padding(2.dp)
+                    .clip(CircleShape)
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .data(artist.artistImageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = artist.name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = artist.name,
+            fontSize = 11.sp,
+            color = Color(0xFFE5E7EB),
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Song count badge
+        if (artist.songs.isNotEmpty()) {
+            Text(
+                text = "${artist.songs.size} songs",
+                fontSize = 10.sp,
+                color = Color(0xFF6B7280),
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
         }
     }
 }
