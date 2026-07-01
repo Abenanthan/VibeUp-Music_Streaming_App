@@ -868,6 +868,130 @@ fun PlayerScreen(
                     }
                 }
 
+                // ── Artist Credits (Spotify-style) ──────────────────────────────────────
+                val artists = song.allArtists
+                if (artists.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "Artists",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            style = androidx.compose.ui.text.TextStyle(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(PurpleLight, BlueLight)
+                                )
+                            ),
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            artists.take(3).forEach { artist ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color(0xFF0D0D2B))
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Artist avatar
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                Brush.linearGradient(
+                                                    colors = listOf(PurplePrimary, BluePrimary)
+                                                )
+                                            )
+                                    ) {
+                                        if (artist.imageUrl.isNotBlank()) {
+                                            AsyncImage(
+                                                model = artist.imageUrl,
+                                                contentDescription = artist.name,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        } else {
+                                            // Fallback initial letter
+                                            Box(
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = artist.name.firstOrNull()?.toString() ?: "?",
+                                                    fontSize = 20.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    // Artist name + role
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = artist.name,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color.White,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = if (artists.indexOf(artist) == 0)
+                                                "Primary Artist"
+                                            else
+                                                "Featured Artist",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF6B7280)
+                                        )
+                                    }
+
+                                    // Explore button
+                                    if (artist.id.isNotBlank()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(20.dp))
+                                                .background(
+                                                    Brush.linearGradient(
+                                                        colors = listOf(
+                                                            PurplePrimary.copy(alpha = 0.3f),
+                                                            BluePrimary.copy(alpha = 0.3f)
+                                                        )
+                                                    )
+                                                )
+                                                .clickable {
+                                                    navController.navigate(
+                                                        Screen.Artist.createRoute(artist.id)
+                                                    )
+                                                }
+                                                .padding(horizontal = 14.dp, vertical = 7.dp)
+                                        ) {
+                                            Text(
+                                                text = "Explore",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = Color(0xFFA78BFA)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
                 // Bottom padding
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }

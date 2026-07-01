@@ -1,5 +1,6 @@
 package com.vibeup.android.data.remote.dto
 
+import com.vibeup.android.domain.model.ArtistCredit
 import com.vibeup.android.domain.model.Song
 
 fun SongDto.toDomain(): Song {
@@ -12,6 +13,13 @@ fun SongDto.toDomain(): Song {
         duration = duration ?: 0,
         imageUrl = image?.lastOrNull()?.url ?: "",
         audioUrl = downloadUrl?.lastOrNull()?.url ?: "",
-        language = language ?: ""
+        language = language ?: "",
+        allArtists = artists?.primary?.map {
+            ArtistCredit(
+                id = it.id ?: "",
+                name = it.name ?: "",
+                imageUrl = it.image?.lastOrNull()?.url ?: ""
+            )
+        } ?: emptyList()
     )
 }

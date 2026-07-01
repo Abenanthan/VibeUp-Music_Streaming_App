@@ -29,8 +29,9 @@ data class ArtistsDto(
 )
 
 data class ArtistDto(
-    @SerializedName("id")   val id: String?,
-    @SerializedName("name") val name: String?
+    @SerializedName("id")    val id: String?,
+    @SerializedName("name")  val name: String?,
+    @SerializedName("image") val image: List<ImageDto>?
 )
 
 data class AlbumDto(
