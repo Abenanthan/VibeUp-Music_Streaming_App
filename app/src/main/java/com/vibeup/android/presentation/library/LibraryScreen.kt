@@ -30,6 +30,7 @@ import com.vibeup.android.presentation.auth.AuthViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.theme.*
 import androidx.compose.foundation.shape.CircleShape
+import com.vibeup.android.presentation.stats.StatsWidget
 
 @Composable
 fun LibraryScreen(
@@ -434,7 +435,18 @@ fun LibraryScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+
+                    // After the Downloads card item { ... } block, add:
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        StatsWidget(
+                            onOpenStats = { navController.navigate(Screen.Stats.route) }
+                        )
+                    }
                 }
+
+                // After the Downloads card item { ... } block, add:
+
 
                 // ── Liked Songs Tab ──
                 1 -> {
@@ -986,4 +998,6 @@ fun LibrarySongItem(
             }
         }
     }
+
+
 }

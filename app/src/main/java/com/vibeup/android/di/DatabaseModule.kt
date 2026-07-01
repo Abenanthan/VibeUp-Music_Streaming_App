@@ -12,6 +12,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import com.vibeup.android.data.local.dao.DownloadDao
 import com.vibeup.android.data.local.dao.LyricsDao
+import com.vibeup.android.data.local.dao.PlayHistoryDao
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -51,4 +52,10 @@ object DatabaseModule
     fun provideLyricsDao(database: VibeUpDatabase): LyricsDao {
         return database.lyricsDao()
     }
+
+    @Provides
+    @Singleton
+    fun providePlayHistoryDao(
+        database: VibeUpDatabase
+    ): PlayHistoryDao = database.playHistoryDao()
 }

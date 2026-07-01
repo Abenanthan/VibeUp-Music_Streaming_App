@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
+import com.vibeup.android.data.local.dao.PlayHistoryDao
+import com.vibeup.android.data.local.entity.PlayHistory
 
 class LibraryRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val playHistoryDao: PlayHistoryDao
 ) : LibraryRepository {
 
     private val uid get() = auth.currentUser?.uid ?: ""
@@ -141,19 +144,32 @@ class LibraryRepositoryImpl @Inject constructor(
             .await()
     }
 
-    override suspend fun addToRecentlyPlayed(song: Song) {
-        if (uid.isEmpty()) return
-        try {
-            userDoc().collection("recentlyPlayed")
-                .document(song.id)
-                .set(song.toMap() + mapOf(
-                    "playedAt" to System.currentTimeMillis()
-                ))
-                .await()
-        } catch (e: Exception) {
-            android.util.Log.e("LibraryRepo", "Recently played error: ${e.message}")
+
+        override suspend fun addToRecentlyPlayed(song: Song) {
+            if (uid.isEmpty()) return
+            try {
+                // ✅ Save to Firestore (existing)
+                userDoc().collection("recentlyPlayed")
+                    .document(song.id)
+                    .set(song.toMap() + mapOf(
+                        "playedAt" to System.currentTimeMillis()
+                    )).await()
+
+                // ✅ Save to local Room DB for stats
+                playHistoryDao.insertPlay(
+                    PlayHistory(
+                        songId = song.id,
+                        title = song.title,
+                        artist = song.artist,
+                        album = song.album,
+                        imageUrl = song.imageUrl,
+                        duration = song.duration
+                    )
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("LibraryRepo", "RecentlyPlayed: ${e.message}")
+            }
         }
-    }
 
     override fun getRecentlyPlayed(): Flow<List<Song>> = callbackFlow {
         if (uid.isEmpty()) {

@@ -38,7 +38,9 @@ import com.vibeup.android.ui.theme.DarkBackground
 import com.vibeup.android.ui.theme.DarkCard
 import com.vibeup.android.ui.theme.TextSecondary
 import com.vibeup.android.ui.theme.VibeUpGreen
-
+import com.vibeup.android.ui.theme.PurplePrimary
+import androidx.compose.material.icons.filled.BarChart
+import com.vibeup.android.presentation.stats.StatsWidget
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -274,7 +276,12 @@ fun ProfileScreen(
                 }
             }
 
+            StatsWidget(
+                onOpenStats = { navController.navigate(Screen.Stats.route) }
+            )
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Add to ProfileScreen
 
             // Email (Read only)
             Card(
