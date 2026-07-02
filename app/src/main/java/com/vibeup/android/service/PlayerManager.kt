@@ -178,6 +178,16 @@ class PlayerManager @Inject constructor(
                                     _currentSong.value = active[index]
                                 }
                             }
+
+                            // ✅ Reset volume and restart monitoring on every transition
+                            exoPlayer?.let {
+                                if (crossfadeManager.isEnabled.value) {
+                                    crossfadeManager.fadeIn(it) { }
+                                    startCrossfadeMonitoring(it)
+                                } else {
+                                    it.volume = 1f
+                                }
+                            }
                         }
                     })
                 }
@@ -333,16 +343,7 @@ class PlayerManager @Inject constructor(
         player.repeatMode = Player.REPEAT_MODE_ALL
         _repeatMode.value = Player.REPEAT_MODE_ALL
         player.prepare()
-
-        // ✅ Fade in new song if crossfade enabled
-        if (crossfadeManager.isEnabled.value) {
-            crossfadeManager.fadeIn(player) { }
-        }
-
         player.play()
-
-        // ✅ Start crossfade monitoring
-        startCrossfadeMonitoring(player)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -568,30 +569,19 @@ class PlayerManager @Inject constructor(
 
     private fun startCrossfadeMonitoring(player: ExoPlayer) {
         crossfadeManager.stopMonitoring()
-        if (!crossfadeManager.isEnabled.value) return
+        if (!crossfadeManager.isEnabled.value) {
+            player.volume = 1f
+            return
+        }
+
+        val startIndex = player.currentMediaItemIndex
 
         crossfadeManager.startMonitoring(player) {
-            // ✅ Triggered near end of song
             android.util.Log.d("PlayerManager", "Crossfade triggered!")
             crossfadeManager.fadeOut(player) {
-                // After fade out seek to next
-                if (player.hasNextMediaItem()) {
+                // ✅ Only skip if ExoPlayer hasn't transitioned naturally yet
+                if (player.currentMediaItemIndex == startIndex && player.hasNextMediaItem()) {
                     player.seekToNextMediaItem()
-                    crossfadeManager.fadeIn(player) {
-                        // Restart monitoring for next song
-                        startCrossfadeMonitoring(player)
-                    }
-                }
-            }
-
-            // ✅ Start fading in next song simultaneously
-            val currentIndex = player.currentMediaItemIndex
-            val nextIndex = currentIndex + 1
-            if (nextIndex < player.mediaItemCount) {
-                // Update current song state
-                val active = _activeQueue.value
-                if (nextIndex < active.size) {
-                    _currentSong.value = active[nextIndex]
                 }
             }
         }

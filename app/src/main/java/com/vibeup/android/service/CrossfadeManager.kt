@@ -32,13 +32,18 @@ class CrossfadeManager @Inject constructor(
     )
     val durationSeconds: StateFlow<Int> = _durationSeconds.asStateFlow()
 
-    private var fadeJob: Job? = null
+    private var monitoringJob: Job? = null
+    private var volumeJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun toggle() {
         val enabled = !_isEnabled.value
         _isEnabled.value = enabled
         prefs.edit().putBoolean("crossfade_enabled", enabled).apply()
+        if (!enabled) {
+            monitoringJob?.cancel()
+            volumeJob?.cancel()
+        }
     }
 
     fun setDuration(seconds: Int) {
@@ -51,14 +56,14 @@ class CrossfadeManager @Inject constructor(
         player: ExoPlayer,
         onCrossfadeNeeded: () -> Unit
     ) {
-        fadeJob?.cancel()
-        fadeJob = scope.launch {
+        monitoringJob?.cancel()
+        monitoringJob = scope.launch {
             while (true) {
                 delay(500)
                 if (!_isEnabled.value) continue
-                val player2 = player
-                val duration = player2.duration
-                val position = player2.currentPosition
+                
+                val duration = player.duration
+                val position = player.currentPosition
                 if (duration <= 0) continue
 
                 val timeRemaining = duration - position
@@ -66,7 +71,7 @@ class CrossfadeManager @Inject constructor(
 
                 // ✅ Trigger crossfade when near end
                 if (timeRemaining in 1..(crossfadeDurationMs + 500) &&
-                    player2.isPlaying
+                    player.isPlaying
                 ) {
                     onCrossfadeNeeded()
                     break
@@ -80,12 +85,13 @@ class CrossfadeManager @Inject constructor(
         player: ExoPlayer,
         onComplete: () -> Unit
     ) {
+        volumeJob?.cancel()
         val durationMs = _durationSeconds.value * 1000L
         val steps = 20
         val stepDelay = durationMs / steps
         var currentStep = 0
 
-        scope.launch {
+        volumeJob = scope.launch {
             while (currentStep <= steps) {
                 val volume = 1f - (currentStep.toFloat() / steps)
                 player.volume = volume.coerceIn(0f, 1f)
@@ -102,6 +108,7 @@ class CrossfadeManager @Inject constructor(
         player: ExoPlayer,
         onComplete: () -> Unit
     ) {
+        volumeJob?.cancel()
         val durationMs = _durationSeconds.value * 1000L
         val steps = 20
         val stepDelay = durationMs / steps
@@ -109,7 +116,7 @@ class CrossfadeManager @Inject constructor(
 
         player.volume = 0f
 
-        scope.launch {
+        volumeJob = scope.launch {
             while (currentStep <= steps) {
                 val volume = currentStep.toFloat() / steps
                 player.volume = volume.coerceIn(0f, 1f)
@@ -122,11 +129,12 @@ class CrossfadeManager @Inject constructor(
     }
 
     fun cancelFade(player: ExoPlayer) {
-        fadeJob?.cancel()
+        monitoringJob?.cancel()
+        volumeJob?.cancel()
         player.volume = 1f
     }
 
     fun stopMonitoring() {
-        fadeJob?.cancel()
+        monitoringJob?.cancel()
     }
 }
