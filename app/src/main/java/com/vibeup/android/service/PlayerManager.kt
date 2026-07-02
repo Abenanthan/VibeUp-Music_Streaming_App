@@ -35,7 +35,8 @@ class PlayerManager @Inject constructor(
     private val libraryRepository: LibraryRepository,
     private val audioEffectsManager: AudioEffectsManager,
     private val networkMonitor: NetworkMonitor,
-    private val softwareEqualizer: SoftwareEqualizer
+    private val softwareEqualizer: SoftwareEqualizer,
+    private val crossfadeManager: CrossfadeManager
 ) {
     private var exoPlayer: ExoPlayer? = null
     private val scope = CoroutineScope(Dispatchers.Main)
@@ -309,7 +310,9 @@ class PlayerManager @Inject constructor(
                             .build()
                     )
                     .build()
-            } catch (e: Exception) {
+            }
+
+            catch (e: Exception) {
                 android.util.Log.e("PlayerManager", "Error building MediaItem for ${s.title}: ${e.message}")
                 null
             }
@@ -330,7 +333,16 @@ class PlayerManager @Inject constructor(
         player.repeatMode = Player.REPEAT_MODE_ALL
         _repeatMode.value = Player.REPEAT_MODE_ALL
         player.prepare()
+
+        // ✅ Fade in new song if crossfade enabled
+        if (crossfadeManager.isEnabled.value) {
+            crossfadeManager.fadeIn(player) { }
+        }
+
         player.play()
+
+        // ✅ Start crossfade monitoring
+        startCrossfadeMonitoring(player)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -554,7 +566,42 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    private fun startCrossfadeMonitoring(player: ExoPlayer) {
+        crossfadeManager.stopMonitoring()
+        if (!crossfadeManager.isEnabled.value) return
+
+        crossfadeManager.startMonitoring(player) {
+            // ✅ Triggered near end of song
+            android.util.Log.d("PlayerManager", "Crossfade triggered!")
+            crossfadeManager.fadeOut(player) {
+                // After fade out seek to next
+                if (player.hasNextMediaItem()) {
+                    player.seekToNextMediaItem()
+                    crossfadeManager.fadeIn(player) {
+                        // Restart monitoring for next song
+                        startCrossfadeMonitoring(player)
+                    }
+                }
+            }
+
+            // ✅ Start fading in next song simultaneously
+            val currentIndex = player.currentMediaItemIndex
+            val nextIndex = currentIndex + 1
+            if (nextIndex < player.mediaItemCount) {
+                // Update current song state
+                val active = _activeQueue.value
+                if (nextIndex < active.size) {
+                    _currentSong.value = active[nextIndex]
+                }
+            }
+        }
+    }
+
     fun resetState() {
+        crossfadeManager.stopMonitoring()  // ← ADD
+        exoPlayer?.let {
+            crossfadeManager.cancelFade(it)  // ← ADD
+        }
         progressJob?.cancel()
         audioEffectsManager.releaseEffects()
         exoPlayer?.stop()
@@ -569,7 +616,6 @@ class PlayerManager @Inject constructor(
         _activeQueue.value = emptyList()
         _isSmartShuffle.value = false
         _isShuffleEnabled.value = false
-        _playbackError.value = null
     }
 
     fun clearError() {

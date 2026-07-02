@@ -33,11 +33,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import android.media.audiofx.PresetReverb
 import androidx.compose.ui.platform.LocalContext
-
+import com.vibeup.android.service.CrossfadeManager
 // ── ViewModel ──
 @HiltViewModel
 class AudioEffectsViewModel @Inject constructor(
-    val audioEffectsManager: AudioEffectsManager
+    val audioEffectsManager: AudioEffectsManager,
+    val crossfadeManager: CrossfadeManager
 ) : ViewModel()
 
 // ── Screen ──
@@ -532,6 +533,115 @@ fun AudioEffectsScreen(
                 )
             }
 
+            // ── Crossfade Card ──
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val crossfadeEnabled by viewModel.crossfadeManager.isEnabled.collectAsState()
+            val crossfadeDuration by viewModel.crossfadeManager.durationSeconds.collectAsState()
+
+            EffectCard(
+                title = "🎵 Crossfade",
+                subtitle = "Smooth transitions between songs",
+                enabled = crossfadeEnabled,
+                onToggle = { viewModel.crossfadeManager.toggle() }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Duration",
+                        fontSize = 12.sp,
+                        color = Color(0xFF6B7280)
+                    )
+                    Text(
+                        "$crossfadeDuration seconds",
+                        fontSize = 12.sp,
+                        color = PurplePrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Slider(
+                    value = crossfadeDuration.toFloat(),
+                    onValueChange = {
+                        viewModel.crossfadeManager.setDuration(it.toInt())
+                    },
+                    valueRange = 1f..12f,
+                    steps = 10,
+                    colors = SliderDefaults.colors(
+                        thumbColor = PurplePrimary,
+                        activeTrackColor = PurplePrimary,
+                        inactiveTrackColor = Color(0xFF2A2A4A)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Duration presets
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(3, 5, 7, 10, 12).forEach { seconds ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(28.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (crossfadeDuration == seconds)
+                                        Brush.linearGradient(
+                                            colors = listOf(
+                                                PurplePrimary,
+                                                BluePrimary
+                                            )
+                                        )
+                                    else
+                                        Brush.linearGradient(
+                                            colors = listOf(
+                                                Color(0xFF1C1C3A),
+                                                Color(0xFF1C1C3A)
+                                            )
+                                        )
+                                )
+                                .clickable {
+                                    viewModel.crossfadeManager.setDuration(seconds)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "${seconds}s",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (crossfadeDuration == seconds)
+                                    Color.White
+                                else
+                                    Color(0xFF6B7280)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF0A1628))
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("💡", fontSize = 14.sp)
+                    Text(
+                        "Songs fade out and overlap smoothly. " +
+                                "Works best with 5-7 seconds.",
+                        fontSize = 11.sp,
+                        color = Color(0xFF4B5563),
+                        lineHeight = 16.sp
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -578,6 +688,8 @@ private fun launchSystemEqualizer(context: android.content.Context, audioSession
         ).show()
     }
 }
+
+
 
 // ── Effect Card Component ──
 @Composable
