@@ -39,6 +39,7 @@ import com.vibeup.android.ui.theme.DarkCard
 import com.vibeup.android.ui.theme.TextSecondary
 import com.vibeup.android.ui.theme.VibeUpGreen
 import com.vibeup.android.ui.theme.PurplePrimary
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.BarChart
 import com.vibeup.android.presentation.stats.StatsWidget
 @Composable
@@ -276,13 +277,6 @@ fun ProfileScreen(
                 }
             }
 
-            StatsWidget(
-                onOpenStats = { navController.navigate(Screen.Stats.route) }
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Add to ProfileScreen
-
             // Email (Read only)
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -349,6 +343,48 @@ fun ProfileScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Downloads
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate(Screen.Downloads.route) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkCard)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = null,
+                        tint = VibeUpGreen
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Downloads",
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Manage your offline music",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            StatsWidget(
+                onOpenStats = { navController.navigate(Screen.Stats.route) }
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

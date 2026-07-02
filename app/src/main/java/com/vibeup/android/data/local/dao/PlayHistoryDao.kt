@@ -87,12 +87,7 @@ interface PlayHistoryDao {
     ): List<DayPlayCount>
 
     // ✅ Listening streak
-    @Query("""
-    SELECT dayOfYear, year, COUNT(*) as playCount
-    FROM play_history
-    GROUP BY dayOfYear, year
-    ORDER BY year DESC, dayOfYear DESC
-""")
+    @Query("SELECT dayOfYear, year, COUNT(*) as playCount FROM play_history GROUP BY dayOfYear, year ORDER BY year DESC, dayOfYear DESC")
     suspend fun getDistinctPlayDays(): List<DayPlayCount>
 
     // ✅ Most played album

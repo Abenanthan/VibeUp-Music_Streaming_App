@@ -436,13 +436,14 @@ fun LibraryScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    // After the Downloads card item { ... } block, add:
-                    item {
+                    // STATS SCREEN DISABLED
+
+                    /*item {
                         Spacer(modifier = Modifier.height(8.dp))
                         StatsWidget(
                             onOpenStats = { navController.navigate(Screen.Stats.route) }
                         )
-                    }
+                    }*/
                 }
 
                 // After the Downloads card item { ... } block, add:
