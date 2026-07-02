@@ -33,10 +33,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.LocalSong
 import com.vibeup.android.presentation.player.PlayerViewModel
-import com.vibeup.android.ui.theme.DarkBackground
-import com.vibeup.android.ui.theme.DarkCard
-import com.vibeup.android.ui.theme.TextSecondary
-import com.vibeup.android.ui.theme.VibeUpGreen
 
 @Composable
 fun LocalMusicScreen(
@@ -65,7 +61,7 @@ fun LocalMusicScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1A1A2E), DarkBackground)
+                    colors = listOf(Color(0xFF1A1A2E), MaterialTheme.colorScheme.background)
                 )
             )
     ) {
@@ -79,7 +75,7 @@ fun LocalMusicScreen(
                 text = "Local Music 📁",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = VibeUpGreen,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -96,7 +92,7 @@ fun LocalMusicScreen(
                         Icon(
                             Icons.Default.FolderOpen,
                             contentDescription = null,
-                            tint = VibeUpGreen,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(80.dp)
                         )
                         Text(
@@ -108,7 +104,7 @@ fun LocalMusicScreen(
                         Text(
                             text = "Allow VibeUp to access your\nlocal music files",
                             fontSize = 14.sp,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                         Button(
@@ -121,7 +117,7 @@ fun LocalMusicScreen(
                                 permissionLauncher.launch(permission)
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = VibeUpGreen,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.Black
                             ),
                             shape = RoundedCornerShape(12.dp)
@@ -139,13 +135,13 @@ fun LocalMusicScreen(
                     value = searchQuery,
                     onValueChange = { viewModel.onSearchQueryChange(it) },
                     placeholder = {
-                        Text("Search local songs...", color = TextSecondary)
+                        Text("Search local songs...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
                     trailingIcon = {
@@ -156,7 +152,7 @@ fun LocalMusicScreen(
                                 Icon(
                                     Icons.Default.Clear,
                                     contentDescription = "Clear",
-                                    tint = TextSecondary
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -164,13 +160,13 @@ fun LocalMusicScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = VibeUpGreen,
-                        unfocusedBorderColor = DarkCard,
-                        focusedContainerColor = DarkCard,
-                        unfocusedContainerColor = DarkCard,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        cursorColor = VibeUpGreen
+                        cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Search
@@ -190,12 +186,12 @@ fun LocalMusicScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 CircularProgressIndicator(
-                                    color = VibeUpGreen
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     "Scanning music...",
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -212,12 +208,12 @@ fun LocalMusicScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
                                     text = "No local songs found!",
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 16.sp
                                 )
                                 Text(
                                     text = "Add mp3, flac or m4a files\nto your device",
-                                    color = TextSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -229,7 +225,7 @@ fun LocalMusicScreen(
                         Text(
                             text = "${localSongs.size} songs found",
                             fontSize = 13.sp,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
@@ -267,7 +263,7 @@ fun LocalSongItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkCard),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         onClick = onClick
     ) {
         Row(
@@ -297,7 +293,7 @@ fun LocalSongItem(
                 Icon(
                     Icons.Default.MusicNote,
                     contentDescription = null,
-                    tint = TextSecondary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -315,7 +311,7 @@ fun LocalSongItem(
                 )
                 Text(
                     text = song.artist,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -323,14 +319,13 @@ fun LocalSongItem(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Format badge
                     Surface(
                         shape = RoundedCornerShape(4.dp),
-                        color = VibeUpGreen.copy(alpha = 0.2f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                     ) {
                         Text(
                             text = song.format,
-                            color = VibeUpGreen,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(
@@ -342,7 +337,7 @@ fun LocalSongItem(
                     // Duration
                     Text(
                         text = formatLocalDuration(song.duration),
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
                     )
                 }

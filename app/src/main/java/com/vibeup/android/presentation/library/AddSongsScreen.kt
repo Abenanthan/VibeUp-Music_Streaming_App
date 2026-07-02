@@ -35,7 +35,6 @@ import com.vibeup.android.data.remote.api.SaavnApiService
 import com.vibeup.android.data.remote.dto.toDomain
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.LibraryRepository
-import com.vibeup.android.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -168,7 +167,7 @@ fun AddSongsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -215,7 +214,7 @@ fun AddSongsScreen(
                         .clip(RoundedCornerShape(20.dp))
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(PurplePrimary, BluePrimary)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                             )
                         )
                         .clickable { navController.popBackStack() }
@@ -269,11 +268,11 @@ fun AddSongsScreen(
                     .padding(bottom = 16.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PurplePrimary,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = Color(0xFF2A2A4A),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    cursorColor = PurplePrimary,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color(0xFF12122A),
                     unfocusedContainerColor = Color(0xFF12122A)
                 ),
@@ -298,7 +297,7 @@ fun AddSongsScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             CircularProgressIndicator(
-                                color = PurplePrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(36.dp),
                                 strokeWidth = 3.dp
                             )
@@ -382,7 +381,7 @@ fun AddSongsScreen(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = PurplePrimary
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
@@ -461,7 +460,7 @@ fun AddSongItem(
                         )
                     else
                         Brush.linearGradient(
-                            colors = listOf(PurplePrimary, BluePrimary)
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                         )
                 )
                 .clickable { onAdd() },

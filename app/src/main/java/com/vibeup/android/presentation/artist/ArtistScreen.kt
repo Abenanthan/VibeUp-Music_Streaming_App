@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,7 +29,7 @@ import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.Artist
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.presentation.player.PlayerViewModel
-import com.vibeup.android.ui.theme.*
+import java.util.Locale
 
 @Composable
 fun ArtistScreen(
@@ -43,21 +42,21 @@ fun ArtistScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         when (val state = uiState) {
             is ArtistUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PurplePrimary)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is ArtistUiState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(state.message, color = Color(0xFF6B7280), fontSize = 13.sp)
+                        Text(state.message, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                         Spacer(Modifier.height(12.dp))
                         TextButton(onClick = { viewModel.loadArtist() }) {
-                            Text("Retry", color = PurplePrimary)
+                            Text("Retry", color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -65,7 +64,6 @@ fun ArtistScreen(
             is ArtistUiState.Success -> {
                 ArtistContent(
                     artist = state.artist,
-                    onBack = { navController.popBackStack() },
                     onPlaySong = { song, queue ->
                         playerViewModel.playSong(song, queue)
                     }
@@ -94,7 +92,6 @@ fun ArtistScreen(
 @Composable
 private fun ArtistContent(
     artist: Artist,
-    onBack: () -> Unit,
     onPlaySong: (Song, List<Song>) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -165,7 +162,12 @@ private fun ArtistContent(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    Brush.linearGradient(listOf(PurplePrimary, BluePrimary)),
+                                    Brush.linearGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.tertiary
+                                        )
+                                    ),
                                     RoundedCornerShape(14.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -382,8 +384,8 @@ private fun ArtistSongRow(song: Song, index: Int, onClick: () -> Unit) {
 private fun formatFollowerCount(raw: String): String {
     val count = raw.toLongOrNull() ?: return raw
     return when {
-        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
-        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+        count >= 1_000_000 -> String.format(Locale.getDefault(), "%.1fM", count / 1_000_000.0)
+        count >= 1_000 -> String.format(Locale.getDefault(), "%.1fK", count / 1_000.0)
         else -> count.toString()
     }
 }

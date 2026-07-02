@@ -28,6 +28,7 @@ import com.vibeup.android.presentation.auth.AuthViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.components.MiniPlayer
 import com.vibeup.android.ui.theme.VibeUpTheme
+import com.vibeup.android.ui.theme.ThemeManager
 import com.vibeup.android.presentation.player.LyricsViewModel
 import com.vibeup.android.presentation.player.activityViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,6 +49,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var playerManager: PlayerManager
 
+    @Inject
+    lateinit var themeManager: ThemeManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -66,7 +70,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            VibeUpTheme {
+            VibeUpTheme(themeManager = themeManager) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route

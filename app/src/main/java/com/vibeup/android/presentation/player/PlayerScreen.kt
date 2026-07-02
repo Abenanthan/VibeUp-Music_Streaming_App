@@ -33,9 +33,9 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.vibeup.android.Screen
 import com.vibeup.android.presentation.library.DownloadsViewModel
-import com.vibeup.android.presentation.player.ArtistPreviewViewModel
-import com.vibeup.android.ui.theme.*
 import kotlinx.coroutines.launch
+import java.util.Locale
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 
 @Composable
 fun PlayerScreen(
@@ -156,7 +156,7 @@ fun PlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         currentSong?.let { song ->
             LazyColumn(
@@ -196,7 +196,7 @@ fun PlayerScreen(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.5.sp,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = song.album.ifEmpty { "VibeUp" },
@@ -267,7 +267,7 @@ fun PlayerScreen(
                             Text(
                                 text = song.artist,
                                 fontSize = 16.sp,
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.clickable(enabled = song.artistId.isNotBlank()) {
@@ -283,14 +283,14 @@ fun PlayerScreen(
                                     Icons.Default.FavoriteBorder,
                                 contentDescription = "Like",
                                 tint = if (isLiked)
-                                    PinkAccent
+                                    MaterialTheme.colorScheme.tertiary
                                 else
                                     Color.White,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
                         IconButton(onClick = { navController.navigate(Screen.Queue.route) }) {
-                            Icon(Icons.Default.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = "Queue", tint = Color.White)
                         }
 
                         Box {
@@ -347,7 +347,7 @@ fun PlayerScreen(
                             },
                             colors = SliderDefaults.colors(
                                 thumbColor = Color.White,
-                                activeTrackColor = PurplePrimary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
                                 inactiveTrackColor = Color.White.copy(alpha = 0.2f)
                             ),
                             modifier = Modifier.fillMaxWidth()
@@ -359,12 +359,12 @@ fun PlayerScreen(
                             Text(
                                 text = formatDuration(currentPosition),
                                 fontSize = 12.sp,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = formatDuration(duration),
                                 fontSize = 12.sp,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -390,7 +390,7 @@ fun PlayerScreen(
                                     contentDescription = "Shuffle",
                                     tint = when {
                                         isSmartShuffle -> Color(0xFF10B981) // green = smart
-                                        isShuffleEnabled -> PurplePrimary   // purple = normal
+                                        isShuffleEnabled -> MaterialTheme.colorScheme.primary   // primary = normal
                                         else -> Color.White                  // white = off
                                     },
                                     modifier = Modifier.size(26.dp)
@@ -403,7 +403,7 @@ fun PlayerScreen(
                                         color = if (isSmartShuffle)
                                             Color(0xFF10B981)
                                         else
-                                            PurplePrimary
+                                            MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
@@ -433,8 +433,8 @@ fun PlayerScreen(
                                     .background(
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                PurplePrimary,
-                                                BluePrimary
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.tertiary
                                             )
                                         ),
                                         CircleShape
@@ -486,7 +486,7 @@ fun PlayerScreen(
                                 },
                                 contentDescription = "Repeat",
                                 tint = if (repeatMode != Player.REPEAT_MODE_OFF)
-                                    PurplePrimary
+                                    MaterialTheme.colorScheme.primary
                                 else
                                     Color.White,
                                 modifier = Modifier.size(26.dp)
@@ -511,7 +511,7 @@ fun PlayerScreen(
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
                                 brush = Brush.horizontalGradient(
-                                    colors = listOf(PurpleLight, BlueLight)
+                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                 )
                             )
                         )
@@ -533,8 +533,8 @@ fun PlayerScreen(
                                                     if (showSynced == sync)
                                                         Brush.linearGradient(
                                                             colors = listOf(
-                                                                PurplePrimary,
-                                                                BluePrimary
+                                                                MaterialTheme.colorScheme.primary,
+                                                                MaterialTheme.colorScheme.tertiary
                                                             )
                                                         )
                                                     else
@@ -584,13 +584,13 @@ fun PlayerScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     CircularProgressIndicator(
-                                        color = PurplePrimary,
+                                        color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(28.dp),
                                         strokeWidth = 2.dp
                                     )
                                     Text(
                                         "Loading lyrics...",
-                                        color = TextSecondary,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 12.sp
                                     )
                                 }
@@ -632,7 +632,7 @@ fun PlayerScreen(
                                                 Modifier
                                                     .clip(RoundedCornerShape(10.dp))
                                                     .background(
-                                                        PurplePrimary.copy(
+                                                        MaterialTheme.colorScheme.primary.copy(
                                                             alpha = 0.15f
                                                         )
                                                     )
@@ -700,13 +700,13 @@ fun PlayerScreen(
                                     Text("🎵", fontSize = 32.sp)
                                     Text(
                                         "Lyrics not available",
-                                        color = TextSecondary,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Text(
                                         "for ${song.title}",
-                                        color = TextSecondary.copy(alpha = 0.6f),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                         fontSize = 12.sp
                                     )
                                 }
@@ -732,7 +732,7 @@ fun PlayerScreen(
                                     Text("🎸", fontSize = 32.sp)
                                     Text(
                                         "Instrumental Track",
-                                        color = TextSecondary,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.SemiBold
                                     )
@@ -755,7 +755,7 @@ fun PlayerScreen(
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
                                 brush = Brush.horizontalGradient(
-                                    colors = listOf(PurpleLight, BlueLight)
+                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                 )
                             ),
                             modifier = Modifier.padding(horizontal = 24.dp)
@@ -880,7 +880,7 @@ fun PlayerScreen(
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
                                 brush = Brush.horizontalGradient(
-                                    colors = listOf(PurpleLight, BlueLight)
+                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                 )
                             ),
                             modifier = Modifier.padding(horizontal = 24.dp)
@@ -910,7 +910,7 @@ fun PlayerScreen(
                                             .clip(CircleShape)
                                             .background(
                                                 Brush.linearGradient(
-                                                    colors = listOf(PurplePrimary, BluePrimary)
+                                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                                 )
                                             )
                                     ) {
@@ -965,8 +965,8 @@ fun PlayerScreen(
                                                 .background(
                                                     Brush.linearGradient(
                                                         colors = listOf(
-                                                            PurplePrimary.copy(alpha = 0.3f),
-                                                            BluePrimary.copy(alpha = 0.3f)
+                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
                                                         )
                                                     )
                                                 )
@@ -1009,7 +1009,7 @@ fun PlayerScreen(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = PurplePrimary
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
@@ -1036,8 +1036,8 @@ fun formatDuration(ms: Long): String {
 private fun formatFollowerCountPlayer(raw: String): String {
     val count = raw.toLongOrNull() ?: return raw
     return when {
-        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
-        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+        count >= 1_000_000 -> String.format(Locale.getDefault(), "%.1fM", count / 1_000_000.0)
+        count >= 1_000 -> String.format(Locale.getDefault(), "%.1fK", count / 1_000.0)
         else -> count.toString()
     }
 }

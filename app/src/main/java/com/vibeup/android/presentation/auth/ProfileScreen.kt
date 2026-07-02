@@ -12,11 +12,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -34,14 +34,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.vibeup.android.Screen
-import com.vibeup.android.ui.theme.DarkBackground
-import com.vibeup.android.ui.theme.DarkCard
-import com.vibeup.android.ui.theme.TextSecondary
-import com.vibeup.android.ui.theme.VibeUpGreen
-import com.vibeup.android.ui.theme.PurplePrimary
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.BarChart
 import com.vibeup.android.presentation.stats.StatsWidget
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.ChevronRight
 @Composable
 fun ProfileScreen(
     navController: NavController,
@@ -90,7 +86,7 @@ fun ProfileScreen(
                 Text("Logout", color = Color.White, fontWeight = FontWeight.Bold)
             },
             text = {
-                Text("Are you sure you want to logout?", color = TextSecondary)
+                Text("Are you sure you want to logout?", color = MaterialTheme.colorScheme.onSurfaceVariant)
             },
             confirmButton = {
                 Button(
@@ -108,10 +104,10 @@ fun ProfileScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = DarkCard
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 
@@ -120,7 +116,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1A1A2E), DarkBackground)
+                    colors = listOf(Color(0xFF1A1A2E), MaterialTheme.colorScheme.background)
                 )
             )
     ) {
@@ -153,9 +149,9 @@ fun ProfileScreen(
                 )
                 IconButton(onClick = { showLogoutDialog = true }) {
                     Icon(
-                        Icons.Default.ExitToApp,
+                        Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Logout",
-                        tint = TextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -171,7 +167,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .border(3.dp, VibeUpGreen, CircleShape),
+                            .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
                         contentScale = ContentScale.Crop
                     )
                 } else {
@@ -179,14 +175,14 @@ fun ProfileScreen(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(DarkCard)
-                            .border(3.dp, VibeUpGreen, CircleShape),
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(3.dp, MaterialTheme.colorScheme.primary, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            tint = TextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(64.dp)
                         )
                     }
@@ -197,7 +193,7 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(VibeUpGreen)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable { imagePickerLauncher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
@@ -216,13 +212,13 @@ fun ProfileScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Display Name",
                         fontSize = 12.sp,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     if (isEditingName) {
@@ -232,13 +228,13 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = VibeUpGreen,
-                                unfocusedBorderColor = TextSecondary,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = VibeUpGreen,
-                                focusedContainerColor = DarkBackground,
-                                unfocusedContainerColor = DarkBackground
+                                cursorColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.background,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.background
                             ),
                             singleLine = true,
                             trailingIcon = {
@@ -246,7 +242,7 @@ fun ProfileScreen(
                                     profileViewModel.updateProfile(nickname)
                                     isEditingName = false
                                 }) {
-                                    Text("Save", color = VibeUpGreen)
+                                    Text("Save", color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         )
@@ -260,7 +256,7 @@ fun ProfileScreen(
                                 text = displayName.ifEmpty { "Set your nickname" },
                                 fontSize = 16.sp,
                                 color = if (displayName.isEmpty())
-                                    TextSecondary else Color.White
+                                    MaterialTheme.colorScheme.onSurfaceVariant else Color.White
                             )
                             IconButton(onClick = {
                                 nickname = displayName
@@ -269,7 +265,7 @@ fun ProfileScreen(
                                 Icon(
                                     Icons.Default.Edit,
                                     contentDescription = "Edit",
-                                    tint = VibeUpGreen
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -281,7 +277,7 @@ fun ProfileScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -290,14 +286,14 @@ fun ProfileScreen(
                     Icon(
                         Icons.Default.Email,
                         contentDescription = null,
-                        tint = TextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "Email",
                             fontSize = 12.sp,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = profileViewModel.email,
@@ -316,7 +312,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .clickable { profileViewModel.sendPasswordResetEmail() },
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -325,7 +321,7 @@ fun ProfileScreen(
                     Icon(
                         Icons.Default.Lock,
                         contentDescription = null,
-                        tint = VibeUpGreen
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
@@ -338,7 +334,7 @@ fun ProfileScreen(
                         Text(
                             text = "Send reset link to your email",
                             fontSize = 12.sp,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -352,7 +348,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .clickable { navController.navigate(Screen.Downloads.route) },
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -361,7 +357,7 @@ fun ProfileScreen(
                     Icon(
                         Icons.Default.Download,
                         contentDescription = null,
-                        tint = VibeUpGreen
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
@@ -374,7 +370,7 @@ fun ProfileScreen(
                         Text(
                             text = "Manage your offline music",
                             fontSize = 12.sp,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -386,11 +382,54 @@ fun ProfileScreen(
                 onOpenStats = { navController.navigate(Screen.Stats.route) }
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Appearance / Settings
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate(Screen.Settings.route) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Palette,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            "Appearance",
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            "Obsidian, Aurora, Crimson & more",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             // Loading indicator
             if (profileState is ProfileState.Loading) {
-                CircularProgressIndicator(color = VibeUpGreen)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
 
             // Snackbar message
@@ -401,7 +440,7 @@ fun ProfileScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = if (profileState is ProfileState.Error)
                             Color.Red.copy(alpha = 0.8f)
-                        else VibeUpGreen.copy(alpha = 0.8f)
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                     )
                 ) {
                     Text(

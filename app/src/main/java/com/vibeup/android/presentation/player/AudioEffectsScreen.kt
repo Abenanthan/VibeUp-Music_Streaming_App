@@ -28,7 +28,6 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.vibeup.android.Screen
 import com.vibeup.android.service.AudioEffectsManager
-import com.vibeup.android.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import android.media.audiofx.PresetReverb
@@ -78,7 +77,7 @@ fun AudioEffectsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -114,7 +113,7 @@ fun AudioEffectsScreen(
                         fontWeight = FontWeight.Bold,
                         style = androidx.compose.ui.text.TextStyle(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(PurpleLight, BlueLight)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                             )
                         )
                     )
@@ -169,7 +168,7 @@ fun AudioEffectsScreen(
                             .clip(RoundedCornerShape(20.dp))
                             .background(
                                 Brush.linearGradient(
-                                    colors = listOf(PurplePrimary, BluePrimary)
+                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                 )
                             )
                     ) {
@@ -232,55 +231,55 @@ fun AudioEffectsScreen(
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                PurplePrimary.copy(alpha = 0.2f),
-                                BluePrimary.copy(alpha = 0.2f)
-                            )
-                        )
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
                     )
-                    .clickable {
-                        navController.navigate(Screen.SoftwareEq.route)
-                    }
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(PurplePrimary, BluePrimary)
-                            ),
-                            RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Equalizer,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "🎚️ Software Equalizer",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        "32-band · AutoEq import · All devices",
-                        fontSize = 11.sp,
-                        color = TextSecondary
-                    )
-                }
-                Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = TextSecondary,
-                    modifier = Modifier.size(18.dp)
                 )
+            )
+            .clickable {
+                navController.navigate(Screen.SoftwareEq.route)
+            }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+                    ),
+                    RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Equalizer,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                "🎚️ Software Equalizer",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                "32-band · AutoEq import · All devices",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp)
+        )
             }
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -311,8 +310,8 @@ fun AudioEffectsScreen(
                                     if (eqPreset == index)
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                PurplePrimary,
-                                                BluePrimary
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.tertiary
                                             )
                                         )
                                     else
@@ -355,7 +354,7 @@ fun AudioEffectsScreen(
                                 Text(
                                     "${eqBands[index] / 100} dB",
                                     fontSize = 11.sp,
-                                    color = PurplePrimary
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Slider(
@@ -365,8 +364,8 @@ fun AudioEffectsScreen(
                                 },
                                 valueRange = -1500f..1500f,
                                 colors = SliderDefaults.colors(
-                                    thumbColor = PurplePrimary,
-                                    activeTrackColor = PurplePrimary,
+                                    thumbColor = MaterialTheme.colorScheme.primary,
+                                    activeTrackColor = MaterialTheme.colorScheme.primary,
                                     inactiveTrackColor = Color(0xFF2A2A4A)
                                 ),
                                 modifier = Modifier.fillMaxWidth()
@@ -393,7 +392,7 @@ fun AudioEffectsScreen(
                     Text(
                         "${bassStrength / 10}%",
                         fontSize = 12.sp,
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -402,8 +401,8 @@ fun AudioEffectsScreen(
                     onValueChange = { efx.setBassStrength(it.toInt()) },
                     valueRange = 0f..1000f,
                     colors = SliderDefaults.colors(
-                        thumbColor = PurplePrimary,
-                        activeTrackColor = PurplePrimary,
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
                         inactiveTrackColor = Color(0xFF2A2A4A)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -427,7 +426,7 @@ fun AudioEffectsScreen(
                     Text(
                         "${virtStrength / 10}%",
                         fontSize = 12.sp,
-                        color = BluePrimary,
+                        color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -436,8 +435,8 @@ fun AudioEffectsScreen(
                     onValueChange = { efx.setVirtualizerStrength(it.toInt()) },
                     valueRange = 0f..1000f,
                     colors = SliderDefaults.colors(
-                        thumbColor = BluePrimary,
-                        activeTrackColor = BluePrimary,
+                        thumbColor = MaterialTheme.colorScheme.tertiary,
+                        activeTrackColor = MaterialTheme.colorScheme.tertiary,
                         inactiveTrackColor = Color(0xFF2A2A4A)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -468,12 +467,12 @@ fun AudioEffectsScreen(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(
                                     if (reverbPreset == value)
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                PinkAccent,
-                                                PurplePrimary
-                                            )
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.secondary,
+                                            MaterialTheme.colorScheme.primary
                                         )
+                                    )
                                     else
                                         Brush.linearGradient(
                                             colors = listOf(
@@ -558,7 +557,7 @@ fun AudioEffectsScreen(
                     Text(
                         "$crossfadeDuration seconds",
                         fontSize = 12.sp,
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -570,8 +569,8 @@ fun AudioEffectsScreen(
                     valueRange = 1f..12f,
                     steps = 10,
                     colors = SliderDefaults.colors(
-                        thumbColor = PurplePrimary,
-                        activeTrackColor = PurplePrimary,
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
                         inactiveTrackColor = Color(0xFF2A2A4A)
                     ),
                     modifier = Modifier.fillMaxWidth()
@@ -592,8 +591,8 @@ fun AudioEffectsScreen(
                                     if (crossfadeDuration == seconds)
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                PurplePrimary,
-                                                BluePrimary
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.tertiary
                                             )
                                         )
                                     else
@@ -732,7 +731,7 @@ fun EffectCard(
                 onCheckedChange = { onToggle() },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = PurplePrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
                     uncheckedThumbColor = Color(0xFF6B7280),
                     uncheckedTrackColor = Color(0xFF1C1C3A)
                 )

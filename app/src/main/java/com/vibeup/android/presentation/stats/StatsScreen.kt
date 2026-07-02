@@ -3,7 +3,6 @@ package com.vibeup.android.presentation.stats
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -29,7 +28,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.vibeup.android.ui.theme.*
 import kotlin.math.roundToInt
 
 @Composable
@@ -56,7 +54,7 @@ fun StatsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (stats.isLoading) {
             Column(
@@ -64,14 +62,14 @@ fun StatsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircularProgressIndicator(
-                    color = PurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(44.dp),
                     strokeWidth = 3.dp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     "Loading your stats...",
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
             }
@@ -94,8 +92,8 @@ fun StatsScreen(
                             .background(
                                 Brush.radialGradient(
                                     colors = listOf(
-                                        PurplePrimary.copy(alpha = 0.8f),
-                                        BluePrimary.copy(alpha = 0.6f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f),
                                         Color(0xFF0A0A1A)
                                     ),
                                     radius = 600f + animOffset / 5
@@ -289,7 +287,7 @@ fun StatsScreen(
                             )
                             Text(
                                 "Start playing music to\nbuild your listening stats",
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 13.sp,
                                 textAlign = TextAlign.Center
                             )
@@ -393,7 +391,7 @@ fun WeeklyChart(
                 Text(
                     "${day.playCount}",
                     fontSize = 9.sp,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Box(
@@ -404,8 +402,8 @@ fun WeeklyChart(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    PurplePrimary,
-                                    BluePrimary
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
                                 )
                             )
                         )
@@ -414,7 +412,7 @@ fun WeeklyChart(
                 Text(
                     viewModel.getDayLabel(day.dayOfYear, day.year),
                     fontSize = 9.sp,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -458,7 +456,7 @@ fun TopSongRow(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (rank <= 3) rankColors[rank - 1]
-                else TextSecondary
+                else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -487,7 +485,7 @@ fun TopSongRow(
             Text(
                 song.artist,
                 fontSize = 11.sp,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -508,8 +506,8 @@ fun TopSongRow(
                         .background(
                             Brush.horizontalGradient(
                                 colors = listOf(
-                                    PurplePrimary,
-                                    BluePrimary
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
                                 )
                             )
                         )
@@ -521,14 +519,14 @@ fun TopSongRow(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(PurplePrimary.copy(alpha = 0.2f))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 .padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Text(
                 "${song.playCount}×",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = PurplePrimary
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -551,7 +549,7 @@ fun TopArtistRow(
             "#$rank",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.width(28.dp)
         )
 
@@ -561,7 +559,7 @@ fun TopArtistRow(
                 .size(40.dp)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(PurplePrimary, BluePrimary)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                     ),
                     CircleShape
                 ),
@@ -598,8 +596,8 @@ fun TopArtistRow(
                         .background(
                             Brush.horizontalGradient(
                                 colors = listOf(
-                                    PinkAccent,
-                                    PurplePrimary
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary
                                 )
                             )
                         )
@@ -610,14 +608,14 @@ fun TopArtistRow(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(PinkAccent.copy(alpha = 0.15f))
+                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
                 .padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Text(
                 "$plays×",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = PinkAccent
+                color = MaterialTheme.colorScheme.secondary
             )
         }
     }

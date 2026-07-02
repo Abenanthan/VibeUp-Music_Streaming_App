@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.vibeup.android.ui.theme.*
 import kotlinx.coroutines.launch
 
 @Composable
@@ -68,7 +67,7 @@ fun LyricsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Background album art blur effect
         currentSong?.let { song ->
@@ -79,7 +78,7 @@ fun LyricsScreen(
                     .fillMaxSize()
                     .then(
                         Modifier.background(
-                            Color(0xCC0A0A1A)
+                            Color.Black.copy(alpha = 0.8f)
                         )
                     ),
                 contentScale = ContentScale.Crop,
@@ -91,7 +90,7 @@ fun LyricsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xCC0A0A1A))
+                .background(Color.Black.copy(alpha = 0.8f))
         )
 
         Column(
@@ -155,8 +154,8 @@ fun LyricsScreen(
                                         if (showSynced == sync)
                                             Brush.linearGradient(
                                                 colors = listOf(
-                                                    PurplePrimary,
-                                                    BluePrimary
+                                                    MaterialTheme.colorScheme.primary,
+                                                    MaterialTheme.colorScheme.tertiary
                                                 )
                                             )
                                         else
@@ -203,7 +202,7 @@ fun LyricsScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             CircularProgressIndicator(
-                                color = PurplePrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(36.dp),
                                 strokeWidth = 3.dp
                             )
@@ -384,7 +383,7 @@ fun LyricsScreen(
                                     }
                                 }
                             ) {
-                                Text("Retry", color = PurplePrimary)
+                                Text("Retry", color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }

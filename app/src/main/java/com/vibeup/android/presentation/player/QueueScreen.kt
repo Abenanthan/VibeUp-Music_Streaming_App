@@ -1,7 +1,5 @@
 package com.vibeup.android.presentation.player
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -22,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -36,9 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.Song
-import com.vibeup.android.ui.theme.*
 import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 
 @Composable
 fun QueueScreen(
@@ -53,7 +48,6 @@ fun QueueScreen(
     var localQueue by remember(activeQueue) { mutableStateOf(activeQueue) }
 
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
     // Drag state: which item index is being dragged and by how much (px)
     var draggingIndex by remember { mutableStateOf<Int?>(null) }
@@ -63,7 +57,7 @@ fun QueueScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -94,7 +88,7 @@ fun QueueScreen(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         style = androidx.compose.ui.text.TextStyle(
-                            brush = Brush.horizontalGradient(listOf(PurpleLight, BlueLight))
+                            brush = Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
                         )
                     )
                     Text(
@@ -214,7 +208,7 @@ private fun QueueRow(
             .padding(vertical = 3.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(
-                if (isCurrent) PurplePrimary.copy(alpha = 0.18f)
+                if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                 else if (isDragging) Color(0xFF1C1C3A)
                 else Color(0xFF12122A)
             )
@@ -264,19 +258,19 @@ private fun QueueRow(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (!isCurrent) {
+                if (isCurrent) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                } else {
                     Icon(
                         Icons.Default.DragHandle,
                         contentDescription = "Drag to reorder",
                         tint = Color(0xFF4B5563),
                         modifier = Modifier.size(18.dp)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(PurplePrimary)
                     )
                 }
             }
@@ -294,7 +288,7 @@ private fun QueueRow(
                     song.title,
                     fontSize = 13.sp,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isCurrent) PurpleLight else Color.White,
+                    color = if (isCurrent) MaterialTheme.colorScheme.primary else Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -312,7 +306,7 @@ private fun QueueRow(
                     "Now playing",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = PurplePrimary
+                    color = MaterialTheme.colorScheme.primary
                 )
             } else {
                 IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
