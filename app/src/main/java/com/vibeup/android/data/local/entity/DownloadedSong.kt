@@ -1,12 +1,11 @@
 package com.vibeup.android.data.local.entity
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 
-@Entity(tableName = "downloaded_songs")
+@Entity(tableName = "downloaded_songs", primaryKeys = ["id", "userId"])
 data class DownloadedSong(
-    @PrimaryKey
     val id: String,
+    val userId: String,
     val title: String,
     val artist: String,
     val album: String,

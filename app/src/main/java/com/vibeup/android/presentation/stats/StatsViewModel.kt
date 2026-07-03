@@ -2,6 +2,7 @@ package com.vibeup.android.presentation.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.vibeup.android.data.local.dao.ArtistPlayCount
 import com.vibeup.android.data.local.dao.DayPlayCount
 import com.vibeup.android.data.local.dao.PlayHistoryDao
@@ -28,8 +29,11 @@ data class ListeningStats(
 
 @HiltViewModel
 class StatsViewModel @Inject constructor(
-    private val playHistoryDao: PlayHistoryDao
+    private val playHistoryDao: PlayHistoryDao,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
+
+    private val uid get() = auth.currentUser?.uid ?: "guest_user"
 
     private val _stats = MutableStateFlow(ListeningStats())
     val stats: StateFlow<ListeningStats> = _stats.asStateFlow()
@@ -42,13 +46,13 @@ class StatsViewModel @Inject constructor(
         viewModelScope.launch {
             _stats.value = _stats.value.copy(isLoading = true)
             try {
-                val totalPlays = playHistoryDao.getTotalPlays()
-                val totalSeconds = playHistoryDao.getTotalListenSeconds() ?: 0L
-                val topSongs = playHistoryDao.getTopSongs(5)
-                val topArtists = playHistoryDao.getTopArtists(5)
-                val topAlbum = playHistoryDao.getTopAlbum()?.artist ?: ""
-                val peakHour = playHistoryDao.getPeakHour()?.hour ?: -1
-                val weeklyPlays = playHistoryDao.getWeeklyPlays()
+                val totalPlays = playHistoryDao.getTotalPlays(uid)
+                val totalSeconds = playHistoryDao.getTotalListenSeconds(uid) ?: 0L
+                val topSongs = playHistoryDao.getTopSongs(uid, 5)
+                val topArtists = playHistoryDao.getTopArtists(uid, 5)
+                val topAlbum = playHistoryDao.getTopAlbum(uid)?.artist ?: ""
+                val peakHour = playHistoryDao.getPeakHour(uid)?.hour ?: -1
+                val weeklyPlays = playHistoryDao.getWeeklyPlays(uid)
                 val streak = calculateStreak()
 
                 _stats.value = ListeningStats(
@@ -69,7 +73,7 @@ class StatsViewModel @Inject constructor(
     }
 
     private suspend fun calculateStreak(): Int {
-        val days = playHistoryDao.getDistinctPlayDays()
+        val days = playHistoryDao.getDistinctPlayDays(uid)
         if (days.isEmpty()) return 0
 
         val cal = Calendar.getInstance()

@@ -2,6 +2,7 @@ package com.vibeup.android.presentation.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.vibeup.android.data.local.dao.SearchHistoryDao
 import com.vibeup.android.data.local.entity.SearchHistory
 import com.vibeup.android.domain.model.Song
@@ -24,8 +25,11 @@ class SearchViewModel @Inject constructor(
     private val searchSongsUseCase: SearchSongsUseCase,
     private val getSearchSuggestionsUseCase: GetSearchSuggestionsUseCase,
     private val getTopSearchesUseCase: GetTopSearchesUseCase,
-    private val searchHistoryDao: SearchHistoryDao
+    private val searchHistoryDao: SearchHistoryDao,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
+
+    private val uid get() = auth.currentUser?.uid ?: "guest_user"
 
     private val _searchResults = MutableStateFlow<List<Song>>(emptyList())
     val searchResults: StateFlow<List<Song>> = _searchResults.asStateFlow()
@@ -45,7 +49,7 @@ class SearchViewModel @Inject constructor(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    val searchHistory = searchHistoryDao.getSearchHistory()
+    val searchHistory = searchHistoryDao.getSearchHistory(uid)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var searchJob: Job? = null
@@ -94,7 +98,10 @@ class SearchViewModel @Inject constructor(
                 // Save to history after successful search
                 if (_searchResults.value.isNotEmpty()) {
                     searchHistoryDao.insertSearch(
-                        SearchHistory(query = newQuery.trim())
+                        SearchHistory(
+                            query = newQuery.trim(),
+                            userId = uid
+                        )
                     )
                 }
             } finally {
@@ -113,7 +120,10 @@ class SearchViewModel @Inject constructor(
             try {
                 _searchResults.value = searchSongsUseCase(suggestion)
                 searchHistoryDao.insertSearch(
-                    SearchHistory(query = suggestion.trim())
+                    SearchHistory(
+                        query = suggestion.trim(),
+                        userId = uid
+                    )
                 )
             } finally {
                 _isLoading.value = false
@@ -133,7 +143,7 @@ class SearchViewModel @Inject constructor(
 
     fun clearHistory() {
         viewModelScope.launch {
-            searchHistoryDao.clearHistory()
+            searchHistoryDao.clearHistory(uid)
         }
     }
 

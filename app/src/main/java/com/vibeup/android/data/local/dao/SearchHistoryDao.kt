@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SearchHistoryDao {
 
-    @Query("SELECT * FROM search_history ORDER BY timestamp DESC LIMIT 10")
-    fun getSearchHistory(): Flow<List<SearchHistory>>
+    @Query("SELECT * FROM search_history WHERE userId = :userId ORDER BY timestamp DESC LIMIT 10")
+    fun getSearchHistory(userId: String): Flow<List<SearchHistory>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSearch(search: SearchHistory)
@@ -16,6 +16,6 @@ interface SearchHistoryDao {
     @Delete
     suspend fun deleteSearch(search: SearchHistory)
 
-    @Query("DELETE FROM search_history")
-    suspend fun clearHistory()
+    @Query("DELETE FROM search_history WHERE userId = :userId")
+    suspend fun clearHistory(userId: String)
 }

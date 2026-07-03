@@ -1,6 +1,7 @@
 package com.vibeup.android.data.repository
 
 import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
 import com.vibeup.android.data.local.dao.DownloadDao
 import com.vibeup.android.data.local.entity.DownloadedSong
 import com.vibeup.android.domain.model.Song
@@ -31,21 +32,24 @@ enum class DownloadStatus {
 class DownloadRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val downloadDao: DownloadDao,
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
+    private val auth: FirebaseAuth
 ) {
+    private val uid get() = auth.currentUser?.uid ?: "guest_user"
+
     private val _downloadProgress = MutableStateFlow<Map<String, DownloadProgress>>(emptyMap())
     val downloadProgress: StateFlow<Map<String, DownloadProgress>> =
         _downloadProgress.asStateFlow()
 
     private val activeDownloads = mutableMapOf<String, Boolean>()
 
-    fun getAllDownloads() = downloadDao.getAllDownloads()
+    fun getAllDownloads() = downloadDao.getAllDownloads(uid)
 
-    suspend fun isDownloaded(songId: String) = downloadDao.isDownloaded(songId)
+    suspend fun isDownloaded(songId: String) = downloadDao.isDownloaded(songId, uid)
 
-    suspend fun getDownload(songId: String) = downloadDao.getDownload(songId)
+    suspend fun getDownload(songId: String) = downloadDao.getDownload(songId, uid)
 
-    suspend fun getTotalSize() = downloadDao.getTotalSize() ?: 0L
+    suspend fun getTotalSize() = downloadDao.getTotalSize(uid) ?: 0L
 
     suspend fun downloadSong(
         song: Song,
@@ -117,6 +121,7 @@ class DownloadRepository @Inject constructor(
             // Save to DB
             val downloadedSong = DownloadedSong(
                 id = songId,
+                userId = uid,
                 title = song.title,
                 artist = song.artist,
                 album = song.album,
@@ -140,11 +145,11 @@ class DownloadRepository @Inject constructor(
     }
 
     suspend fun deleteDownload(songId: String) {
-        val download = downloadDao.getDownload(songId)
+        val download = downloadDao.getDownload(songId, uid)
         download?.let {
             File(it.localPath).delete()
         }
-        downloadDao.deleteDownload(songId)
+        downloadDao.deleteDownload(songId, uid)
         val current = _downloadProgress.value.toMutableMap()
         current.remove(songId)
         _downloadProgress.value = current

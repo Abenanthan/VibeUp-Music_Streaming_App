@@ -15,9 +15,9 @@ import com.vibeup.android.data.local.dao.PlayHistoryDao
         SearchHistory::class,
         DownloadedSong::class,
         CachedLyrics::class,
-        PlayHistory::class    // ← ADD
+        PlayHistory::class
     ],
-    version = 4,              // ← bump
+    version = 5,
     exportSchema = false
 )
 abstract class VibeUpDatabase : RoomDatabase() {

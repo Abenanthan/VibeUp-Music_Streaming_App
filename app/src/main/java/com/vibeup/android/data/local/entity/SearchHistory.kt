@@ -1,11 +1,10 @@
 package com.vibeup.android.data.local.entity
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 
-@Entity(tableName = "search_history")
+@Entity(tableName = "search_history", primaryKeys = ["query", "userId"])
 data class SearchHistory(
-    @PrimaryKey
     val query: String,
+    val userId: String,
     val timestamp: Long = System.currentTimeMillis()
 )

@@ -20,7 +20,7 @@ class LibraryRepositoryImpl @Inject constructor(
     private val playHistoryDao: PlayHistoryDao
 ) : LibraryRepository {
 
-    private val uid get() = auth.currentUser?.uid ?: ""
+    private val uid get() = auth.currentUser?.uid ?: "guest_user"
 
     private fun userDoc() = firestore.collection("users").document(uid)
 
@@ -145,31 +145,33 @@ class LibraryRepositoryImpl @Inject constructor(
     }
 
 
-        override suspend fun addToRecentlyPlayed(song: Song) {
-            if (uid.isEmpty()) return
-            try {
-                // ✅ Save to Firestore (existing)
+    override suspend fun addToRecentlyPlayed(song: Song) {
+        try {
+            // ✅ Save to Firestore only for registered users
+            if (auth.currentUser != null) {
                 userDoc().collection("recentlyPlayed")
                     .document(song.id)
                     .set(song.toMap() + mapOf(
                         "playedAt" to System.currentTimeMillis()
                     )).await()
-
-                // ✅ Save to local Room DB for stats
-                playHistoryDao.insertPlay(
-                    PlayHistory(
-                        songId = song.id,
-                        title = song.title,
-                        artist = song.artist,
-                        album = song.album,
-                        imageUrl = song.imageUrl,
-                        duration = song.duration
-                    )
-                )
-            } catch (e: Exception) {
-                android.util.Log.e("LibraryRepo", "RecentlyPlayed: ${e.message}")
             }
+
+            // ✅ Save to local Room DB for stats (All users including guests)
+            playHistoryDao.insertPlay(
+                PlayHistory(
+                    userId = uid,
+                    songId = song.id,
+                    title = song.title,
+                    artist = song.artist,
+                    album = song.album,
+                    imageUrl = song.imageUrl,
+                    duration = song.duration
+                )
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("LibraryRepo", "RecentlyPlayed: ${e.message}")
         }
+    }
 
     override fun getRecentlyPlayed(): Flow<List<Song>> = callbackFlow {
         if (uid.isEmpty()) {

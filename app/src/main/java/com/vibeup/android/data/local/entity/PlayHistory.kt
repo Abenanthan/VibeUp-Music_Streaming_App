@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class PlayHistory(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: String,
     val songId: String,
     val title: String,
     val artist: String,
