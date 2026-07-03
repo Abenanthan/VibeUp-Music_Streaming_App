@@ -1,10 +1,9 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.dagger.hilt.android")
-    id("com.google.gms.google-services")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -36,13 +35,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-opt-in=androidx.media3.common.util.UnstableApi"
-        )
-    }
-
     buildFeatures {
         compose = true
     }
@@ -54,8 +46,11 @@ android {
     }
 }
 
-kapt {
-    correctErrorTypes = true
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.add("-opt-in=androidx.media3.common.util.UnstableApi")
+    }
 }
 
 dependencies {
@@ -81,8 +76,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
 
     // Hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Retrofit + OkHttp
@@ -111,9 +106,9 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Media Session Compat
     implementation("androidx.media:media:1.7.0")
@@ -123,9 +118,7 @@ dependencies {
     //splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-
-
-   // Coroutines
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     // DataStore
