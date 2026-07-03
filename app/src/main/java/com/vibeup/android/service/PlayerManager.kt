@@ -587,6 +587,15 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    fun setPlaybackSpeed(speed: Float) {
+        try {
+            val params = androidx.media3.common.PlaybackParameters(speed)
+            getExoPlayer().playbackParameters = params
+        } catch (e: Exception) {
+            android.util.Log.e("PlayerManager", "Speed change failed: ${e.message}")
+        }
+    }
+
     fun resetState() {
         crossfadeManager.stopMonitoring()  // ← ADD
         exoPlayer?.let {

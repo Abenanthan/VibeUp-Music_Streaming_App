@@ -43,6 +43,9 @@ class PlayerViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _playbackSpeed = MutableStateFlow(1.0f)
+    val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
+
 
     init {
         viewModelScope.launch {
@@ -168,5 +171,10 @@ class PlayerViewModel @Inject constructor(
     fun moveQueueItem(fromIndex: Int, toIndex: Int) = playerManager.moveQueueItem(fromIndex, toIndex)
     fun removeFromQueue(index: Int) = playerManager.removeFromQueue(index)
     fun jumpToQueueIndex(index: Int) = playerManager.jumpToQueueIndex(index)
+
+    fun setPlaybackSpeed(speed: Float) {
+        _playbackSpeed.value = speed
+        playerManager.setPlaybackSpeed(speed)
+    }
 
 }

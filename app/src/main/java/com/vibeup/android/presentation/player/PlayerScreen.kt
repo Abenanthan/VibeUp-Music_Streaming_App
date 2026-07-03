@@ -36,6 +36,7 @@ import com.vibeup.android.presentation.library.DownloadsViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.Speed
 
 @Composable
 fun PlayerScreen(
@@ -289,8 +290,118 @@ fun PlayerScreen(
                                 modifier = Modifier.size(28.dp)
                             )
                         }
-                        IconButton(onClick = { navController.navigate(Screen.Queue.route) }) {
-                            Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                        // Three dots menu state
+                        var showOptionsMenu by remember { mutableStateOf(false) }
+                        var showSpeedSheet by remember { mutableStateOf(false) }
+                        val playbackSpeed by viewModel.playbackSpeed.collectAsState()
+
+                        Box {
+                            IconButton(onClick = { showOptionsMenu = true }) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = "More options",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showOptionsMenu,
+                                onDismissRequest = { showOptionsMenu = false },
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .width(200.dp)
+                            ) {
+                                // Queue Management
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.QueueMusic,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Text(
+                                                "Queue",
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        showOptionsMenu = false
+                                        navController.navigate(Screen.Queue.route)
+                                    }
+                                )
+
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                                    thickness = 0.5.dp
+                                )
+
+                                // Playback Speed
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Speed,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSurface,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Text(
+                                                    "Speed",
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                            // Current speed badge
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                                            ) {
+                                                Text(
+                                                    "${playbackSpeed}x",
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        showOptionsMenu = false
+                                        showSpeedSheet = true
+                                    }
+                                )
+                            }
+                        }
+
+// Playback Speed Bottom Sheet
+                        if (showSpeedSheet) {
+                            PlaybackSpeedSheet(
+                                currentSpeed = playbackSpeed,
+                                onSpeedSelected = { speed ->
+                                    viewModel.setPlaybackSpeed(speed)
+                                    showSpeedSheet = false
+                                },
+                                onDismiss = { showSpeedSheet = false }
+                            )
                         }
 
                         Box {
@@ -1041,3 +1152,165 @@ private fun formatFollowerCountPlayer(raw: String): String {
         else -> count.toString()
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PlaybackSpeedSheet(
+    currentSpeed: Float,
+    onSpeedSelected: (Float) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = 12.dp)
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 48.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    Icons.Default.Speed,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    "Playback Speed",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Speed buttons grid
+            speeds.forEach { speed ->
+                val isSelected = currentSpeed == speed
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (isSelected)
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                                    )
+                                )
+                            else
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                )
+                        )
+                        .clickable { onSpeedSelected(speed) }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Speed visualization bars
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val barCount = when {
+                                speed <= 0.5f -> 1
+                                speed <= 0.75f -> 2
+                                speed <= 1.0f -> 3
+                                speed <= 1.25f -> 4
+                                speed <= 1.5f -> 5
+                                speed <= 1.75f -> 6
+                                else -> 7
+                            }
+                            repeat(7) { i ->
+                                Box(
+                                    modifier = Modifier
+                                        .width(3.dp)
+                                        .height(if (i < barCount) 16.dp else 6.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(
+                                            if (isSelected && i < barCount)
+                                                MaterialTheme.colorScheme.primary
+                                            else if (i < barCount)
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                            else
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
+                                        )
+                                )
+                            }
+                        }
+
+                        Column {
+                            Text(
+                                text = "${speed}x",
+                                fontSize = 15.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = when (speed) {
+                                    0.5f  -> "Half speed"
+                                    0.75f -> "Slow"
+                                    1.0f  -> "Normal"
+                                    1.25f -> "Slightly fast"
+                                    1.5f  -> "Fast"
+                                    1.75f -> "Very fast"
+                                    2.0f  -> "Double speed"
+                                    else  -> ""
+                                },
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    if (isSelected) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
