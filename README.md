@@ -17,7 +17,7 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
   - Automatic language detection based on device locale with the option to manually switch languages.
 - **Local Music Integration**: Scan and play music directly from your device storage.
 - **Playlist Management**: Create, edit, and organize your music library into custom playlists.
-- **Background Playback**: Persistent playback with modern MediaStyle notifications and seamless integration with Android's media controls.
+- **Background Playback**: Persisstent playback with modern MediaStyle notifications and seamless integration with Android's media controls.
 - **Mini Player**: Always accessible playback controls while browsing the app.
 - **Efficient Search Algorithm**: Uses JioSaavn's official API's to process search queries with song recommendations using popularity.
 - **Artsit Details Page**: Featuring artists of the song as well as explore option where details of artist are shown.
