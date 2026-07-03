@@ -58,11 +58,43 @@ class AuthViewModel @Inject constructor(
     fun resetState() {
         _authState.value = AuthState.Idle
     }
+
+    fun continueAsGuest() {
+        // Simply mark as "logged in" without Firebase — skip mode
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                firebaseAuth.signInAnonymously().await()
+                _currentUser.value = firebaseAuth.currentUser
+                _authState.value = AuthState.Success
+            } catch (e: Exception) {
+                // If anonymous auth fails, just set a dummy state to navigate
+                _authState.value = AuthState.Guest
+            }
+        }
+    }
+
+    fun sendPasswordReset(email: String) {
+        viewModelScope.launch {
+            try {
+                if (email.isBlank()) {
+                    _authState.value = AuthState.Error("Enter your email first")
+                    return@launch
+                }
+                firebaseAuth.sendPasswordResetEmail(email).await()
+                _authState.value = AuthState.ResetSent
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Failed to send reset email")
+            }
+        }
+    }
 }
 
 sealed class AuthState {
-    object Idle    : AuthState()
-    object Loading : AuthState()
-    object Success : AuthState()
+    object Idle      : AuthState()
+    object Loading   : AuthState()
+    object Success   : AuthState()
+    object Guest     : AuthState()   // 👈 ADD
+    object ResetSent : AuthState()   // 👈 ADD
     data class Error(val message: String) : AuthState()
 }

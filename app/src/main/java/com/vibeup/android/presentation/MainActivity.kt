@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vibeup.android.presentation.auth.AuthViewModel
+import com.vibeup.android.presentation.auth.AuthState
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.ui.components.MiniPlayer
 import com.vibeup.android.ui.theme.VibeUpTheme
@@ -87,9 +88,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val isPlaying by playerViewModel.isPlaying.collectAsState()
                 val currentUser by authViewModel.currentUser.collectAsState()
-                //val isPlayerActive by playerViewModel.isPlayerActive.collectAsState()
-
-
+                val authState by authViewModel.authState.collectAsState()
 
                 val bottomNavItems = listOf(
                     BottomNavItem("Home", Icons.Default.Home, Screen.Home.route),
@@ -173,7 +172,7 @@ class MainActivity : ComponentActivity() {
                 ) { paddingValues ->
                     VibeUpNavHost(
                         navController = navController,
-                        startDestination = if (currentUser != null)
+                        startDestination = if (currentUser != null || authState is AuthState.Guest)
                             Screen.Home.route
                         else
                             Screen.Auth.route,
