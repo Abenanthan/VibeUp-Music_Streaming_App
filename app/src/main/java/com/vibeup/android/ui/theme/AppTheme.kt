@@ -3,6 +3,8 @@ package com.vibeup.android.ui.theme
 import androidx.compose.ui.graphics.Color
 
 enum class VibeTheme(val displayName: String, val description: String) {
+
+    CLASSIC_PURPLE("Classic Purple", "VibeUp original. Vibrant purple gradient."),
     OBSIDIAN("Obsidian", "Linear-inspired. Cold, precise, professional."),
     AURORA("Aurora", "Darkroom-inspired. Deep teal, cinematic."),
     CRIMSON("Crimson", "Pocketcasts-inspired. Bold red, high contrast."),
@@ -153,7 +155,27 @@ object VibeThemes {
         gradientEnd  = Color(0xFFFF6B35)
     )
 
+    // ── Classic Purple ── VibeUp original purple gradient ───────────────────
+// Restored from the original app — deep purple-blue, vibrant and musical
+    val ClassicPurple = VibeColorScheme(
+        background    = Color(0xFF0A0A1A),
+        surface       = Color(0xFF12122A),
+        card          = Color(0xFF1C1C3A),
+        elevated      = Color(0xFF242448),
+        primary       = Color(0xFF8B5CF6),
+        primaryLight  = Color(0xFFAB7BFF),
+        secondary     = Color(0xFF3B82F6),
+        accent        = Color(0xFFEC4899),
+        textPrimary   = Color(0xFFFFFFFF),
+        textSecondary = Color(0xFFB0B0D0),
+        textMuted     = Color(0xFF4B5563),
+        navBar        = Color(0xFF12122A),
+        gradientStart = Color(0xFF8B5CF6),
+        gradientEnd   = Color(0xFF3B82F6)
+    )
+
     fun get(theme: VibeTheme) = when (theme) {
+        VibeTheme.CLASSIC_PURPLE -> ClassicPurple
         VibeTheme.OBSIDIAN -> Obsidian
         VibeTheme.AURORA   -> Aurora
         VibeTheme.CRIMSON  -> Crimson

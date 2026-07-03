@@ -20,11 +20,11 @@ class ThemeManager @Inject constructor(
     val currentTheme: StateFlow<VibeTheme> = _currentTheme.asStateFlow()
 
     private fun loadSavedTheme(): VibeTheme {
-        val saved = prefs.getString("theme", VibeTheme.OBSIDIAN.name)
+        val saved = prefs.getString("theme", VibeTheme.CLASSIC_PURPLE.name)  // 👈 CHANGED
         return try {
-            VibeTheme.valueOf(saved ?: VibeTheme.OBSIDIAN.name)
+            VibeTheme.valueOf(saved ?: VibeTheme.CLASSIC_PURPLE.name)         // 👈 CHANGED
         } catch (e: Exception) {
-            VibeTheme.OBSIDIAN
+            VibeTheme.CLASSIC_PURPLE                                           // 👈 CHANGED
         }
     }
 
