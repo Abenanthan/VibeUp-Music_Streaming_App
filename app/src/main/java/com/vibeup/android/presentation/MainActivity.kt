@@ -35,6 +35,7 @@ import com.vibeup.android.presentation.player.activityViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.vibeup.android.service.PlayerManager
 import javax.inject.Inject
 
@@ -130,7 +131,12 @@ class MainActivity : ComponentActivity() {
                                             Screen.Home.route -> currentRoute == Screen.Home.route || 
                                                                 currentRoute?.startsWith(Screen.Playlist.route) == true ||
                                                                 currentRoute == Screen.Profile.route ||
+                                                                currentRoute == Screen.Settings.route ||
+                                                                currentRoute == Screen.Stats.route ||
+                                                                currentRoute?.startsWith("artist") == true ||
                                                                 currentRoute == Screen.AudioEffects.route ||
+                                                                currentRoute == Screen.SoftwareEq.route ||
+                                                                currentRoute == Screen.Queue.route ||
                                                                 currentRoute == Screen.Lyrics.route
                                             Screen.Library.route -> currentRoute == Screen.Library.route || 
                                                                    currentRoute == Screen.Downloads.route ||
@@ -141,19 +147,17 @@ class MainActivity : ComponentActivity() {
                                         NavigationBarItem(
                                             selected = isSelected,
                                             onClick = {
-                                                if (isSelected) {
-                                                    // If already on this tab or its sub-screen, pop to root
-                                                    if (currentRoute != item.route) {
-                                                        navController.popBackStack(item.route, inclusive = false)
+                                                if (currentRoute == item.route) return@NavigationBarItem
+
+                                                navController.navigate(item.route) {
+                                                    // Pop everything up to the root of the graph to avoid building up a large stack
+                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                        saveState = false
                                                     }
-                                                } else {
-                                                    navController.navigate(item.route) {
-                                                        popUpTo(Screen.Home.route) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
+                                                    // Avoid multiple copies of the same destination
+                                                    launchSingleTop = true
+                                                    // Don't restore state so we always land on the root of the tab
+                                                    restoreState = false
                                                 }
                                             },
                                             icon = {
