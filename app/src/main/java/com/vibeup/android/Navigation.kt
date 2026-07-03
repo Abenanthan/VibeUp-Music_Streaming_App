@@ -23,7 +23,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.vibeup.android.presentation.artist.ArtistScreen
 import com.vibeup.android.presentation.stats.StatsScreen
-
+import com.vibeup.android.presentation.settings.SettingsScreen
 sealed class Screen(val route: String) {
     object Auth    : Screen("auth")
     object Home    : Screen("home")
@@ -52,6 +52,8 @@ sealed class Screen(val route: String) {
     }
 
     object Stats : Screen("stats")
+
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -135,6 +137,10 @@ fun VibeUpNavHost(
 
         composable(Screen.Stats.route) {
             StatsScreen(navController = navController)
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(navController = navController)
         }
 
     }

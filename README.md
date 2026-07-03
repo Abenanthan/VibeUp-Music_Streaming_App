@@ -21,7 +21,8 @@ VibeUp is a modern, high-performance Android music player built with Jetpack Com
 - **Mini Player**: Always accessible playback controls while browsing the app.
 - **Efficient Search Algorithm**: Uses JioSaavn's official API's to process search queries with song recommendations using popularity.
 - **Artsit Details Page**: Featuring artists of the song as well as explore option where details of artist are shown.
-- **User Stats Page**: features the user statistics data with total hours played,total songs played,top songs and top artists.
+- **User Stats Page**: Features the user statistics data with total hours played,total songs played,top songs and top artists.
+- **Multiple Themes**: Users can now select their own customized themes for the entire app.
 
 ## Tech Stack
 

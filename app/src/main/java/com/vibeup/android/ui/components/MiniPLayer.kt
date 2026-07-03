@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlayCircle
@@ -25,10 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.Song
-import com.vibeup.android.ui.theme.BluePrimary
-import com.vibeup.android.ui.theme.DarkCard
-import com.vibeup.android.ui.theme.PurplePrimary
-import com.vibeup.android.ui.theme.TextSecondary
 
 @Composable
 fun MiniPlayer(
@@ -44,7 +39,7 @@ fun MiniPlayer(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(DarkCard)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         // ✅ Purple/Blue gradient progress bar
         if (duration > 0) {
@@ -69,7 +64,7 @@ fun MiniPlayer(
                         .fillMaxHeight()
                         .background(
                             Brush.horizontalGradient(
-                                colors = listOf(PurplePrimary, BluePrimary)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                             )
                         )
                 )
@@ -109,7 +104,7 @@ fun MiniPlayer(
                 Text(
                     text = song.artist,
                     fontSize = 12.sp,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -132,7 +127,7 @@ fun MiniPlayer(
                     else
                         Icons.Default.PlayCircle,
                     contentDescription = "Play/Pause",
-                    tint = PurplePrimary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(36.dp)
                 )
             }

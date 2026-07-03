@@ -18,7 +18,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.vibeup.android.ui.theme.*
 
 @Composable
 fun StatsWidget(
@@ -47,7 +46,7 @@ fun StatsWidget(
                 .size(120.dp)
                 .offset(x = (-20).dp, y = (-20).dp)
                 .background(
-                    PurplePrimary.copy(alpha = 0.15f),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                     androidx.compose.foundation.shape.CircleShape
                 )
         )
@@ -57,7 +56,7 @@ fun StatsWidget(
                 .align(Alignment.TopEnd)
                 .offset(x = 20.dp, y = (-10).dp)
                 .background(
-                    BluePrimary.copy(alpha = 0.12f),
+                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
                     androidx.compose.foundation.shape.CircleShape
                 )
         )
@@ -81,7 +80,7 @@ fun StatsWidget(
                             .clip(RoundedCornerShape(8.dp))
                             .background(
                                 Brush.linearGradient(
-                                    colors = listOf(PurplePrimary, BluePrimary)
+                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -107,13 +106,13 @@ fun StatsWidget(
                     Text(
                         "See all",
                         fontSize = 12.sp,
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                     Icon(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = PurplePrimary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -129,7 +128,7 @@ fun StatsWidget(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
@@ -173,7 +172,7 @@ fun StatsWidget(
                         "hrs",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -254,7 +253,7 @@ fun StatsWidget(
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(
                                         Brush.verticalGradient(
-                                            colors = listOf(PurplePrimary, BluePrimary)
+                                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                         )
                                     )
                             )

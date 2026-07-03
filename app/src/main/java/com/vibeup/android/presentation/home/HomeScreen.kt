@@ -44,7 +44,6 @@ import com.vibeup.android.domain.model.Song
 import com.vibeup.android.presentation.library.DownloadsViewModel
 import com.vibeup.android.presentation.library.LibraryViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
-import com.vibeup.android.ui.theme.*
 
 // ── Mood Data Class ──
 data class MoodItem(
@@ -135,7 +134,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         AnimatedVisibility(
             visible = !isOnline,
@@ -208,14 +207,14 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 CircularProgressIndicator(
-                    color = PurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(44.dp),
                     strokeWidth = 3.dp
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     "Loading your vibes...",
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             }
@@ -593,7 +592,7 @@ fun HomeHeader(navController: NavController) {
                 .size(42.dp)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(PurplePrimary, BluePrimary)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                     ),
                     CircleShape
                 )
@@ -622,7 +621,7 @@ fun SearchBar(onClick: () -> Unit) {
             .padding(horizontal = 16.dp)
             .height(46.dp)
             .clip(RoundedCornerShape(50.dp))
-            .background(Color(0xFF12122A))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onClick() }
             .then(
                 Modifier.padding(horizontal = 16.dp)
@@ -684,7 +683,7 @@ fun SectionDivider() {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(1.dp)
-            .background(Color(0xFF1a1a3a))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
     )
     Spacer(modifier = Modifier.height(16.dp))
 }
@@ -895,7 +894,7 @@ fun ArtistsSection(
                             .height(16.dp)
                             .background(
                                 Brush.verticalGradient(
-                                    colors = listOf(PurplePrimary, BluePrimary)
+                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                                 ),
                                 RoundedCornerShape(2.dp)
                             )
@@ -911,7 +910,7 @@ fun ArtistsSection(
                 if (artist.artistId.isNotBlank()) {
                     Text(
                         text = "See all",
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
@@ -967,7 +966,7 @@ fun ArtistCard(
                 .size(72.dp)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(PurplePrimary, BluePrimary)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                     ),
                     CircleShape
                 )
@@ -976,12 +975,12 @@ fun ArtistCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF0A0A1A), CircleShape)
+                    .background(MaterialTheme.colorScheme.background, CircleShape)
                     .padding(2.dp)
                     .clip(CircleShape)
             ) {
                 AsyncImage(
-                    model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    model = ImageRequest.Builder(LocalContext.current)
                         .data(artist.artistImageUrl)
                         .crossfade(true)
                         .build(),
@@ -1149,7 +1148,7 @@ fun GlassSongCard(
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(PurplePrimary, BluePrimary)
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                         )
                     )
             )
@@ -1238,7 +1237,7 @@ fun SongOptionsDialog(
                             Icon(
                                 Icons.Default.Download,
                                 contentDescription = null,
-                                tint = BluePrimary
+                                tint = MaterialTheme.colorScheme.tertiary
                             )
                             Text("Download", color = Color.White, fontSize = 14.sp)
                         }
@@ -1306,7 +1305,7 @@ fun SongOptionsDialog(
                                 Icon(
                                     Icons.Default.MusicNote,
                                     contentDescription = null,
-                                    tint = PurplePrimary
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
                                     playlist.name,
@@ -1342,12 +1341,12 @@ fun LoadingRow() {
                 modifier = Modifier
                     .size(135.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF12122A)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
-                    color = PurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     strokeWidth = 2.dp
                 )
             }
@@ -1364,7 +1363,7 @@ fun EmptyRow(message: String) {
             .padding(horizontal = 16.dp)
             .height(80.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF12122A)),
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
         Text(

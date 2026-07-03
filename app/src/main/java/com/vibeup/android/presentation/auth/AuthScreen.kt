@@ -25,10 +25,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vibeup.android.Screen
-import com.vibeup.android.ui.theme.DarkBackground
-import com.vibeup.android.ui.theme.DarkCard
-import com.vibeup.android.ui.theme.TextSecondary
-import com.vibeup.android.ui.theme.VibeUpGreen
 
 @Composable
 fun AuthScreen(
@@ -63,7 +59,7 @@ fun AuthScreen(
                 Brush.verticalGradient(
                     colors = listOf(
                         Color(0xFF1A1A2E),
-                        DarkBackground
+                        MaterialTheme.colorScheme.background
                     )
                 )
             )
@@ -85,12 +81,12 @@ fun AuthScreen(
                 text = "VibeUp",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
-                color = VibeUpGreen
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = "Your Music, Your Vibe",
                 fontSize = 14.sp,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -99,7 +95,7 @@ fun AuthScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(DarkCard, RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                     .padding(4.dp)
             ) {
                 Button(
@@ -109,10 +105,10 @@ fun AuthScreen(
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isLoginMode) VibeUpGreen
+                        containerColor = if (isLoginMode) MaterialTheme.colorScheme.primary
                         else Color.Transparent,
                         contentColor = if (isLoginMode) Color.Black
-                        else TextSecondary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
@@ -125,10 +121,10 @@ fun AuthScreen(
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (!isLoginMode) VibeUpGreen
+                        containerColor = if (!isLoginMode) MaterialTheme.colorScheme.primary
                         else Color.Transparent,
                         contentColor = if (!isLoginMode) Color.Black
-                        else TextSecondary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
@@ -145,24 +141,24 @@ fun AuthScreen(
                     email = it
                     errorMessage = ""
                 },
-                placeholder = { Text("Email", color = TextSecondary) },
+                placeholder = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Email,
                         contentDescription = null,
-                        tint = TextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = VibeUpGreen,
-                    unfocusedBorderColor = DarkCard,
-                    focusedContainerColor = DarkCard,
-                    unfocusedContainerColor = DarkCard,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    cursorColor = VibeUpGreen
+                    cursorColor = MaterialTheme.colorScheme.primary
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email
@@ -179,12 +175,12 @@ fun AuthScreen(
                     password = it
                     errorMessage = ""
                 },
-                placeholder = { Text("Password", color = TextSecondary) },
+                placeholder = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Lock,
                         contentDescription = null,
-                        tint = TextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 trailingIcon = {
@@ -194,7 +190,7 @@ fun AuthScreen(
                                 Icons.Default.VisibilityOff
                             else Icons.Default.Visibility,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -204,13 +200,13 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = VibeUpGreen,
-                    unfocusedBorderColor = DarkCard,
-                    focusedContainerColor = DarkCard,
-                    unfocusedContainerColor = DarkCard,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
-                    cursorColor = VibeUpGreen
+                    cursorColor = MaterialTheme.colorScheme.primary
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
@@ -228,26 +224,26 @@ fun AuthScreen(
                         errorMessage = ""
                     },
                     placeholder = {
-                        Text("Confirm Password", color = TextSecondary)
+                        Text("Confirm Password", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Lock,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = VibeUpGreen,
-                        unfocusedBorderColor = DarkCard,
-                        focusedContainerColor = DarkCard,
-                        unfocusedContainerColor = DarkCard,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        cursorColor = VibeUpGreen
+                        cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password
@@ -288,7 +284,7 @@ fun AuthScreen(
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = VibeUpGreen,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.Black
                 ),
                 enabled = authState !is AuthState.Loading
@@ -318,7 +314,7 @@ fun AuthScreen(
             }) {
                 Text(
                     text = "Skip for now",
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
             }

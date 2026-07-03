@@ -38,10 +38,6 @@ import com.vibeup.android.presentation.home.SongOptionsDialog
 import com.vibeup.android.presentation.library.DownloadsViewModel
 import com.vibeup.android.presentation.library.LibraryViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
-import com.vibeup.android.ui.theme.DarkCard
-import com.vibeup.android.ui.theme.DarkSurface
-import com.vibeup.android.ui.theme.TextSecondary
-import com.vibeup.android.ui.theme.VibeUpGreen
 
 @Composable
 fun SearchScreen(
@@ -82,14 +78,14 @@ fun SearchScreen(
             placeholder = {
                 Text(
                     text = "Search Tamil, Telugu, Hindi songs...",
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = TextSecondary
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             trailingIcon = {
@@ -98,7 +94,7 @@ fun SearchScreen(
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Clear",
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -109,9 +105,9 @@ fun SearchScreen(
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = DarkCard,
-                focusedContainerColor = DarkCard,
-                unfocusedContainerColor = DarkCard,
+                unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 focusedTextColor = MaterialTheme.colorScheme.onBackground,
                 unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                 cursorColor = MaterialTheme.colorScheme.primary
@@ -161,7 +157,7 @@ fun SearchScreen(
                             }
                             item {
                                 HorizontalDivider(
-                                    color = DarkSurface,
+                                    color = MaterialTheme.colorScheme.surface,
                                     thickness = 0.5.dp,
                                     modifier = Modifier.padding(vertical = 12.dp)
                                 )
@@ -187,7 +183,7 @@ fun SearchScreen(
                                     ) {
                                         Text(
                                             text = "Clear All",
-                                            color = TextSecondary,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 13.sp
                                         )
                                     }
@@ -206,7 +202,7 @@ fun SearchScreen(
                                     Icon(
                                         Icons.Default.History,
                                         contentDescription = null,
-                                        tint = TextSecondary,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
@@ -224,13 +220,13 @@ fun SearchScreen(
                                         Icon(
                                             Icons.Default.Delete,
                                             contentDescription = "Delete",
-                                            tint = TextSecondary,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(18.dp)
                                         )
                                     }
                                 }
                                 HorizontalDivider(
-                                    color = DarkSurface,
+                                    color = MaterialTheme.colorScheme.surface,
                                     thickness = 0.5.dp
                                 )
                             }
@@ -248,7 +244,7 @@ fun SearchScreen(
                                     Text(
                                         text = "Search for your favourite songs",
                                         fontSize = 16.sp,
-                                        color = TextSecondary
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -278,7 +274,7 @@ fun SearchScreen(
                             Text(
                                 text = "No results found for \"$query\"",
                                 fontSize = 16.sp,
-                                color = TextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -301,7 +297,7 @@ fun SearchScreen(
                             item {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 8.dp),
-                                    color = DarkSurface,
+                                    color = MaterialTheme.colorScheme.surface,
                                     thickness = 0.5.dp
                                 )
                             }
@@ -311,7 +307,7 @@ fun SearchScreen(
                             Text(
                                 text = "${searchResults.size} results",
                                 fontSize = 14.sp,
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
@@ -363,7 +359,7 @@ fun SuggestionItem(
         Icon(
             imageVector = if (isPopular) Icons.AutoMirrored.Filled.TrendingUp else Icons.Default.Search,
             contentDescription = null,
-            tint = TextSecondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
@@ -427,14 +423,14 @@ fun SearchSongItem(
             Text(
                 text = song.artist,
                 fontSize = 13.sp,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = song.album,
                 fontSize = 11.sp,
-                color = TextSecondary.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -443,7 +439,7 @@ fun SearchSongItem(
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "Options",
-                tint = TextSecondary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         IconButton(onClick = onClick) {

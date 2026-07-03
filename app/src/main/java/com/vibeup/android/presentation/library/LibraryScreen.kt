@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,9 +29,7 @@ import com.vibeup.android.domain.model.Playlist
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.presentation.auth.AuthViewModel
 import com.vibeup.android.presentation.player.PlayerViewModel
-import com.vibeup.android.ui.theme.*
 import androidx.compose.foundation.shape.CircleShape
-import com.vibeup.android.presentation.stats.StatsWidget
 
 @Composable
 fun LibraryScreen(
@@ -42,10 +41,9 @@ fun LibraryScreen(
     val likedSongs by viewModel.likedSongs.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
     val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
     val message by viewModel.message.collectAsState()
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var showCreateDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var playlistName by remember { mutableStateOf("") }
@@ -79,18 +77,18 @@ fun LibraryScreen(
                         value = playlistName,
                         onValueChange = { playlistName = it },
                         placeholder = {
-                            Text("Playlist name", color = Color(0xFF4B5563))
+                            Text("Playlist name", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PurplePrimary,
-                            unfocusedBorderColor = Color(0xFF2A2A4A),
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            cursorColor = PurplePrimary,
-                            focusedContainerColor = Color(0xFF12122A),
-                            unfocusedContainerColor = Color(0xFF12122A)
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         singleLine = true
                     )
@@ -100,19 +98,19 @@ fun LibraryScreen(
                         placeholder = {
                             Text(
                                 "Description (optional)",
-                                color = Color(0xFF4B5563)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PurplePrimary,
-                            unfocusedBorderColor = Color(0xFF2A2A4A),
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            cursorColor = PurplePrimary,
-                            focusedContainerColor = Color(0xFF12122A),
-                            unfocusedContainerColor = Color(0xFF12122A)
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         singleLine = true
                     )
@@ -129,7 +127,7 @@ fun LibraryScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PurplePrimary
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -142,10 +140,10 @@ fun LibraryScreen(
                     playlistName = ""
                     playlistDesc = ""
                 }) {
-                    Text("Cancel", color = Color(0xFF6B7280))
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF12122A),
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(20.dp)
         )
     }
@@ -160,7 +158,7 @@ fun LibraryScreen(
             text = {
                 Text(
                     "Are you sure you want to logout?",
-                    color = Color(0xFF9CA3AF)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             confirmButton = {
@@ -182,10 +180,10 @@ fun LibraryScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel", color = Color(0xFF6B7280))
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF12122A),
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(20.dp)
         )
     }
@@ -193,7 +191,7 @@ fun LibraryScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -220,17 +218,17 @@ fun LibraryScreen(
                         style = androidx.compose.ui.text.TextStyle(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    Color(0xFFA78BFA),
-                                    Color(0xFF60A5FA)
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
                                 )
                             )
                         )
                     )
                     IconButton(onClick = { showLogoutDialog = true }) {
                         Icon(
-                            Icons.Default.ExitToApp,
+                            Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = "Logout",
-                            tint = Color(0xFF6B7280)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -242,7 +240,7 @@ fun LibraryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF0D0D2B))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -256,8 +254,8 @@ fun LibraryScreen(
                                     if (selectedTab == index)
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                PurplePrimary.copy(alpha = 0.5f),
-                                                BluePrimary.copy(alpha = 0.5f)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
                                             )
                                         )
                                     else
@@ -276,9 +274,9 @@ fun LibraryScreen(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (selectedTab == index)
-                                    Color(0xFFE5E7EB)
+                                    Color.White
                                 else
-                                    Color(0xFF4B5563)
+                                    MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -301,7 +299,7 @@ fun LibraryScreen(
                                 "🎵 Your Playlists",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFF3F4F6)
+                                color = Color.White
                             )
                             Row(
                                 modifier = Modifier
@@ -309,8 +307,8 @@ fun LibraryScreen(
                                     .background(
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                PurplePrimary,
-                                                BluePrimary
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.tertiary
                                             )
                                         )
                                     )
@@ -357,7 +355,6 @@ fun LibraryScreen(
                         items(playlists) { playlist ->
                             PlaylistCard(
                                 playlist = playlist,
-                                songs = emptyList(),
                                 onClick = {
                                     navController.navigate(
                                         "${Screen.Playlist.route}/${playlist.id}"
@@ -383,8 +380,8 @@ fun LibraryScreen(
                                 .background(
                                     Brush.linearGradient(
                                         colors = listOf(
-                                            BluePrimary.copy(alpha = 0.2f),
-                                            PurplePrimary.copy(alpha = 0.2f)
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                         )
                                     )
                                 )
@@ -401,7 +398,7 @@ fun LibraryScreen(
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(
                                         Brush.linearGradient(
-                                            colors = listOf(BluePrimary, PurplePrimary)
+                                            colors = listOf(MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.primary)
                                         )
                                     ),
                                 contentAlignment = Alignment.Center
@@ -418,36 +415,24 @@ fun LibraryScreen(
                                     "Downloads",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFF3F4F6)
+                                    color = Color.White
                                 )
                                 Text(
                                     "Play music offline",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF6B7280)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Icon(
                                 Icons.Default.ChevronRight,
                                 contentDescription = null,
-                                tint = Color(0xFF374151),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
-
-                    // STATS SCREEN DISABLED
-
-                    /*item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        StatsWidget(
-                            onOpenStats = { navController.navigate(Screen.Stats.route) }
-                        )
-                    }*/
                 }
-
-                // After the Downloads card item { ... } block, add:
-
 
                 // ── Liked Songs Tab ──
                 1 -> {
@@ -456,7 +441,7 @@ fun LibraryScreen(
                             "💚 Liked Songs",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF3F4F6),
+                            color = Color.White,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -467,12 +452,12 @@ fun LibraryScreen(
                                     .fillMaxWidth()
                                     .height(120.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF12122A)),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     "No liked songs yet!\nLike songs to see them here 💚",
-                                    color = Color(0xFF4B5563),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -501,7 +486,7 @@ fun LibraryScreen(
                             "🕐 Recently Played",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF3F4F6),
+                            color = Color.White,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -512,12 +497,12 @@ fun LibraryScreen(
                                     .fillMaxWidth()
                                     .height(120.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF12122A)),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     "No recently played songs yet! 🎵",
-                                    color = Color(0xFF4B5563),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -547,7 +532,7 @@ fun LibraryScreen(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = PurplePrimary
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
@@ -575,12 +560,6 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
                         Color(0xFFEC4899).copy(alpha = 0.2f),
                         Color(0xFF8B5CF6).copy(alpha = 0.2f)
                     )
-                )
-            )
-            .then(
-                Modifier.background(
-                    Color.Transparent,
-                    RoundedCornerShape(16.dp)
                 )
             )
             .clickable { onClick() }
@@ -614,12 +593,12 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
                 "Liked Songs",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFF3F4F6)
+                color = Color.White
             )
             Text(
                 "$count songs",
                 fontSize = 12.sp,
-                color = Color(0xFF6B7280)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Box(
@@ -628,7 +607,7 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
                 .clip(CircleShape)
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(PurplePrimary, BluePrimary)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                     )
                 ),
             contentAlignment = Alignment.Center
@@ -647,7 +626,6 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
 @Composable
 fun PlaylistCard(
     playlist: Playlist,
-    songs: List<Song>,
     onClick: () -> Unit,
     onRename: (String) -> Unit,
     onDelete: () -> Unit
@@ -680,13 +658,13 @@ fun PlaylistCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PurplePrimary,
-                        unfocusedBorderColor = Color(0xFF2A2A4A),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
-                        cursorColor = PurplePrimary,
-                        focusedContainerColor = Color(0xFF12122A),
-                        unfocusedContainerColor = Color(0xFF12122A)
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     singleLine = true
                 )
@@ -700,7 +678,7 @@ fun PlaylistCard(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PurplePrimary
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -709,10 +687,10 @@ fun PlaylistCard(
             },
             dismissButton = {
                 TextButton(onClick = { showRenameDialog = false }) {
-                    Text("Cancel", color = Color(0xFF6B7280))
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = Color(0xFF12122A),
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(20.dp)
         )
     }
@@ -721,7 +699,7 @@ fun PlaylistCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -798,7 +776,7 @@ fun PlaylistCard(
                 text = playlist.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFF3F4F6),
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -806,7 +784,7 @@ fun PlaylistCard(
                 Text(
                     text = playlist.description,
                     fontSize = 11.sp,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -822,14 +800,14 @@ fun PlaylistCard(
                 Icon(
                     Icons.Default.MoreVert,
                     contentDescription = "Options",
-                    tint = Color(0xFF6B7280),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
             DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(Color(0xFF1C1C3A))
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
             ) {
                 DropdownMenuItem(
                     text = {
@@ -864,7 +842,7 @@ fun PlaylistCard(
         Icon(
             Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = Color(0xFF374151),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -878,7 +856,7 @@ fun EmptyPlaylistCard(onClick: () -> Unit) {
             .fillMaxWidth()
             .height(120.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -892,7 +870,7 @@ fun EmptyPlaylistCard(onClick: () -> Unit) {
                     .clip(CircleShape)
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(PurplePrimary, BluePrimary)
+                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -906,7 +884,7 @@ fun EmptyPlaylistCard(onClick: () -> Unit) {
             }
             Text(
                 "Create your first playlist!",
-                color = Color(0xFF4B5563),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 13.sp
             )
         }
@@ -926,7 +904,7 @@ fun LibrarySongItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onPlay() }
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -945,14 +923,14 @@ fun LibrarySongItem(
                 text = song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFF3F4F6),
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = song.artist,
                 fontSize = 11.sp,
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -965,14 +943,14 @@ fun LibrarySongItem(
                 Icon(
                     Icons.Default.MoreVert,
                     contentDescription = null,
-                    tint = Color(0xFF6B7280),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
             }
             DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(Color(0xFF1C1C3A))
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
             ) {
                 DropdownMenuItem(
                     text = {
@@ -999,6 +977,4 @@ fun LibrarySongItem(
             }
         }
     }
-
-
 }

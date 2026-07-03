@@ -31,10 +31,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.vibeup.android.service.audio.SoftwareEqualizer
-import com.vibeup.android.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import java.util.Locale
+import androidx.compose.material.icons.automirrored.filled.CompareArrows
 
 @HiltViewModel
 class SoftwareEqViewModel @Inject constructor(
@@ -71,7 +72,7 @@ fun SoftwareEqScreen(
                 Column {
                     Text(
                         "Paste AutoEq parametric EQ text:",
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -80,13 +81,13 @@ fun SoftwareEqScreen(
                         onValueChange = { importText = it },
                         modifier = Modifier.fillMaxWidth().height(150.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PurplePrimary,
-                            unfocusedBorderColor = DarkElevated,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            focusedContainerColor = DarkCard,
-                            unfocusedContainerColor = DarkCard,
-                            cursorColor = PurplePrimary
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         placeholder = {
                             Text(
@@ -107,16 +108,16 @@ fun SoftwareEqScreen(
                             importText = ""
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("Import") }
             },
             dismissButton = {
                 TextButton(onClick = { showImportDialog = false }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = DarkCard,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             shape = RoundedCornerShape(20.dp)
         )
     }
@@ -129,7 +130,7 @@ fun SoftwareEqScreen(
                 Column {
                     Text(
                         "Save your current 32-band settings under a name:",
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -139,13 +140,13 @@ fun SoftwareEqScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PurplePrimary,
-                            unfocusedBorderColor = DarkElevated,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
-                            focusedContainerColor = DarkCard,
-                            unfocusedContainerColor = DarkCard,
-                            cursorColor = PurplePrimary
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         ),
                         placeholder = { Text("e.g. My Earphones", color = Color(0xFF374151), fontSize = 12.sp) }
                     )
@@ -160,21 +161,21 @@ fun SoftwareEqScreen(
                             presetNameInput = ""
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("Save") }
             },
             dismissButton = {
                 TextButton(onClick = { showSavePresetDialog = false }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = DarkCard,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
             shape = RoundedCornerShape(20.dp)
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(DeepDark)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
 
             // ── Header ──
@@ -186,7 +187,7 @@ fun SoftwareEqScreen(
                 ) {
                     IconButton(
                         onClick = { navController.popBackStack() },
-                        modifier = Modifier.size(36.dp).background(DarkSurface, CircleShape)
+                        modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.surface, CircleShape)
                     ) {
                         Icon(
                             Icons.Default.ArrowBackIosNew,
@@ -201,19 +202,19 @@ fun SoftwareEqScreen(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
-                                brush = Brush.horizontalGradient(colors = listOf(PurpleLight, BlueLight))
+                                brush = Brush.horizontalGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
                             )
                         )
-                        Text("32-band high-precision DSP", fontSize = 11.sp, color = TextSecondary)
+                        Text("32-band high-precision DSP", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Switch(
                         checked = isEnabled,
                         onCheckedChange = { eq.toggle() },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = PurplePrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
                             uncheckedThumbColor = Color(0xFF6B7280),
-                            uncheckedTrackColor = DarkCard
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     )
                 }
@@ -227,7 +228,7 @@ fun SoftwareEqScreen(
                         .clip(RoundedCornerShape(14.dp))
                         .background(
                             if (isBypassed) Color(0xFFEC4899).copy(alpha = 0.18f)
-                            else DarkCard
+                            else MaterialTheme.colorScheme.surfaceVariant
                         )
                         .clickable(enabled = isEnabled) { eq.toggleBypassPreview() }
                         .padding(14.dp),
@@ -235,9 +236,9 @@ fun SoftwareEqScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Icon(
-                        if (isBypassed) Icons.Default.HearingDisabled else Icons.Default.CompareArrows,
+                        if (isBypassed) Icons.Default.HearingDisabled else Icons.AutoMirrored.Filled.CompareArrows,
                         contentDescription = null,
-                        tint = if (isBypassed) Color(0xFFEC4899) else PurplePrimary,
+                        tint = if (isBypassed) Color(0xFFEC4899) else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Column(modifier = Modifier.weight(1f)) {
@@ -250,7 +251,7 @@ fun SoftwareEqScreen(
                         Text(
                             if (isBypassed) "Tap to restore EQ early" else "Briefly hear raw audio without EQ",
                             fontSize = 10.sp,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (!isEnabled) {
@@ -266,7 +267,7 @@ fun SoftwareEqScreen(
                 Text(
                     "Presets",
                     fontSize = 12.sp,
-                    color = TextSecondary.copy(alpha = contentAlpha),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyRow(
@@ -280,7 +281,7 @@ fun SoftwareEqScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(if (currentPreset == preset) PurplePrimary else DarkCard)
+                                .background(if (currentPreset == preset) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                                 .clickable(enabled = isEnabled) { eq.applyPreset(preset) }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
@@ -289,7 +290,7 @@ fun SoftwareEqScreen(
                                     Icon(
                                         Icons.Default.Person,
                                         contentDescription = null,
-                                        tint = if (currentPreset == preset) Color.White else PurpleLight,
+                                        tint = if (currentPreset == preset) Color.White else MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(11.dp)
                                     )
                                 }
@@ -297,7 +298,7 @@ fun SoftwareEqScreen(
                                     preset,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = if (currentPreset == preset) Color.White else TextSecondary
+                                    color = if (currentPreset == preset) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -306,7 +307,7 @@ fun SoftwareEqScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(PurplePrimary.copy(alpha = 0.15f))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
                                 .clickable(enabled = isEnabled) { showSavePresetDialog = true }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
@@ -314,10 +315,10 @@ fun SoftwareEqScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Save preset",
-                                    tint = PurpleLight,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(13.dp)
                                 )
-                                Text("Save current", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = PurpleLight)
+                                Text("Save current", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -340,7 +341,7 @@ fun SoftwareEqScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(DarkCard)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(16.dp)
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -351,9 +352,9 @@ fun SoftwareEqScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "${if (preAmp >= 0) "+" else ""}${String.format("%.1f", preAmp)} dB",
+                            "${if (preAmp >= 0) "+" else ""}${String.format(Locale.getDefault(), "%.1f", preAmp)} dB",
                             fontSize = 12.sp,
-                            color = PurplePrimary.copy(alpha = contentAlpha),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -363,18 +364,18 @@ fun SoftwareEqScreen(
                         valueRange = -15f..15f,
                         enabled = isEnabled,
                         colors = SliderDefaults.colors(
-                            thumbColor = PurplePrimary,
-                            activeTrackColor = PurplePrimary,
-                            inactiveTrackColor = DarkElevated,
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surface,
                             disabledThumbColor = Color(0xFF4B5563),
                             disabledActiveTrackColor = Color(0xFF374151),
-                            disabledInactiveTrackColor = DarkElevated
+                            disabledInactiveTrackColor = MaterialTheme.colorScheme.surface
                         )
                     )
                     Text(
                         "Lower pre-amp if you notice distortion when boosting bands.",
                         fontSize = 10.sp,
-                        color = TextSecondary.copy(alpha = contentAlpha)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -393,7 +394,7 @@ fun SoftwareEqScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(DarkCard)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -406,7 +407,7 @@ fun SoftwareEqScreen(
                             Text(
                                 text = formatFreq(band.frequency),
                                 fontSize = 9.sp,
-                                color = TextSecondary.copy(alpha = contentAlpha),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
                                 modifier = Modifier.width(36.dp)
                             )
                             Slider(
@@ -417,19 +418,19 @@ fun SoftwareEqScreen(
                                 valueRange = -12f..12f,
                                 enabled = isEnabled,
                                 colors = SliderDefaults.colors(
-                                    thumbColor = PurplePrimary,
-                                    activeTrackColor = PurplePrimary,
-                                    inactiveTrackColor = DarkElevated,
+                                    thumbColor = MaterialTheme.colorScheme.primary,
+                                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                                    inactiveTrackColor = MaterialTheme.colorScheme.surface,
                                     disabledThumbColor = Color(0xFF4B5563),
                                     disabledActiveTrackColor = Color(0xFF374151),
-                                    disabledInactiveTrackColor = DarkElevated
+                                    disabledInactiveTrackColor = MaterialTheme.colorScheme.surface
                                 ),
                                 modifier = Modifier.weight(1f).height(28.dp)
                             )
                             Text(
-                                text = "${if (band.gainDb >= 0) "+" else ""}${String.format("%.1f", band.gainDb)}",
+                                text = "${if (band.gainDb >= 0) "+" else ""}${String.format(Locale.getDefault(), "%.1f", band.gainDb)}",
                                 fontSize = 9.sp,
-                                color = (if (band.gainDb > 0) PurplePrimary else TextSecondary).copy(alpha = contentAlpha),
+                                color = (if (band.gainDb > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = contentAlpha),
                                 modifier = Modifier.width(30.dp)
                             )
                         }
@@ -455,12 +456,12 @@ fun SoftwareEqScreen(
                         onClick = { showImportDialog = true },
                         enabled = isEnabled,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary.copy(alpha = 0.2f)),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.Download, contentDescription = null, tint = PurplePrimary, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Download, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("AutoEq Import", fontSize = 12.sp, color = PurplePrimary)
+                        Text("AutoEq Import", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -477,12 +478,13 @@ fun SoftwareEqScreen(
 @Composable
 private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.SoftwareEqBand>, isEnabled: Boolean) {
     val contentAlpha = if (isEnabled) 1f else 0.35f
+    val primaryColor = MaterialTheme.colorScheme.primary
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(110.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(DarkCard)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .alpha(contentAlpha)
     ) {
@@ -539,8 +541,8 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
                 path = fillPath,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        PurplePrimary.copy(alpha = 0.35f),
-                        PurplePrimary.copy(alpha = 0.02f)
+                        primaryColor.copy(alpha = 0.35f),
+                        primaryColor.copy(alpha = 0.02f)
                     )
                 )
             )
@@ -548,7 +550,7 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
             // The curve stroke itself
             drawPath(
                 path = path,
-                color = PurplePrimary,
+                color = primaryColor,
                 style = Stroke(width = 2.5f, cap = StrokeCap.Round)
             )
 
@@ -556,7 +558,7 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
             points.forEachIndexed { i, point ->
                 val gain = bands[i].gainDb
                 drawCircle(
-                    color = if (gain == 0.0) Color.White.copy(alpha = 0.25f) else PurpleLight,
+                    color = if (gain == 0.0) Color.White.copy(alpha = 0.25f) else primaryColor,
                     radius = if (gain == 0.0) 1.5f else 2.5f,
                     center = point
                 )

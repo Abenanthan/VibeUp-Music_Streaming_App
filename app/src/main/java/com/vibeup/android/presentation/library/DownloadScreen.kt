@@ -30,7 +30,6 @@ import com.vibeup.android.data.local.entity.DownloadedSong
 import com.vibeup.android.data.repository.DownloadStatus
 import com.vibeup.android.presentation.player.PlayerViewModel
 import com.vibeup.android.data.repository.DownloadRepository
-import com.vibeup.android.ui.theme.*
 
 @Composable
 fun DownloadsScreen(
@@ -54,7 +53,7 @@ fun DownloadsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -89,7 +88,7 @@ fun DownloadsScreen(
                         fontWeight = FontWeight.Bold,
                         style = androidx.compose.ui.text.TextStyle(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(PurpleLight, BlueLight)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                             )
                         )
                     )
@@ -170,7 +169,7 @@ fun DownloadsScreen(
                     .fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = PurplePrimary
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
@@ -244,13 +243,13 @@ fun DownloadedSongItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .background(PurplePrimary.copy(alpha = 0.2f))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
                         song.quality,
                         fontSize = 9.sp,
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -270,7 +269,7 @@ fun DownloadedSongItem(
                         .fillMaxWidth()
                         .height(3.dp)
                         .clip(RoundedCornerShape(2.dp)),
-                    color = PurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     trackColor = Color(0xFF2A2A4A)
                 )
             }
