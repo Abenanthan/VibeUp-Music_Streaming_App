@@ -1,5 +1,7 @@
 package com.vibeup.android.domain.model
 
+import java.io.Serializable
+
 data class Song(
     val id: String,
     val title: String,
@@ -11,10 +13,10 @@ data class Song(
     val audioUrl: String,
     val language: String,
     val allArtists: List<ArtistCredit> = emptyList()
-)
+) : Serializable
 
 data class ArtistCredit(
     val id: String,
     val name: String,
     val imageUrl: String = ""
-)
+) : Serializable

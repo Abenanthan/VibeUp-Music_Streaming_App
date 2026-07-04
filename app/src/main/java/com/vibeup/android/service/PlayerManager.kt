@@ -14,6 +14,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.LibraryRepository
+import com.vibeup.android.domain.repository.SongRepository
 import com.vibeup.android.service.audio.SoftwareEqualizer
 import com.vibeup.android.util.NetworkMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,6 +26,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,6 +41,7 @@ import javax.inject.Singleton
 class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val libraryRepository: LibraryRepository,
+    private val songRepository: SongRepository,
     private val audioEffectsManager: AudioEffectsManager,
     private val networkMonitor: NetworkMonitor,
     private val softwareEqualizer: SoftwareEqualizer,
@@ -41,6 +50,7 @@ class PlayerManager @Inject constructor(
     private var exoPlayer: ExoPlayer? = null
     private val scope = CoroutineScope(Dispatchers.Main)
     private var progressJob: Job? = null
+    private var autoSaveJob: Job? = null
 
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong.asStateFlow()
@@ -109,8 +119,14 @@ class PlayerManager @Inject constructor(
                     addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(playing: Boolean) {
                             _isPlaying.value = playing
-                            if (playing) startTracking()
-                            else stopTracking()
+                            if (playing) {
+                                startTracking()
+                                startAutoSave()
+                            } else {
+                                stopTracking()
+                                stopAutoSave()
+                                saveState()
+                            }
                         }
 
                         override fun onPlaybackStateChanged(state: Int) {
@@ -188,6 +204,8 @@ class PlayerManager @Inject constructor(
                                     it.volume = 1f
                                 }
                             }
+                            
+                            saveState()
                         }
                     })
                 }
@@ -246,6 +264,7 @@ class PlayerManager @Inject constructor(
 
     fun playSong(song: Song, queue: List<Song> = emptyList(), queueId: String? = null) {
         _playbackError.value = null
+        isRestored.value = true
         
         // ✅ 1. Network check for remote songs
         val isLocal = song.audioUrl.startsWith("file://") || 
@@ -619,6 +638,157 @@ class PlayerManager @Inject constructor(
 
     fun clearError() {
         _playbackError.value = null
+    }
+
+    // ── Persistence ──────────────────────────────────────────────────────────
+
+    private data class PlaybackState(
+        val queue: List<Song>,
+        val activeQueue: List<Song>,
+        val currentIndex: Int,
+        val position: Long,
+        val queueId: String?,
+        val isShuffleEnabled: Boolean,
+        val isSmartShuffle: Boolean,
+        val repeatMode: Int
+    ) : Serializable
+
+    private fun startAutoSave() {
+        autoSaveJob?.cancel()
+        autoSaveJob = scope.launch {
+            while (true) {
+                delay(30000) // 30 seconds
+                saveState()
+            }
+        }
+    }
+
+    private fun stopAutoSave() {
+        autoSaveJob?.cancel()
+    }
+
+    fun saveState() {
+        val player = exoPlayer ?: return
+        val currentQueue = _queue.value
+        val currentActive = _activeQueue.value
+        if (currentActive.isEmpty()) return
+
+        // Strip URLs to force fresh ones on restore (prevent CDN expiry issues)
+        val strippedQueue = currentQueue.map { it.copy(audioUrl = "") }
+        val strippedActive = currentActive.map { it.copy(audioUrl = "") }
+
+        val state = PlaybackState(
+            queue = strippedQueue,
+            activeQueue = strippedActive,
+            currentIndex = player.currentMediaItemIndex,
+            position = player.currentPosition,
+            queueId = _currentQueueId.value,
+            isShuffleEnabled = _isShuffleEnabled.value,
+            isSmartShuffle = _isSmartShuffle.value,
+            repeatMode = player.repeatMode
+        )
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                val file = File(context.filesDir, "playback_state.bin")
+                ObjectOutputStream(FileOutputStream(file)).use { it.writeObject(state) }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerManager", "Save state failed: ${e.message}")
+            }
+        }
+    }
+
+    fun restoreState() {
+        if (isRestored.value) return
+        
+        scope.launch(Dispatchers.IO) {
+            try {
+                val file = File(context.filesDir, "playback_state.bin")
+                if (!file.exists()) return@launch
+
+                val state = ObjectInputStream(FileInputStream(file)).use { 
+                    it.readObject() as PlaybackState 
+                }
+
+                withContext(Dispatchers.Main) {
+                    val player = getExoPlayer()
+                    
+                    // Initial metadata restore
+                    _queue.value = state.queue
+                    _activeQueue.value = state.activeQueue
+                    _currentQueueId.value = state.queueId
+                    _isShuffleEnabled.value = state.isShuffleEnabled
+                    _isSmartShuffle.value = state.isSmartShuffle
+                    player.repeatMode = state.repeatMode
+                    _repeatMode.value = state.repeatMode
+                    
+                    val index = state.currentIndex.coerceIn(state.activeQueue.indices)
+                    if (index != -1) {
+                        _currentSong.value = state.activeQueue[index]
+                    }
+
+                    // Fetch fresh URLs for the entire queue in one go
+                    scope.launch(Dispatchers.IO) {
+                        val remoteIds = state.activeQueue
+                            .filter { it.language != "local" && it.id.isNotBlank() }
+                            .map { it.id }
+                        
+                        val freshSongs = if (remoteIds.isNotEmpty()) {
+                            songRepository.getSongsByIds(remoteIds)
+                        } else emptyList()
+                        
+                        val freshMap = freshSongs.associateBy { it.id }
+
+                        val restoredActive = state.activeQueue.map { song ->
+                            if (song.language == "local") song 
+                            else freshMap[song.id] ?: song
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            _activeQueue.value = restoredActive
+                            if (index in restoredActive.indices) {
+                                _currentSong.value = restoredActive[index]
+                            }
+
+                            val items = restoredActive.map { s ->
+                                MediaItem.Builder()
+                                    .setUri(if (s.audioUrl.isNotBlank()) s.audioUrl.toUri() else "https://vibeup.invalid".toUri())
+                                    .setMediaId(s.id)
+                                    .setMediaMetadata(
+                                        MediaMetadata.Builder()
+                                            .setTitle(s.title)
+                                            .setArtist(s.artist)
+                                            .setAlbumTitle(s.album)
+                                            .setArtworkUri(if (s.imageUrl.isNotBlank()) s.imageUrl.toUri() else null)
+                                            .build()
+                                    )
+                                    .build()
+                            }
+
+                            player.setMediaItems(items, index, 0L)
+                            player.playWhenReady = false 
+                            player.prepare()
+
+                            player.addListener(object : Player.Listener {
+                                override fun onPlaybackStateChanged(playbackState: Int) {
+                                    if (playbackState == Player.STATE_READY) {
+                                        val listener = this
+                                        scope.launch {
+                                            delay(1000)
+                                            player.seekTo(index, state.position)
+                                            player.removeListener(listener)
+                                            isRestored.value = true
+                                        }
+                                    }
+                                }
+                            })
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerManager", "Restore state failed: ${e.message}")
+            }
+        }
     }
 
     fun release() {
