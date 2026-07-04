@@ -724,7 +724,10 @@ class PlayerManager @Inject constructor(
                     
                     val index = state.currentIndex.coerceIn(state.activeQueue.indices)
                     if (index != -1) {
-                        _currentSong.value = state.activeQueue[index]
+                        val restoredSong = state.activeQueue[index]
+                        _currentSong.value = restoredSong
+                        _duration.value = restoredSong.duration.toLong() * 1000L
+                        _currentPosition.value = state.position
                     }
 
                     // Fetch fresh URLs for the entire queue in one go
@@ -747,7 +750,10 @@ class PlayerManager @Inject constructor(
                         withContext(Dispatchers.Main) {
                             _activeQueue.value = restoredActive
                             if (index in restoredActive.indices) {
-                                _currentSong.value = restoredActive[index]
+                                val updatedSong = restoredActive[index]
+                                _currentSong.value = updatedSong
+                                _duration.value = updatedSong.duration.toLong() * 1000L
+                                _currentPosition.value = state.position
                             }
 
                             val items = restoredActive.map { s ->
@@ -768,6 +774,9 @@ class PlayerManager @Inject constructor(
                             player.setMediaItems(items, index, 0L)
                             player.playWhenReady = false 
                             player.prepare()
+
+                            // ✅ Manually set position flow for UI immediately
+                            _currentPosition.value = state.position
 
                             player.addListener(object : Player.Listener {
                                 override fun onPlaybackStateChanged(playbackState: Int) {
