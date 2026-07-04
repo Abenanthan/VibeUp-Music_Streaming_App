@@ -1,60 +1,71 @@
-# VibeUp 
+# VibeUp 🎧
 
-VibeUp is a modern, high-performance Android music player built with Jetpack Compose and Media3 (ExoPlayer). It offers a seamless listening experience with a focus on deep audio customization, dynamic lyrics, and multilingual support.
+VibeUp is a premium, high-performance Android music streaming and local player. Built with **Jetpack Compose** and **Media3 (ExoPlayer)**, it combines a stunning modern interface with a professional-grade audio engine.
 
-## Features
+## ✨ Key Features
 
-- **Modern UI/UX**: Fully built with Jetpack Compose following Material 3 guidelines.
-- **Advanced Playback Engine**: Powered by Android Media3 (ExoPlayer) for stable and high-quality audio streaming and local playback.
-- **Audio Effects Engine**:
-  - 5-Band Equalizer with curated presets (Rock, Pop, Jazz, etc.).
-  - Bass Boost and Virtualizer (Surround Sound).
-  - Loudness Enhancer and Reverb presets.
-  - Utilize Device's own Audio Effects.
-- **Dynamic Lyrics**: Supports both synced (LRC) and plain text lyrics with tap-to-seek functionality.
-- **Multilingual Lyrics (Native Languages)**: Display lyrics in the user's native language when available. Features include:
-  - Support for multiple language tracks per song (original and translations).
-  - Automatic language detection based on device locale with the option to manually switch languages.
-- **Local Music Integration**: Scan and play music directly from your device storage.
-- **Playlist Management**: Create, edit, and organize your music library into custom playlists.
-- **Background Playback**: Persisstent playback with modern MediaStyle notifications and seamless integration with Android's media controls.
-- **Mini Player**: Always accessible playback controls while browsing the app.
-- **Efficient Search Algorithm**: Uses JioSaavn's official API's to process search queries with song recommendations using popularity.
-- **Artsit Details Page**: Featuring artists of the song as well as explore option where details of artist are shown.
-- **User Stats Page**: Features the user statistics data with total hours played,total songs played,top songs and top artists.
-- **Multiple Themes**: Users can now select their own customized themes for the entire app.
+### 🔊 Professional Audio Engine
+- **Dual-Mode Equalizer**:
+    - **Hardware EQ**: Access your device's built-in audio engine (Deepfield, Dolby Atmos, Dirac, etc.).
+    - **10-Band Software EQ**: High-precision DSP using Transposed Direct Form II (TDF2) filters with per-sample smoothing for zero "zipper noise."
+- **Audio Effects**: Bass Boost, Virtualizer (Surround Sound), Reverb presets, and Loudness Enhancer.
+- **Crossfade & Gapless**: Smooth transitions between tracks with customizable fade durations.
+- **Playback Speed**: Adjust tempo without affecting pitch.
 
-## Tech Stack
+### 🧠 Intelligent Playback
+- **Smart Shuffle**: Spotify-style similarity scoring based on language, artist, and mood.
+- **Atomic Reordering**: Real-time, continuous drag-and-drop queue management.
+- **Session Persistence**: Resumes exactly where you left off, even after a device restart.
+
+### 📝 Dynamic Lyrics
+- **Synced (LRC)**: Beautifully animated, time-synced lyrics with tap-to-seek functionality.
+- **Multilingual Support**: Automatic detection and manual switching between original and translated lyrics.
+- **Offline Caching**: Lyrics are stored locally for instant access.
+
+### 📊 Deep Integration
+- **Advanced Stats**: Track your music journey with total plays, listening hours, streaks, and weekly charts.
+- **Interactive Artist Profiles**: Explore full discographies, follower counts, and featured artist credits.
+- **Offline Mode**: Comprehensive download manager with quality selection (320kbps/160kbps/96kbps).
+
+### 🎨 Modern Experience
+- **Adaptive UI**: Fully themed with a custom "Obsidian" palette and vibrant gradients.
+- **Mini Player**: Persistent controls that follow you throughout the app.
+- **Smart Search**: Real-time suggestions and popularity-based rankings powered by JioSaavn APIs.
+
+## 🛠️ Tech Stack
 
 - **Language**: [Kotlin](https://kotlinlang.org/)
-- **UI Framework**: [Jetpack Compose](https://developer.android.com/jetpack/compose)
-- **Navigation**: [Compose Navigation](https://developer.android.com/jetpack/compose/navigation)
-- **Dependency Injection**: [Hilt](https://developer.android.com/training/dependency-injection/hilt-android)
+- **UI Framework**: [Jetpack Compose](https://developer.android.com/jetpack/compose) (Material 3)
 - **Audio Engine**: [Android Media3 / ExoPlayer](https://developer.android.com/guide/topics/media/media3)
-- **Image Loading**: [Coil](https://coil-kt.github.io/coil/)
-- **Local Database**: [Room](https://developer.android.com/training/data-storage/room)
-- **Concurrency**: Kotlin Coroutines & Flow
+- **Dependency Injection**: [Hilt](https://developer.android.com/training/dependency-injection/hilt-android)
+- **Database**: [Room](https://developer.android.com/training/data-storage/room) (Local caching & Play History)
+- **Persistence**: [DataStore](https://developer.android.com/topic/libraries/architecture/datastore) (Session management)
+- **Networking**: [Retrofit](https://square.github.io/retrofit/) + [OkHttp](https://square.github.io/okhttp/)
+- **Image Loading**: [Coil](https://coil-kt.github.io/coil/) (with aggressive disk/memory caching)
+- **Backend**: Firebase Auth & Firestore
 
-## Project Structure
+## 🚀 Getting Started
 
-- `com.vibeup.android.presentation`: UI layers including Screens, ViewModels, and Compose Components.
-- `com.vibeup.android.service`: Core background services including `MusicPlayerService`, `PlayerManager`, `AudioEffectsManager`, and `LyricsManager` (handles fetching, caching, syncing, and language selection for lyrics).
-- `com.vibeup.android.domain`: Domain models and repository interfaces.
-- `com.vibeup.android.ui.theme`: App styling, colors (Purple/Blue primary palette), and Typography.
+### Prerequisites
+- Android Studio Hedgehog (2023.1.1) or newer.
+- Android device or emulator running **Android 8.0 (API 26)** or higher.
 
-## Getting Started
-
+### Installation
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Abenanthan/VibeUp-Music_Streaming_App
    ```
-2. **Open in Android Studio**:
-   - Ensure you have the latest version of Android Studio (Hedgehog or newer).
-3. **Build and Run**:
-   - The app requires Android 7.0 (API 24) or higher.
-   - For notification controls on Android 13+, ensure you grant the notification permission on the first launch.
-   - If you want to use translated lyrics or online lyric lookup, ensure the app has network permission and an optional lyrics provider API key configured in the app settings.
+2. **Setup Firebase**:
+   - Create a project in the [Firebase Console](https://console.firebase.google.com/).
+   - Add an Android app with the package name `com.vibeup.android`.
+   - Download `google-services.json` and place it in the `app/` directory.
+3. **Build**:
+   - Clean and Rebuild project in Android Studio.
+   - Deploy to your device.
 
-## License
+## 📜 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for more details.
+
+---
+Developed with ❤️ by [Abenanthan](https://github.com/Abenanthan)
