@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
-            playerManager.resetState()
+            playerManager.restoreState()
         }
 
 

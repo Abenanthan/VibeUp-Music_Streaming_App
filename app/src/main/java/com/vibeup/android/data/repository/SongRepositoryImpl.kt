@@ -81,6 +81,17 @@ class SongRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getSongsByIds(ids: List<String>): List<Song> {
+        if (ids.isEmpty()) return emptyList()
+        return try {
+            val response = api.getSongById(ids = ids.joinToString(","))
+            response.data?.map { it.toDomain() } ?: emptyList()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     override suspend fun getPlayableSong(songId: String): Song? {
         return getSongById(songId)
     }

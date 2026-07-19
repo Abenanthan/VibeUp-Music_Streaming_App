@@ -14,6 +14,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.vibeup.android.domain.model.Song
 import com.vibeup.android.domain.repository.LibraryRepository
+import com.vibeup.android.domain.repository.SongRepository
 import com.vibeup.android.service.audio.SoftwareEqualizer
 import com.vibeup.android.util.NetworkMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,6 +26,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,6 +41,7 @@ import javax.inject.Singleton
 class PlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val libraryRepository: LibraryRepository,
+    private val songRepository: SongRepository,
     private val audioEffectsManager: AudioEffectsManager,
     private val networkMonitor: NetworkMonitor,
     private val softwareEqualizer: SoftwareEqualizer,
@@ -41,6 +50,7 @@ class PlayerManager @Inject constructor(
     private var exoPlayer: ExoPlayer? = null
     private val scope = CoroutineScope(Dispatchers.Main)
     private var progressJob: Job? = null
+    private var autoSaveJob: Job? = null
 
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong.asStateFlow()
@@ -109,8 +119,14 @@ class PlayerManager @Inject constructor(
                     addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(playing: Boolean) {
                             _isPlaying.value = playing
-                            if (playing) startTracking()
-                            else stopTracking()
+                            if (playing) {
+                                startTracking()
+                                startAutoSave()
+                            } else {
+                                stopTracking()
+                                stopAutoSave()
+                                saveState()
+                            }
                         }
 
                         override fun onPlaybackStateChanged(state: Int) {
@@ -166,16 +182,42 @@ class PlayerManager @Inject constructor(
                                     _currentSong.value = song
                                     CoroutineScope(Dispatchers.IO).launch {
                                         try {
-                                            libraryRepository
-                                                .addToRecentlyPlayed(song)
+                                            libraryRepository.addToRecentlyPlayed(song)
                                         } catch (e: Exception) { }
                                     }
                                 }
                             } else {
-                                // Fallback to index if mediaId is missing for some reason
                                 val index = exoPlayer?.currentMediaItemIndex ?: 0
                                 if (active.isNotEmpty() && index < active.size) {
                                     _currentSong.value = active[index]
+                                }
+                            }
+
+                            // Pre-fetch the NEXT song's URL while the current song
+                            // plays, so ExoPlayer has a valid URI ready before it
+                            // tries to buffer it. This is the fix for auto-advance
+                            // failing after session restore.
+                            val player = exoPlayer ?: return
+                            val nextIndex = player.currentMediaItemIndex + 1
+                            val active2 = _activeQueue.value
+                            if (nextIndex < active2.size) {
+                                val nextSong = active2[nextIndex]
+                                if (nextSong.audioUrl.isBlank() &&
+                                    nextSong.language != "local" &&
+                                    nextSong.id.isNotBlank()
+                                ) {
+                                    scope.launch(Dispatchers.IO) {
+                                        try {
+                                            val resolved = songRepository.getPlayableSong(nextSong.id)
+                                            if (resolved != null && resolved.audioUrl.isNotBlank()) {
+                                                withContext(Dispatchers.Main) {
+                                                    updateQueueItem(nextIndex, resolved)
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("PlayerManager", "Pre-fetch next song failed: ${e.message}")
+                                        }
+                                    }
                                 }
                             }
 
@@ -188,6 +230,8 @@ class PlayerManager @Inject constructor(
                                     it.volume = 1f
                                 }
                             }
+                            
+                            saveState()
                         }
                     })
                 }
@@ -246,6 +290,7 @@ class PlayerManager @Inject constructor(
 
     fun playSong(song: Song, queue: List<Song> = emptyList(), queueId: String? = null) {
         _playbackError.value = null
+        isRestored.value = true
         
         // ✅ 1. Network check for remote songs
         val isLocal = song.audioUrl.startsWith("file://") || 
@@ -557,13 +602,36 @@ class PlayerManager @Inject constructor(
     // * Used when the user taps a row in the queue screen.
 
     fun jumpToQueueIndex(index: Int) {
-        val player = getExoPlayer()
         if (index !in _activeQueue.value.indices) return
-        try {
-            player.seekToDefaultPosition(index)
-            player.play()
-        } catch (e: Exception) {
-            android.util.Log.e("PlayerManager", "jumpToQueueIndex failed: ${e.message}")
+        val song = _activeQueue.value[index]
+
+        scope.launch {
+            // If this song has no URL (empty after session restore), fetch it
+            // before seeking. Without this, ExoPlayer errors and plays nothing.
+            if (song.audioUrl.isBlank() &&
+                song.language != "local" &&
+                song.id.isNotBlank()
+            ) {
+                try {
+                    val resolved = withContext(Dispatchers.IO) {
+                        songRepository.getPlayableSong(song.id)
+                    }
+                    if (resolved != null && resolved.audioUrl.isNotBlank()) {
+                        updateQueueItem(index, resolved)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("PlayerManager", "jumpToQueueIndex URL resolve failed: ${e.message}")
+                    return@launch  // Don't try to play if we can't get a URL
+                }
+            }
+
+            try {
+                val player = getExoPlayer()
+                player.seekToDefaultPosition(index)
+                player.play()
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerManager", "jumpToQueueIndex seek failed: ${e.message}")
+            }
         }
     }
 
@@ -619,6 +687,206 @@ class PlayerManager @Inject constructor(
 
     fun clearError() {
         _playbackError.value = null
+    }
+
+    // ── Persistence ──────────────────────────────────────────────────────────
+
+    private data class PlaybackState(
+        val queue: List<Song>,
+        val activeQueue: List<Song>,
+        val currentIndex: Int,
+        val position: Long,
+        val queueId: String?,
+        val isShuffleEnabled: Boolean,
+        val isSmartShuffle: Boolean,
+        val repeatMode: Int
+    ) : Serializable
+
+    private fun startAutoSave() {
+        autoSaveJob?.cancel()
+        autoSaveJob = scope.launch {
+            while (true) {
+                delay(30000) // 30 seconds
+                saveState()
+            }
+        }
+    }
+
+    private fun stopAutoSave() {
+        autoSaveJob?.cancel()
+    }
+
+    fun saveState() {
+        val player = exoPlayer ?: return
+        val currentQueue = _queue.value
+        val currentActive = _activeQueue.value
+        if (currentActive.isEmpty()) return
+
+        // Strip URLs to force fresh ones on restore (prevent CDN expiry issues)
+        val strippedQueue = currentQueue.map { it.copy(audioUrl = "") }
+        val strippedActive = currentActive.map { it.copy(audioUrl = "") }
+
+        val state = PlaybackState(
+            queue = strippedQueue,
+            activeQueue = strippedActive,
+            currentIndex = player.currentMediaItemIndex,
+            position = player.currentPosition,
+            queueId = _currentQueueId.value,
+            isShuffleEnabled = _isShuffleEnabled.value,
+            isSmartShuffle = _isSmartShuffle.value,
+            repeatMode = player.repeatMode
+        )
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                val file = File(context.filesDir, "playback_state.bin")
+                ObjectOutputStream(FileOutputStream(file)).use { it.writeObject(state) }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerManager", "Save state failed: ${e.message}")
+            }
+        }
+    }
+
+    fun restoreState() {
+        if (isRestored.value) return
+        
+        scope.launch(Dispatchers.IO) {
+            try {
+                val file = File(context.filesDir, "playback_state.bin")
+                if (!file.exists()) return@launch
+
+                val state = ObjectInputStream(FileInputStream(file)).use { 
+                    it.readObject() as PlaybackState 
+                }
+
+                withContext(Dispatchers.Main) {
+                    val player = getExoPlayer()
+                    
+                    // Initial metadata restore
+                    _queue.value = state.queue
+                    _activeQueue.value = state.activeQueue
+                    _currentQueueId.value = state.queueId
+                    _isShuffleEnabled.value = state.isShuffleEnabled
+                    _isSmartShuffle.value = state.isSmartShuffle
+                    player.repeatMode = state.repeatMode
+                    _repeatMode.value = state.repeatMode
+                    
+                    val index = state.currentIndex.coerceIn(state.activeQueue.indices)
+                    if (index != -1) {
+                        val restoredSong = state.activeQueue[index]
+                        _currentSong.value = restoredSong
+                        _duration.value = restoredSong.duration.toLong() * 1000L
+                        _currentPosition.value = state.position
+                    }
+
+                    // Fetch fresh URLs for the entire queue in one go
+                    // Fetch fresh URL for ONLY the current + next song.
+                    // Previous approach fetched ALL songs via a single batch call
+                    // (getSongsByIds) which fails intermittently on large queues,
+                    // leaving all other songs with "https://vibeup.invalid" URLs.
+                    // Those invalid URLs caused ExoPlayer to error and loop on the
+                    // same song. Now we fetch one or two songs synchronously and
+                    // resolve the rest lazily via onMediaItemTransition pre-fetch.
+                    scope.launch(Dispatchers.IO) {
+                        val currentSong = state.activeQueue[index]
+                        val nextIndex = if (index + 1 < state.activeQueue.size) index + 1 else -1
+                        val nextSong = if (nextIndex != -1) state.activeQueue[nextIndex] else null
+
+                        // Resolve current song — one API call, almost never fails
+                        val resolvedCurrent = if (
+                            currentSong.language != "local" && currentSong.id.isNotBlank()
+                        ) {
+                            try { songRepository.getPlayableSong(currentSong.id) ?: currentSong }
+                            catch (e: Exception) { currentSong }
+                        } else currentSong
+
+                        // Resolve next song — pre-fetched so auto-advance works immediately
+                        val resolvedNext = if (
+                            nextSong != null &&
+                            nextSong.language != "local" &&
+                            nextSong.id.isNotBlank()
+                        ) {
+                            try { songRepository.getPlayableSong(nextSong.id) ?: nextSong }
+                            catch (e: Exception) { nextSong }
+                        } else nextSong
+
+                        // All remaining songs keep audioUrl = "" for now.
+                        // onMediaItemTransition will resolve each one lazily just
+                        // before ExoPlayer needs it.
+                        val restoredActive = state.activeQueue.mapIndexed { i, song ->
+                            when (i) {
+                                index     -> resolvedCurrent
+                                nextIndex -> resolvedNext ?: song
+                                else      -> song
+                            }
+                        }
+
+                        // If even the current song couldn't be resolved, abort restore.
+                        // Better to show an empty state than play an invalid URL.
+                        if (resolvedCurrent.audioUrl.isBlank() && currentSong.language != "local") {
+                            android.util.Log.e("PlayerManager", "Restore aborted: current song URL unresolvable")
+                            return@launch
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            _activeQueue.value = restoredActive
+                            _currentSong.value = resolvedCurrent
+                            _duration.value = resolvedCurrent.duration.toLong() * 1000L
+                            _currentPosition.value = state.position
+
+                            val items = restoredActive.map { s ->
+                                MediaItem.Builder()
+                                    // Songs without a URL get an empty-path URI.
+                                    // ExoPlayer won't try to load them until auto-advance
+                                    // reaches them, at which point onMediaItemTransition
+                                    // pre-fetch will have already replaced the item with
+                                    // a valid URL via updateQueueItem().
+                                    .setUri(
+                                        if (s.audioUrl.isNotBlank()) s.audioUrl.toUri()
+                                        else "vibeup://pending/${s.id}".toUri()
+                                    )
+                                    .setMediaId(s.id)
+                                    .setMediaMetadata(
+                                        MediaMetadata.Builder()
+                                            .setTitle(s.title)
+                                            .setArtist(s.artist)
+                                            .setAlbumTitle(s.album)
+                                            .setArtworkUri(if (s.imageUrl.isNotBlank()) s.imageUrl.toUri() else null)
+                                            .build()
+                                    )
+                                    .build()
+                            }
+
+                            player.setMediaItems(items, index, 0L)
+                            player.playWhenReady = false
+                            player.prepare()
+                            _currentPosition.value = state.position
+
+                            // Seek only after STATE_READY — seeking before this is
+                            // silently ignored by ExoPlayer (root cause of the
+                            // "frozen timer at position 0" bug in previous attempts)
+                            player.addListener(object : Player.Listener {
+                                override fun onPlaybackStateChanged(playbackState: Int) {
+                                    if (playbackState == Player.STATE_READY) {
+                                        val listener = this
+                                        scope.launch {
+                                            delay(300)
+                                            player.seekTo(index, state.position)
+                                            player.removeListener(listener)
+                                            isRestored.value = true
+                                            android.util.Log.d("PlayerManager",
+                                                "Restored: ${resolvedCurrent.title} at ${state.position}ms")
+                                        }
+                                    }
+                                }
+                            })
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerManager", "Restore state failed: ${e.message}")
+            }
+        }
     }
 
     fun release() {

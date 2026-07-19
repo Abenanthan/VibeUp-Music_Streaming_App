@@ -78,6 +78,9 @@ class MusicPlayerService : MediaLibraryService() {
         super.onCreate()
         createNotificationChannel()
 
+        // ✅ Attempt to restore session if coming from a cold start
+        playerManager.restoreState()
+
         val player = playerManager.getExoPlayer()
         player.addListener(playerListener)
 
