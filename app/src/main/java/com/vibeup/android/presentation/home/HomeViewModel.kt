@@ -30,7 +30,7 @@ class HomeViewModel @Inject constructor(
 
     // ... all your existing state flows stay exactly the same ...
     private val favouriteIds = listOf(
-        "GWwnRe0u", "rjkrTnma", "m1iXOUID", "mPTrDSun",
+        "GWwnRe0u", "gfZ4vKNM", "m1iXOUID", "mPTrDSun",
         "__YIeFT-", "uP7MlTHz", "eLm-JvK4", "SM-rvz75",
         "qcVqPqk5", "vRNpPA7_", "yBmo2qWU", "QWLY3Ls_",
         "QkFUdVod", "BH07HVc8", "kehuVn2F", "cDHlLKvW", "_KjTxjcC"
