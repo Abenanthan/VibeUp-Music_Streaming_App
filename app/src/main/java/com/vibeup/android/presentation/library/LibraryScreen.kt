@@ -899,6 +899,9 @@ fun LibrarySongItem(
     onUnlike: (() -> Unit)? = null
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val ringtoneLauncher = com.vibeup.android.presentation.ringtone.rememberRingtoneLauncher(
+        com.vibeup.android.LocalNavController.current
+    )
 
     Row(
         modifier = Modifier
@@ -961,6 +964,16 @@ fun LibrarySongItem(
                         )
                     },
                     onClick = { showMenu = false; onPlay() }
+                )
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "Set as Ringtone",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    },
+                    onClick = { showMenu = false; ringtoneLauncher(song) }
                 )
                 if (onUnlike != null) {
                     DropdownMenuItem(

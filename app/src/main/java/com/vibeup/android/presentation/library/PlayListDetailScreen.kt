@@ -631,6 +631,9 @@ fun PlaylistSongItem(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showDownloadQualities by remember { mutableStateOf(false) }
+    val ringtoneLauncher = com.vibeup.android.presentation.ringtone.rememberRingtoneLauncher(
+        com.vibeup.android.LocalNavController.current
+    )
 
     Row(
         modifier = Modifier
@@ -771,6 +774,20 @@ fun PlaylistSongItem(
                     }
                 }
 
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    thickness = 0.5.dp
+                )
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "🔔 Set as Ringtone",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    },
+                    onClick = { showMenu = false; ringtoneLauncher(song) }
+                )
                 HorizontalDivider(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     thickness = 0.5.dp

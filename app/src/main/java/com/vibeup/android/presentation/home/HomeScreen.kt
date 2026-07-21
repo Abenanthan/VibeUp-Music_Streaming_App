@@ -1184,6 +1184,9 @@ fun SongOptionsDialog(
     onAddToPlaylist: (String) -> Unit,
     onDownload: ((String) -> Unit)? = null
 ) {
+    val ringtoneLauncher = com.vibeup.android.presentation.ringtone.rememberRingtoneLauncher(
+        com.vibeup.android.LocalNavController.current
+    )
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -1269,6 +1272,26 @@ fun SongOptionsDialog(
                                 }
                             }
                         }
+                    }
+                }
+
+                // Set as Ringtone option
+                HorizontalDivider(color = Color(0xFF1F1F3A), thickness = 1.dp)
+                TextButton(
+                    onClick = { ringtoneLauncher(song); onDismiss() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = Color(0xFFF59E0B)
+                        )
+                        Text("Set as Ringtone", color = Color.White, fontSize = 14.sp)
                     }
                 }
 

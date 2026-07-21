@@ -1,7 +1,10 @@
 package com.vibeup.android
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +27,7 @@ import androidx.navigation.NavType
 import com.vibeup.android.presentation.artist.ArtistScreen
 import com.vibeup.android.presentation.stats.StatsScreen
 import com.vibeup.android.presentation.settings.SettingsScreen
+import com.vibeup.android.presentation.ringtone.RingtoneTrimmerScreen
 sealed class Screen(val route: String) {
     object Auth    : Screen("auth")
     object Home    : Screen("home")
@@ -54,6 +58,13 @@ sealed class Screen(val route: String) {
     object Stats : Screen("stats")
 
     object Settings : Screen("settings")
+
+    object Ringtone : Screen("ringtone")
+}
+
+/** Lets deep composables (e.g. the shared song menu) navigate without prop-drilling. */
+val LocalNavController = compositionLocalOf<NavController> {
+    error("NavController not provided")
 }
 
 @Composable
@@ -62,6 +73,7 @@ fun VibeUpNavHost(
     startDestination: String = Screen.Auth.route,
     modifier: Modifier = Modifier
 ) {
+    CompositionLocalProvider(LocalNavController provides navController) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -143,5 +155,10 @@ fun VibeUpNavHost(
             SettingsScreen(navController = navController)
         }
 
+        composable(Screen.Ringtone.route) {
+            RingtoneTrimmerScreen(navController = navController)
+        }
+
+    }
     }
 }

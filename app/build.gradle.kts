@@ -96,6 +96,10 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.4.0")
     implementation("androidx.media3:media3-ui:1.4.0")
     implementation("androidx.media3:media3-session:1.4.0")
+    // Media3 Transformer - in-app audio clipping for ringtones
+    implementation("androidx.media3:media3-transformer:1.4.0")
+    implementation("androidx.media3:media3-effect:1.4.0")
+    implementation("androidx.media3:media3-common:1.4.0")
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.7.0")
