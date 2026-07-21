@@ -7,9 +7,11 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,8 +28,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,12 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.vibeup.android.data.repository.RingtoneType
 import kotlinx.coroutines.delay
+import kotlin.math.abs
+import kotlin.math.sin
 
 private const val MAX_CLIP_SEC = 40f
 private const val MIN_CLIP_SEC = 3f
@@ -199,6 +207,7 @@ private fun ColumnScope.TrimmerBody(
     }
     var selectedType by remember { mutableStateOf(RingtoneType.RINGTONE) }
     var alsoContact by remember { mutableStateOf(false) }
+    var playheadFrac by remember { mutableStateOf(0f) }
 
     // ── Preview player: loops the current selection ──
     val player = remember {
@@ -219,10 +228,12 @@ private fun ColumnScope.TrimmerBody(
             player.seekTo((range.start * 1000).toLong())
             player.playWhenReady = true
             while (isPlaying) {
-                if (player.currentPosition >= (range.endInclusive * 1000).toLong()) {
+                val posMs = player.currentPosition
+                if (posMs >= (range.endInclusive * 1000).toLong()) {
                     player.seekTo((range.start * 1000).toLong())
                 }
-                delay(100)
+                playheadFrac = if (durationSec > 0f) (posMs / 1000f) / durationSec else 0f
+                delay(40)
             }
         } else {
             player.playWhenReady = false
@@ -280,17 +291,19 @@ private fun ColumnScope.TrimmerBody(
             Text("End ${formatSec(range.endInclusive)}", color = Color(0xFF9CA3AF), fontSize = 13.sp)
         }
 
-        RangeSlider(
-            value = range,
-            onValueChange = { new ->
-                range = clampRange(new, range, durationSec)
-            },
-            valueRange = 0f..durationSec,
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = Color(0xFF2A2A45)
-            )
+        WaveformTrimmer(
+            seedKey = sourcePath,
+            durationSec = durationSec,
+            range = range,
+            playheadFrac = playheadFrac,
+            accent = MaterialTheme.colorScheme.primary,
+            onRangeChange = { new -> range = clampRange(new, range, durationSec) }
+        )
+
+        Text(
+            "Drag the handles to pick your clip • max ${MAX_CLIP_SEC.toInt()}s",
+            color = Color(0xFF6B7280),
+            fontSize = 11.sp
         )
 
         // Preview button
@@ -436,6 +449,116 @@ private fun TypeChip(
             fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
         )
+    }
+}
+
+/**
+ * A waveform-style trimmer: vertical bars spanning the whole track, a highlighted
+ * selection window with two draggable grip handles, and a live playhead line.
+ * (Bar heights are a deterministic pseudo-waveform — the source has no amplitude data.)
+ */
+@Composable
+private fun WaveformTrimmer(
+    seedKey: String,
+    durationSec: Float,
+    range: ClosedFloatingPointRange<Float>,
+    playheadFrac: Float,
+    accent: Color,
+    onRangeChange: (ClosedFloatingPointRange<Float>) -> Unit
+) {
+    val barCount = 70
+    val bars = remember(seedKey) {
+        val seed = seedKey.hashCode()
+        List(barCount) { i ->
+            // Layered sines + a per-bar jitter derived from the seed → organic but stable.
+            val jitter = (((seed / (i + 1)) % 100) / 100f)
+            val v = 0.5f + 0.5f * sin(i * 0.55f) * abs(sin(i * 0.17f + 1.3f))
+            (0.12f + 0.88f * (0.55f * v + 0.45f * jitter)).coerceIn(0.10f, 1f)
+        }
+    }
+
+    var widthPx by remember { mutableStateOf(1f) }
+    // Read the freshest range/handle inside the gesture without re-keying pointerInput.
+    val rangeState = remember { mutableStateOf(range) }
+    rangeState.value = range
+    var activeHandle by remember { mutableStateOf(0) } // 1 = start, 2 = end
+
+    val dim = Color(0xFF2E2E4D)
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(96.dp)
+            .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f) }
+            .pointerInput(durationSec) {
+                detectDragGestures(
+                    onDragStart = { pos ->
+                        val cur = rangeState.value
+                        val startX = (cur.start / durationSec) * widthPx
+                        val endX = (cur.endInclusive / durationSec) * widthPx
+                        activeHandle = if (abs(pos.x - startX) <= abs(pos.x - endX)) 1 else 2
+                    },
+                    onDrag = { change, _ ->
+                        change.consume()
+                        val frac = (change.position.x / widthPx).coerceIn(0f, 1f)
+                        val sec = frac * durationSec
+                        val cur = rangeState.value
+                        val next = if (activeHandle == 1) sec..cur.endInclusive else cur.start..sec
+                        onRangeChange(next)
+                    }
+                )
+            }
+    ) {
+        val w = size.width
+        val h = size.height
+        val startX = (range.start / durationSec).coerceIn(0f, 1f) * w
+        val endX = (range.endInclusive / durationSec).coerceIn(0f, 1f) * w
+
+        // Selection background band.
+        drawRoundRect(
+            color = accent.copy(alpha = 0.12f),
+            topLeft = Offset(startX, 0f),
+            size = Size((endX - startX).coerceAtLeast(0f), h),
+            cornerRadius = CornerRadius(8f, 8f)
+        )
+
+        // Bars.
+        val slot = w / barCount
+        val barW = slot * 0.55f
+        bars.forEachIndexed { i, amp ->
+            val cx = i * slot + slot / 2f
+            val barH = h * amp
+            val top = (h - barH) / 2f
+            val inSel = cx in startX..endX
+            drawRoundRect(
+                color = if (inSel) accent else dim,
+                topLeft = Offset(cx - barW / 2f, top),
+                size = Size(barW, barH),
+                cornerRadius = CornerRadius(barW / 2f, barW / 2f)
+            )
+        }
+
+        // Edge handles.
+        val handleW = 8f
+        listOf(startX, endX).forEach { x ->
+            drawRoundRect(
+                color = accent,
+                topLeft = Offset(x - handleW / 2f, 0f),
+                size = Size(handleW, h),
+                cornerRadius = CornerRadius(4f, 4f)
+            )
+        }
+
+        // Playhead.
+        if (playheadFrac > 0f) {
+            val px = playheadFrac.coerceIn(0f, 1f) * w
+            drawRoundRect(
+                color = Color.White,
+                topLeft = Offset(px - 1.5f, 0f),
+                size = Size(3f, h),
+                cornerRadius = CornerRadius(2f, 2f)
+            )
+        }
     }
 }
 
