@@ -118,22 +118,29 @@ class PlayerViewModel @Inject constructor(
 
                 if (nextIndex < active.size) {
                     val nextSong = active[nextIndex]
-                    _isResolvingUrl.value = true
 
-                    val playable = try {
-                        withContext(Dispatchers.IO) { playSongUseCase(nextSong) }
-                    } catch (e: Exception) {
-                        android.util.Log.e("PlayerVM", "playNext resolve failed: ${e.message}")
-                        nextSong // use original if resolve fails — don't crash
-                    } finally {
-                        _isResolvingUrl.value = false
-                    }
+                    // Only hit the network when the next song has no URL yet (e.g. an
+                    // unresolved item after session restore). If it's already playable
+                    // — the common case, thanks to the next-song pre-fetch — skip
+                    // instantly instead of blocking on a resolve every single time.
+                    val needsResolve = nextSong.audioUrl.isBlank() &&
+                        nextSong.language != "local" && nextSong.id.isNotBlank()
 
-                    // Only update queue item if URL actually changed
-                    if (playable.audioUrl != nextSong.audioUrl) {
-                        try { playerManager.updateQueueItem(nextIndex, playable) }
-                        catch (e: Exception) {
-                            android.util.Log.e("PlayerVM", "updateQueueItem failed: ${e.message}")
+                    if (needsResolve) {
+                        _isResolvingUrl.value = true
+                        val playable = try {
+                            withContext(Dispatchers.IO) { playSongUseCase(nextSong) }
+                        } catch (e: Exception) {
+                            android.util.Log.e("PlayerVM", "playNext resolve failed: ${e.message}")
+                            nextSong
+                        } finally {
+                            _isResolvingUrl.value = false
+                        }
+                        if (playable.audioUrl != nextSong.audioUrl) {
+                            try { playerManager.updateQueueItem(nextIndex, playable) }
+                            catch (e: Exception) {
+                                android.util.Log.e("PlayerVM", "updateQueueItem failed: ${e.message}")
+                            }
                         }
                     }
 

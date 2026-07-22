@@ -90,6 +90,10 @@ class PlayerManager @Inject constructor(
 
     val isRestored = MutableStateFlow(false)
 
+    // Counts consecutive playback errors so a queue full of bad/expired URLs can't
+    // send ExoPlayer into an endless skip loop. Reset to 0 whenever a song loads OK.
+    private var errorSkipCount = 0
+
     fun getExoPlayer(): ExoPlayer {
         if (exoPlayer == null) {
             val renderersFactory = object : androidx.media3.exoplayer.DefaultRenderersFactory(context) {
@@ -132,6 +136,8 @@ class PlayerManager @Inject constructor(
                         override fun onPlaybackStateChanged(state: Int) {
                             if (state == Player.STATE_READY) {
                                 _duration.value = duration
+                                // A song loaded fine → we're not in an error loop.
+                                errorSkipCount = 0
                             }
                         }
 
@@ -150,23 +156,60 @@ class PlayerManager @Inject constructor(
                         }
 
                         override fun onPlayerError(error: PlaybackException) {
-                            android.util.Log.e("PlayerManager", "Player error: ${error.message}")
-                            _playbackError.value = when (error.errorCode) {
-                                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
-                                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> "Network connection lost"
-                                PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
-                                PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> "Failed to load song"
-                                else -> "Playback error: ${error.errorCodeName}"
-                            }
+                            android.util.Log.e("PlayerManager", "Player error: ${error.errorCodeName} ${error.message}")
+                            val player = exoPlayer ?: return
                             _isPlaying.value = false
                             stopTracking()
 
-                            // ✅ Auto-skip if possible
-                            if (hasNextMediaItem()) {
-                                android.util.Log.d("PlayerManager", "Attempting auto-skip after error...")
-                                seekToNextMediaItem()
-                                prepare()
-                                play()
+                            val active = _activeQueue.value
+                            errorSkipCount++
+
+                            // Circuit breaker: if we've failed more times in a row than
+                            // there are songs, stop — never loop the whole queue forever.
+                            if (errorSkipCount > active.size.coerceAtLeast(1)) {
+                                errorSkipCount = 0
+                                _playbackError.value = "Couldn't play this song"
+                                return
+                            }
+
+                            val idx = player.currentMediaItemIndex
+                            val current = active.getOrNull(idx)
+                            val isStreaming = current != null &&
+                                current.language != "local" && current.id.isNotBlank()
+
+                            // For a streaming song, the URL is likely a restore placeholder
+                            // or an expired CDN link. Fetch a FRESH url and retry the SAME
+                            // song in place instead of skipping — this is what breaks the
+                            // infinite skip loop after session restore.
+                            if (isStreaming) {
+                                scope.launch(Dispatchers.IO) {
+                                    val resolved = try {
+                                        songRepository.getPlayableSong(current!!.id)
+                                    } catch (e: Exception) { null }
+                                    withContext(Dispatchers.Main) {
+                                        val p = exoPlayer ?: return@withContext
+                                        if (resolved != null &&
+                                            resolved.audioUrl.isNotBlank() &&
+                                            resolved.audioUrl != current!!.audioUrl
+                                        ) {
+                                            updateQueueItem(idx, resolved)
+                                            p.prepare()
+                                            p.play()
+                                        } else if (p.hasNextMediaItem()) {
+                                            p.seekToNextMediaItem(); p.prepare(); p.play()
+                                        } else {
+                                            _playbackError.value = "Couldn't play this song"
+                                        }
+                                    }
+                                }
+                                return
+                            }
+
+                            // Local / unknown item — bounded skip.
+                            if (player.hasNextMediaItem()) {
+                                player.seekToNextMediaItem(); player.prepare(); player.play()
+                            } else {
+                                _playbackError.value = "Couldn't play this song"
                             }
                         }
 
@@ -291,6 +334,7 @@ class PlayerManager @Inject constructor(
     fun playSong(song: Song, queue: List<Song> = emptyList(), queueId: String? = null) {
         _playbackError.value = null
         isRestored.value = true
+        errorSkipCount = 0
         
         // ✅ 1. Network check for remote songs
         val isLocal = song.audioUrl.startsWith("file://") || 
@@ -749,7 +793,10 @@ class PlayerManager @Inject constructor(
 
     fun restoreState() {
         if (isRestored.value) return
-        
+        // Claim immediately so the two cold-start callers (MainActivity + the
+        // MusicPlayerService) can't both run restore and stack duplicate queues.
+        isRestored.value = true
+
         scope.launch(Dispatchers.IO) {
             try {
                 val file = File(context.filesDir, "playback_state.bin")
@@ -857,29 +904,17 @@ class PlayerManager @Inject constructor(
                                     .build()
                             }
 
-                            player.setMediaItems(items, index, 0L)
+                            // Pass the resume position straight to setMediaItems as the
+                            // start position — ExoPlayer honours it once the item is
+                            // ready. This replaces the old delayed seek-listener, which
+                            // could fire on a DIFFERENT song the user started meanwhile
+                            // and yank it back to the stored offset ("stops in middle").
+                            player.setMediaItems(items, index, state.position)
                             player.playWhenReady = false
                             player.prepare()
                             _currentPosition.value = state.position
-
-                            // Seek only after STATE_READY — seeking before this is
-                            // silently ignored by ExoPlayer (root cause of the
-                            // "frozen timer at position 0" bug in previous attempts)
-                            player.addListener(object : Player.Listener {
-                                override fun onPlaybackStateChanged(playbackState: Int) {
-                                    if (playbackState == Player.STATE_READY) {
-                                        val listener = this
-                                        scope.launch {
-                                            delay(300)
-                                            player.seekTo(index, state.position)
-                                            player.removeListener(listener)
-                                            isRestored.value = true
-                                            android.util.Log.d("PlayerManager",
-                                                "Restored: ${resolvedCurrent.title} at ${state.position}ms")
-                                        }
-                                    }
-                                }
-                            })
+                            android.util.Log.d("PlayerManager",
+                                "Restored: ${resolvedCurrent.title} at ${state.position}ms")
                         }
                     }
                 }
