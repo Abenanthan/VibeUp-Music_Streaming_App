@@ -978,8 +978,10 @@ fun ArtistCoverflow(
     if (artists.isEmpty()) return
     val n = artists.size
 
-    var active by remember(n) { mutableStateOf(0) }
-    val anim = remember { Animatable(0f) }
+    // `active` is unbounded — the gallery loops infinitely in both directions.
+    // Start in the middle so there are cards to scroll on both sides immediately.
+    var active by remember(n) { mutableStateOf(n * 500 + n / 2) }
+    val anim = remember { Animatable((n * 500 + n / 2).toFloat()) }
     LaunchedEffect(active) {
         anim.animateTo(active.toFloat(), tween(durationMillis = 460, easing = FastOutSlowInEasing))
     }
@@ -1003,15 +1005,18 @@ fun ArtistCoverflow(
                         change.consume()
                         acc += dragAmount
                         val threshold = cardWpx * 0.45f
-                        if (acc <= -threshold && active < n - 1) { active++; acc = 0f }
-                        else if (acc >= threshold && active > 0) { active--; acc = 0f }
+                        // No bounds — wraps around endlessly.
+                        if (acc <= -threshold) { active++; acc = 0f }
+                        else if (acc >= threshold) { active--; acc = 0f }
                     }
                 )
             },
         contentAlignment = Alignment.Center
     ) {
         artists.forEachIndexed { i, artist ->
-            val rel = i - pos
+            // Nearest looped copy of this card relative to the current position.
+            var rel = (i - pos).mod(n.toFloat())
+            if (rel > n / 2f) rel -= n
             val ax = kotlin.math.abs(rel)
             if (ax > 2.6f) return@forEachIndexed
 
@@ -1037,7 +1042,17 @@ fun ArtistCoverflow(
                     .clip(RoundedCornerShape(18.dp))
                     .background(Color(0xFF1A1A2E))
                     .clickable {
-                        if (i == active) onArtistClick(artist) else active = i
+                        // Which artist index is currently centred.
+                        val centered = ((active % n) + n) % n
+                        if (i == centered) {
+                            onArtistClick(artist)
+                        } else {
+                            // Move to this card via the shortest looped path.
+                            var diff = i - centered
+                            if (diff > n / 2) diff -= n
+                            if (diff < -n / 2) diff += n
+                            active += diff
+                        }
                     }
             ) {
                 AsyncImage(
