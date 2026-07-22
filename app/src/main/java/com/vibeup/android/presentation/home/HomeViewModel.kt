@@ -63,8 +63,11 @@ class HomeViewModel @Inject constructor(
     private val _sadSongs = MutableStateFlow<List<Song>>(emptyList())
     val sadSongs: StateFlow<List<Song>> = _sadSongs.asStateFlow()
 
-    private val _arRahmanSongs = MutableStateFlow<List<Song>>(emptyList())
-    val arRahmanSongs: StateFlow<List<Song>> = _arRahmanSongs.asStateFlow()
+    private val _shreyaSongs = MutableStateFlow<List<Song>>(emptyList())
+    val shreyaSongs: StateFlow<List<Song>> = _shreyaSongs.asStateFlow()
+
+    private val _yuvanSongs = MutableStateFlow<List<Song>>(emptyList())
+    val yuvanSongs: StateFlow<List<Song>> = _yuvanSongs.asStateFlow()
 
     private val _anirudhSongs = MutableStateFlow<List<Song>>(emptyList())
     val anirudhSongs: StateFlow<List<Song>> = _anirudhSongs.asStateFlow()
@@ -176,7 +179,8 @@ class HomeViewModel @Inject constructor(
                 val p  = async { loadMoodSongs("party dance songs", _partySongs) }
                 val c  = async { loadMoodSongs("chill relaxing songs", _chillSongs) }
                 val s  = async { loadMoodSongs("sad emotional songs", _sadSongs) }
-                val ar = async { loadArtistSongs("AR Rahman", _arRahmanSongs) }
+                val sh = async { loadArtistSongs("Shreya Ghoshal", _shreyaSongs) }
+                val yu = async { loadArtistSongs("Yuvan Shankar Raja", _yuvanSongs) }
                 val an = async { loadArtistSongs("Anirudh Ravichander", _anirudhSongs) }
                 val si = async { loadArtistSongs("Sid Sriram", _sidSriramSongs) }
                 val aj = async { loadArtistSongs("Arijit Singh", _arijitSongs) }
@@ -186,7 +190,7 @@ class HomeViewModel @Inject constructor(
                 val te = async { loadLanguageSongs("telugu") }
                 val hi = async { loadLanguageSongs("hindi") }
                 r.await(); p.await(); c.await(); s.await()
-                ar.await(); an.await(); si.await(); aj.await()
+                sh.await(); yu.await(); an.await(); si.await(); aj.await()
                 gv.await(); hh.await()
                 ta.await(); te.await(); hi.await()
             } catch (e: Exception) {

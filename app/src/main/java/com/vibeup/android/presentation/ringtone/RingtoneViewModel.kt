@@ -53,15 +53,6 @@ class RingtoneViewModel @Inject constructor(
     private val _state = MutableStateFlow(RingtoneUiState())
     val state: StateFlow<RingtoneUiState> = _state.asStateFlow()
 
-    /** Last successfully written ringtone uri, kept for a follow-up contact assignment. */
-    private var lastRingtoneUri: Uri? = null
-
-    /** Whether the user asked to also assign the ringtone to a contact after saving. */
-    var assignContactAfterSave: Boolean = false
-        private set
-
-    fun setAssignContactAfterSave(value: Boolean) { assignContactAfterSave = value }
-
     fun start() {
         val song = holder.consume() ?: run {
             _state.value = _state.value.copy(stage = RingtoneStage.Failed("No song selected"))
@@ -136,14 +127,16 @@ class RingtoneViewModel @Inject constructor(
     fun canWriteSettings(): Boolean = ringtoneRepository.canWriteSettings()
 
     /**
-     * Trim the selected slice, publish it to MediaStore and set it as the chosen default.
+     * Trim the selected slice, publish it to MediaStore, set it as the chosen default and
+     * — if a contact was picked — assign it to that contact too. All in one flow.
      * Caller must ensure WRITE_SETTINGS is granted first.
      */
     fun applyRingtone(
         sourcePath: String,
         startMs: Long,
         endMs: Long,
-        type: RingtoneType
+        type: RingtoneType,
+        contactUri: Uri? = null
     ) {
         val song = _state.value.song ?: return
         viewModelScope.launch {
@@ -164,35 +157,30 @@ class RingtoneViewModel @Inject constructor(
             }
 
             _state.value = _state.value.copy(stage = RingtoneStage.Working("Applying…"))
-            ringtoneRepository.setAsDefault(type, uri)
-                .onSuccess {
-                    lastRingtoneUri = uri
-                    val label = when (type) {
-                        RingtoneType.RINGTONE -> "ringtone"
-                        RingtoneType.NOTIFICATION -> "notification sound"
-                        RingtoneType.ALARM -> "alarm sound"
-                    }
-                    _state.value = _state.value.copy(
-                        stage = RingtoneStage.Done(uri),
-                        toast = "Set as $label ✅"
-                    )
-                }
-                .onFailure {
-                    _state.value = _state.value.copy(stage = RingtoneStage.Failed("Couldn't apply: ${it.message}"))
-                }
-        }
-    }
+            val setResult = ringtoneRepository.setAsDefault(type, uri)
+            if (setResult.isFailure) {
+                _state.value = _state.value.copy(
+                    stage = RingtoneStage.Failed("Couldn't apply: ${setResult.exceptionOrNull()?.message}")
+                )
+                return@launch
+            }
 
-    /** Assign the already-saved ringtone to a picked contact. Requires WRITE_CONTACTS granted. */
-    fun assignToContact(contactUri: Uri) {
-        val uri = lastRingtoneUri ?: run {
-            _state.value = _state.value.copy(toast = "Save a ringtone first")
-            return
-        }
-        viewModelScope.launch {
-            ringtoneRepository.setContactRingtone(contactUri, uri)
-                .onSuccess { _state.value = _state.value.copy(toast = "Contact ringtone set ✅") }
-                .onFailure { _state.value = _state.value.copy(toast = "Couldn't set contact ringtone") }
+            val label = when (type) {
+                RingtoneType.RINGTONE -> "ringtone"
+                RingtoneType.NOTIFICATION -> "notification sound"
+                RingtoneType.ALARM -> "alarm sound"
+            }
+
+            // Optional contact assignment as part of the same apply.
+            var toastMsg = "Set as $label ✅"
+            if (contactUri != null) {
+                _state.value = _state.value.copy(stage = RingtoneStage.Working("Assigning to contact…"))
+                val c = ringtoneRepository.setContactRingtone(contactUri, uri)
+                toastMsg = if (c.isSuccess) "$label + contact set ✅"
+                           else "Ringtone set, but contact assignment failed"
+            }
+
+            _state.value = _state.value.copy(stage = RingtoneStage.Done(uri), toast = toastMsg)
         }
     }
 

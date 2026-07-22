@@ -1,9 +1,13 @@
 package com.vibeup.android.presentation.home
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,8 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,7 +79,8 @@ fun HomeScreen(
     val partySongs by viewModel.partySongs.collectAsState()
     val chillSongs by viewModel.chillSongs.collectAsState()
     val sadSongs by viewModel.sadSongs.collectAsState()
-    val arRahmanSongs by viewModel.arRahmanSongs.collectAsState()
+    val shreyaSongs by viewModel.shreyaSongs.collectAsState()
+    val yuvanSongs by viewModel.yuvanSongs.collectAsState()
     val anirudhSongs by viewModel.anirudhSongs.collectAsState()
     val sidSriramSongs by viewModel.sidSriramSongs.collectAsState()
     val arijitSongs by viewModel.arijitSongs.collectAsState()
@@ -398,8 +406,24 @@ fun HomeScreen(
                         title = "🎤 Artists",
                         subtitle = "Your favourite musicians"
                     )
-                    val artistsData = remember(anirudhSongs, sidSriramSongs, arijitSongs, gvPrakashSongs, hipHopSongs, arRahmanSongs) {
+                    val artistsData = remember(anirudhSongs, sidSriramSongs, arijitSongs, gvPrakashSongs, hipHopSongs, shreyaSongs, yuvanSongs) {
                         listOf(
+                            ArtistData(
+                                name = "Shreya Ghoshal",
+                                songs = shreyaSongs,
+                                emoji = "🎙️",
+                                // Blank → falls back to album art (always loads). Swap in a
+                                // verified portrait URL here if you have one.
+                                artistImageUrl = "",
+                                artistId = shreyaSongs.firstOrNull()?.artistId ?: ""
+                            ),
+                            ArtistData(
+                                name = "Yuvan Shankar Raja",
+                                songs = yuvanSongs,
+                                emoji = "🎧",
+                                artistImageUrl = "",
+                                artistId = yuvanSongs.firstOrNull()?.artistId ?: ""
+                            ),
                             ArtistData(
                                 name = "Anirudh",
                                 songs = anirudhSongs,
@@ -856,23 +880,16 @@ fun ArtistsSection(
     onAddToPlaylist: (String, Song) -> Unit,
     onDownload: (Song, String) -> Unit
 ) {
-    // ── Artist cards row ─────────────────────────────────────────────────
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.padding(bottom = 20.dp)
-    ) {
-        items(artists, key = { it.name }) { artist ->
-            ArtistCard(
-                artist = artist,
-                onClick = {
-                    if (artist.artistId.isNotBlank()) {
-                        navController.navigate(Screen.Artist.createRoute(artist.artistId))
-                    }
-                }
-            )
+    // ── Artist coverflow (3D gallery) ────────────────────────────────────
+    ArtistCoverflow(
+        artists = artists,
+        modifier = Modifier.padding(bottom = 20.dp),
+        onArtistClick = { artist ->
+            if (artist.artistId.isNotBlank()) {
+                navController.navigate(Screen.Artist.createRoute(artist.artistId))
+            }
         }
-    }
+    )
 
     // ── Songs per artist ─────────────────────────────────────────────────
     artists.forEach { artist ->
@@ -948,73 +965,138 @@ fun ArtistsSection(
     }
 }
 
-// ── Artist Card ──────────────────────────────────────────────────────────
+// ── Artist Coverflow (3D gallery) ─────────────────────────────────────────
+// A compact, Android-tuned coverflow: the centre artist stands upright while
+// neighbours tilt back in perspective and dim. Swipe or tap a side card to
+// bring it forward; tap the centre card to open the artist.
 @Composable
-fun ArtistCard(
-    artist: ArtistData,
-    onClick: () -> Unit
+fun ArtistCoverflow(
+    artists: List<ArtistData>,
+    onArtistClick: (ArtistData) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(90.dp)
-            .clickable { onClick() }
-    ) {
-        // Image with gradient ring
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                    ),
-                    CircleShape
+    if (artists.isEmpty()) return
+    val n = artists.size
+
+    var active by remember(n) { mutableStateOf(0) }
+    val anim = remember { Animatable(0f) }
+    LaunchedEffect(active) {
+        anim.animateTo(active.toFloat(), tween(durationMillis = 460, easing = FastOutSlowInEasing))
+    }
+
+    val density = LocalDensity.current
+    val cardW = 150.dp
+    val cardH = 200.dp
+    val cardWpx = with(density) { cardW.toPx() }
+    val pos = anim.value
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(232.dp)
+            .pointerInput(n) {
+                var acc = 0f
+                detectHorizontalDragGestures(
+                    onDragEnd = { acc = 0f },
+                    onDragCancel = { acc = 0f },
+                    onHorizontalDrag = { change, dragAmount ->
+                        change.consume()
+                        acc += dragAmount
+                        val threshold = cardWpx * 0.45f
+                        if (acc <= -threshold && active < n - 1) { active++; acc = 0f }
+                        else if (acc >= threshold && active > 0) { active--; acc = 0f }
+                    }
                 )
-                .padding(2.dp)
-        ) {
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        artists.forEachIndexed { i, artist ->
+            val rel = i - pos
+            val ax = kotlin.math.abs(rel)
+            if (ax > 2.6f) return@forEachIndexed
+
+            val scale = (1f - ax * 0.16f).coerceAtLeast(0.6f)
+            val rotY = (-rel * 15f).coerceIn(-34f, 34f)
+            val rotZ = (rel * 6f).coerceIn(-14f, 14f)
+            val tx = rel * cardWpx * 0.60f
+            val dimAlpha = (ax * 0.34f).coerceIn(0f, 0.62f)
+
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background, CircleShape)
-                    .padding(2.dp)
-                    .clip(CircleShape)
+                    .zIndex(-ax)
+                    .graphicsLayer {
+                        translationX = tx
+                        rotationY = rotY
+                        rotationZ = rotZ
+                        scaleX = scale
+                        scaleY = scale
+                        // Lower camera distance = stronger perspective for the tilt.
+                        cameraDistance = 12f
+                    }
+                    .size(cardW, cardH)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFF1A1A2E))
+                    .clickable {
+                        if (i == active) onArtistClick(artist) else active = i
+                    }
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(artist.artistImageUrl)
+                        .data(artist.artistImageUrl.ifBlank { artist.songs.firstOrNull()?.imageUrl })
                         .crossfade(true)
                         .build(),
                     contentDescription = artist.name,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+
+                // Legibility gradient
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Transparent,
+                                    Color(0xCC000000)
+                                )
+                            )
+                        )
+                )
+
+                // Name + song count
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(14.dp)
+                ) {
+                    Text(
+                        text = artist.name,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (artist.songs.isNotEmpty()) {
+                        Text(
+                            text = "${artist.songs.size} songs",
+                            color = Color(0xFFB0B0C0),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                // Dim overlay for inactive cards
+                if (dimAlpha > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = dimAlpha))
+                    )
+                }
             }
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = artist.name,
-            fontSize = 11.sp,
-            color = Color(0xFFE5E7EB),
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Song count badge
-        if (artist.songs.isNotEmpty()) {
-            Text(
-                text = "${artist.songs.size} songs",
-                fontSize = 10.sp,
-                color = Color(0xFF6B7280),
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
         }
     }
 }
