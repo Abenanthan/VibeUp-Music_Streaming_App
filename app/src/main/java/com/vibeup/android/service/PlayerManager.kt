@@ -122,6 +122,10 @@ class PlayerManager @Inject constructor(
     // Prevents overlapping suggestion fetches and re-seeding from the same song.
     private var isFetchingSuggestions = false
     private val autoplaySeededIds = mutableSetOf<String>()
+    // Normalised keys (title+artist) of everything the radio has queued this session,
+    // so later batches never re-add a song already played/queued — even a different
+    // recording of the same track. Cleared on each fresh play.
+    private val radioAddedKeys = mutableSetOf<String>()
 
     fun getExoPlayer(): ExoPlayer {
         if (exoPlayer == null) {
@@ -369,6 +373,7 @@ class PlayerManager @Inject constructor(
         errorSkipCount = 0
         // Fresh queue → reset radio seeding so it can extend from this new context.
         autoplaySeededIds.clear()
+        radioAddedKeys.clear()
         isFetchingSuggestions = false
         
         // ✅ 1. Network check for remote songs
@@ -632,15 +637,24 @@ class PlayerManager @Inject constructor(
         autoplaySeededIds.add(seed.id)
         scope.launch(Dispatchers.IO) {
             val pool = buildRadioPool(seed)
-            // Rank the candidate pool by similarity to the seed (language, artist,
-            // album, title-keyword overlap + a little entropy) — the same
-            // content-based scoring the smart-shuffle uses. This is the closest
-            // approximation to a Spotify "song radio" this catalogue API allows.
-            val ranked = smartShuffle(pool, seed).take(20)
 
-            // Search candidates come without playable URLs — resolve them in one
-            // batch call, then keep only the ones we actually got a URL for.
-            val needUrl = ranked.filter { it.audioUrl.isBlank() && it.id.isNotBlank() }.map { it.id }
+            // 1. RELEVANCE: rank the candidate pool by similarity to the seed
+            //    (language, artist, album, title-keyword overlap + entropy).
+            val ranked = smartShuffle(pool, seed)
+
+            // 2. DEDUP: drop near-duplicates (same song, remixes, re-releases) and
+            //    anything already queued / added earlier this session.
+            val seen = HashSet(radioAddedKeys)
+            _activeQueue.value.forEach { seen.add(songKey(it)) }
+            seen.add(songKey(seed))
+            val deduped = ranked.filter { seen.add(songKey(it)) }
+
+            // 3. DIVERSITY: re-rank so no artist dominates and none play back-to-back
+            //    (round-robin across artists, max 2 per batch) — like a real radio.
+            val diversified = diversify(deduped, maxPerArtist = 2, limit = 25)
+
+            // 4. RESOLVE URLs for just the chosen ~25 in one batch call.
+            val needUrl = diversified.filter { it.audioUrl.isBlank() && it.id.isNotBlank() }.map { it.id }
             val resolved = if (needUrl.isNotEmpty()) {
                 try { songRepository.getSongsByIds(needUrl).associateBy { it.id } }
                 catch (e: Exception) {
@@ -648,14 +662,16 @@ class PlayerManager @Inject constructor(
                 }
             } else emptyMap()
 
-            val playable = ranked
+            val playable = diversified
                 .map { if (it.audioUrl.isBlank()) resolved[it.id] ?: it else it }
                 .filter { it.audioUrl.isNotBlank() }
+                .take(18)
 
             android.util.Log.d("Radio",
-                "seeded '${seed.title}' → pool ${pool.size}, resolved ${playable.size} playable")
+                "seeded '${seed.title}' → pool ${pool.size}, deduped ${deduped.size}, appending ${playable.size}")
             withContext(Dispatchers.Main) {
                 appendSongs(playable)
+                playable.forEach { radioAddedKeys.add(songKey(it)) }
                 isFetchingSuggestions = false
                 // Nothing landed → let this seed be retried on a later trigger.
                 if (playable.isEmpty()) autoplaySeededIds.remove(seed.id)
@@ -709,6 +725,54 @@ class PlayerManager @Inject constructor(
         (suggestions + searchResults)
             .distinctBy { it.id }
             .filter { it.id.isNotBlank() && it.id != seed.id }
+    }
+
+    // Collapses near-duplicate tracks: strips "(From ...)", "[...]", remix/version/
+    // lo-fi/slowed/live/cover tags, then keys on title + primary artist. So the same
+    // song from different albums/releases resolves to one key.
+    private fun songKey(s: Song): String {
+        val title = s.title.lowercase()
+            .replace(Regex("\\(.*?\\)"), "")
+            .replace(Regex("\\[.*?]"), "")
+            .replace(Regex("(?i)\\b(remix|reprise|version|lo-?fi|slowed|reverb|cover|live|remaster(ed)?|acoustic|unplugged|mashup)\\b.*"), "")
+            .replace(Regex("[^a-z0-9]"), "")
+        val artist = s.artist.split(",", "&", "feat", "ft").firstOrNull()
+            ?.lowercase()?.replace(Regex("[^a-z0-9]"), "") ?: ""
+        return "$title|$artist"
+    }
+
+    private fun primaryArtistKey(s: Song): String =
+        s.artist.split(",", "&", "feat", "ft").firstOrNull()?.trim()?.lowercase() ?: ""
+
+    // Diversity re-rank (MMR-style): round-robins across artists so no single artist
+    // dominates and the same artist never lands back-to-back — the way Spotify /
+    // JioSaavn stations spread a queue out. Input must already be relevance-sorted.
+    private fun diversify(ranked: List<Song>, maxPerArtist: Int, limit: Int): List<Song> {
+        val byArtist = LinkedHashMap<String, ArrayDeque<Song>>()
+        for (s in ranked) {
+            byArtist.getOrPut(primaryArtistKey(s)) { ArrayDeque() }.addLast(s)
+        }
+        val perArtist = HashMap<String, Int>()
+        val result = mutableListOf<Song>()
+        var lastArtist: String? = null
+
+        while (result.size < limit) {
+            var progressed = false
+            val artistsWithSongs = byArtist.count { it.value.isNotEmpty() }
+            for ((artist, queue) in byArtist) {
+                if (queue.isEmpty()) continue
+                if ((perArtist[artist] ?: 0) >= maxPerArtist) continue
+                // Avoid back-to-back same artist unless it's the only one left.
+                if (artist == lastArtist && artistsWithSongs > 1) continue
+                result.add(queue.removeFirst())
+                perArtist[artist] = (perArtist[artist] ?: 0) + 1
+                lastArtist = artist
+                progressed = true
+                if (result.size >= limit) break
+            }
+            if (!progressed) break
+        }
+        return result
     }
 
     // Appends fresh songs to both the active queue and ExoPlayer, skipping any
