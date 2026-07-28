@@ -33,4 +33,12 @@ interface SaavnApiService {
         @Query("songCount") songCount: Int = 30,
         @Query("albumCount") albumCount: Int = 10
     ): ArtistDetailsResponseDto
+
+    // Radio / "up next" — songs similar in mood, language and artist to the given
+    // song. Powers the endless auto-radio queue.
+    @GET("api/songs/{id}/suggestions")
+    suspend fun getSongSuggestions(
+        @Path("id") songId: String,
+        @Query("limit") limit: Int = 10
+    ): SongByIdResponseDto
 }

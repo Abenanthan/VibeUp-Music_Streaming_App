@@ -21,10 +21,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -93,6 +96,32 @@ class PlayerManager @Inject constructor(
     // Counts consecutive playback errors so a queue full of bad/expired URLs can't
     // send ExoPlayer into an endless skip loop. Reset to 0 whenever a song loads OK.
     private var errorSkipCount = 0
+
+    // ── Auto-radio (endless mood-based queue) ────────────────────────────────
+    private val prefs by lazy {
+        context.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
+    }
+    private val _autoplayEnabled = MutableStateFlow(prefs.getBoolean("autoplay", true))
+    val autoplayEnabled: StateFlow<Boolean> = _autoplayEnabled.asStateFlow()
+
+    fun setAutoplay(enabled: Boolean) {
+        _autoplayEnabled.value = enabled
+        prefs.edit().putBoolean("autoplay", enabled).apply()
+        if (enabled) {
+            // Stop looping the section so playback can flow into the radio.
+            exoPlayer?.let {
+                if (it.repeatMode == Player.REPEAT_MODE_ALL) {
+                    it.repeatMode = Player.REPEAT_MODE_OFF
+                    _repeatMode.value = Player.REPEAT_MODE_OFF
+                }
+            }
+            maybeExtendRadio(force = true)
+        }
+    }
+
+    // Prevents overlapping suggestion fetches and re-seeding from the same song.
+    private var isFetchingSuggestions = false
+    private val autoplaySeededIds = mutableSetOf<String>()
 
     fun getExoPlayer(): ExoPlayer {
         if (exoPlayer == null) {
@@ -273,7 +302,10 @@ class PlayerManager @Inject constructor(
                                     it.volume = 1f
                                 }
                             }
-                            
+
+                            // Keep the endless radio topped up as songs advance.
+                            maybeExtendRadio()
+
                             saveState()
                         }
                     })
@@ -335,6 +367,9 @@ class PlayerManager @Inject constructor(
         _playbackError.value = null
         isRestored.value = true
         errorSkipCount = 0
+        // Fresh queue → reset radio seeding so it can extend from this new context.
+        autoplaySeededIds.clear()
+        isFetchingSuggestions = false
         
         // ✅ 1. Network check for remote songs
         val isLocal = song.audioUrl.startsWith("file://") || 
@@ -429,10 +464,18 @@ class PlayerManager @Inject constructor(
         } else 0
 
         player.setMediaItems(items, adjustedIndex, 0L)
-        player.repeatMode = Player.REPEAT_MODE_ALL
-        _repeatMode.value = Player.REPEAT_MODE_ALL
+        // With autoplay on, DON'T loop the section — play forward so the queue can
+        // flow into the appended radio songs. (Repeat-all here was the reason the
+        // radio "didn't work": the section wrapped back to song 1 before playback
+        // ever reached the newly appended songs.)
+        val initialRepeat = if (_autoplayEnabled.value) Player.REPEAT_MODE_OFF else Player.REPEAT_MODE_ALL
+        player.repeatMode = initialRepeat
+        _repeatMode.value = initialRepeat
         player.prepare()
         player.play()
+
+        // Seed the endless radio right away so the queue visibly grows on play.
+        maybeExtendRadio(force = true)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -556,6 +599,149 @@ class PlayerManager @Inject constructor(
         }
         player.repeatMode = nextMode
         _repeatMode.value = nextMode
+    }
+
+    // If autoplay is on and the queue is running low, fetch songs similar to the
+    // one now playing (JioSaavn "suggestions" = mood/language/artist radio) and
+    // append them — so playback flows past the section into an endless mix.
+    private fun maybeExtendRadio(force: Boolean = false) {
+        if (!_autoplayEnabled.value) {
+            android.util.Log.d("Radio", "skip: autoplay OFF")
+            return
+        }
+        val player = exoPlayer ?: run { android.util.Log.d("Radio", "skip: no player"); return }
+        val active = _activeQueue.value
+        if (active.isEmpty()) { android.util.Log.d("Radio", "skip: empty queue"); return }
+
+        val currentIndex = player.currentMediaItemIndex.coerceAtLeast(0)
+        val remaining = active.size - (currentIndex + 1)
+        android.util.Log.d("Radio", "check: force=$force idx=$currentIndex size=${active.size} remaining=$remaining fetching=$isFetchingSuggestions")
+
+        // Top up when running low; `force` (fresh play / toggle-on) appends right away.
+        if (!force && remaining > 3) return
+        if (isFetchingSuggestions) return
+
+        val seed = active.getOrNull(currentIndex) ?: _currentSong.value ?: active.firstOrNull()
+        if (seed == null || seed.id.isBlank() || seed.language == "local") {
+            android.util.Log.d("Radio", "skip: no valid seed (seed=${seed?.title} lang=${seed?.language})")
+            return
+        }
+        if (seed.id in autoplaySeededIds) { android.util.Log.d("Radio", "skip: already seeded ${seed.title}"); return }
+
+        isFetchingSuggestions = true
+        autoplaySeededIds.add(seed.id)
+        scope.launch(Dispatchers.IO) {
+            val pool = buildRadioPool(seed)
+            // Rank the candidate pool by similarity to the seed (language, artist,
+            // album, title-keyword overlap + a little entropy) — the same
+            // content-based scoring the smart-shuffle uses. This is the closest
+            // approximation to a Spotify "song radio" this catalogue API allows.
+            val ranked = smartShuffle(pool, seed).take(20)
+
+            // Search candidates come without playable URLs — resolve them in one
+            // batch call, then keep only the ones we actually got a URL for.
+            val needUrl = ranked.filter { it.audioUrl.isBlank() && it.id.isNotBlank() }.map { it.id }
+            val resolved = if (needUrl.isNotEmpty()) {
+                try { songRepository.getSongsByIds(needUrl).associateBy { it.id } }
+                catch (e: Exception) {
+                    android.util.Log.e("Radio", "batch resolve failed: ${e.message}"); emptyMap()
+                }
+            } else emptyMap()
+
+            val playable = ranked
+                .map { if (it.audioUrl.isBlank()) resolved[it.id] ?: it else it }
+                .filter { it.audioUrl.isNotBlank() }
+
+            android.util.Log.d("Radio",
+                "seeded '${seed.title}' → pool ${pool.size}, resolved ${playable.size} playable")
+            withContext(Dispatchers.Main) {
+                appendSongs(playable)
+                isFetchingSuggestions = false
+                // Nothing landed → let this seed be retried on a later trigger.
+                if (playable.isEmpty()) autoplaySeededIds.remove(seed.id)
+            }
+        }
+    }
+
+    // Builds a diverse candidate pool for the radio from several sources in
+    // parallel: the API's own "suggestions" endpoint (if available), the seed's
+    // artist and co-artists, the seed's language, and the listener's most-played
+    // artists (light personalisation). Deduped and filtered to playable songs.
+    private suspend fun buildRadioPool(seed: Song): List<Song> = coroutineScope {
+        // Taste profile: most frequent artists in recent history.
+        val recent = try { libraryRepository.getRecentlyPlayed().first() } catch (e: Exception) { emptyList() }
+        val favArtists = recent.take(25)
+            .map { it.artist.split(",", "&").first().trim() }
+            .filter { it.isNotBlank() && it != "Unknown Artist" }
+            .groupingBy { it }.eachCount()
+            .entries.sortedByDescending { it.value }
+            .take(2).map { it.key }
+
+        val seedArtist = seed.artist.split(",", "&", "feat", "ft").firstOrNull()?.trim()
+            ?.takeIf { it.isNotBlank() && it != "Unknown Artist" }
+        val coArtists = seed.allArtists.map { it.name }.filter { it.isNotBlank() }.take(2)
+
+        val queries = buildList {
+            seedArtist?.let { add(it) }
+            addAll(coArtists)
+            if (seed.language.isNotBlank()) add("${seed.language} songs")
+            addAll(favArtists)
+        }.distinct().take(4)
+
+        // Fetch the suggestions endpoint and all search queries concurrently.
+        val suggestionsD = async(Dispatchers.IO) {
+            try { songRepository.getSuggestions(seed.id, 15) } catch (e: Exception) { emptyList() }
+        }
+        val searchD = queries.map { q ->
+            async(Dispatchers.IO) {
+                try { songRepository.searchSongs(q) } catch (e: Exception) { emptyList() }
+            }
+        }
+
+        val suggestions = suggestionsD.await()
+        val searchResults = searchD.flatMap { it.await() }
+        android.util.Log.d("Radio",
+            "pool sources: queries=$queries suggestions=${suggestions.size} search=${searchResults.size}")
+
+        // NOTE: search results carry metadata but NO playable URL (the direct search
+        // API resolves URLs separately). So keep URL-less candidates here — they're
+        // ranked on metadata and their URLs are resolved in a batch before appending.
+        (suggestions + searchResults)
+            .distinctBy { it.id }
+            .filter { it.id.isNotBlank() && it.id != seed.id }
+    }
+
+    // Appends fresh songs to both the active queue and ExoPlayer, skipping any
+    // already present so the radio doesn't repeat what's queued.
+    private fun appendSongs(songs: List<Song>) {
+        val player = exoPlayer ?: return
+        val existingIds = _activeQueue.value.map { it.id }.toSet()
+        val fresh = songs.filter { it.id !in existingIds && it.audioUrl.isNotBlank() }
+        android.util.Log.d("Radio", "appendSongs: got ${songs.size}, fresh ${fresh.size} (queue ${_activeQueue.value.size} → ${_activeQueue.value.size + fresh.size})")
+        if (fresh.isEmpty()) return
+
+        _activeQueue.value = _activeQueue.value + fresh
+
+        val items = fresh.mapNotNull { s ->
+            try {
+                MediaItem.Builder()
+                    .setUri(s.audioUrl.toUri())
+                    .setMediaId(s.id)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(s.title)
+                            .setArtist(s.artist)
+                            .setAlbumTitle(s.album)
+                            .setArtworkUri(if (s.imageUrl.isNotBlank()) s.imageUrl.toUri() else null)
+                            .build()
+                    )
+                    .build()
+            } catch (e: Exception) { null }
+        }
+        if (items.isNotEmpty()) {
+            try { player.addMediaItems(items) }
+            catch (e: Exception) { android.util.Log.e("PlayerManager", "appendSongs failed: ${e.message}") }
+        }
     }
 
     fun updateQueueItem(index: Int, song: Song) {

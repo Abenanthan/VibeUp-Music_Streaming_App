@@ -33,6 +33,11 @@ class PlayerViewModel @Inject constructor(
     val repeatMode: StateFlow<Int> = playerManager.repeatMode
     val currentQueueId: StateFlow<String?> = playerManager.currentQueueId
     val isRestored = playerManager.isRestored
+    val autoplayEnabled: StateFlow<Boolean> = playerManager.autoplayEnabled
+
+    fun toggleAutoplay() {
+        playerManager.setAutoplay(!playerManager.autoplayEnabled.value)
+    }
 
     private val _isResolvingUrl = MutableStateFlow(false)
     val isResolvingUrl: StateFlow<Boolean> = _isResolvingUrl.asStateFlow()

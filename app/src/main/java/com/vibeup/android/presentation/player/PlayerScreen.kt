@@ -53,6 +53,7 @@ fun PlayerScreen(
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
     val isSmartShuffle by viewModel.isSmartShuffle.collectAsState()
     val repeatMode by viewModel.repeatMode.collectAsState()
+    val autoplayEnabled by viewModel.autoplayEnabled.collectAsState()
     val isResolvingUrl by viewModel.isResolvingUrl.collectAsState()
     val lyricsState by lyricsViewModel.lyricsState.collectAsState()
     val currentLineIndex by lyricsViewModel.currentLineIndex.collectAsState()
@@ -336,6 +337,49 @@ fun PlayerScreen(
                                         showOptionsMenu = false
                                         navController.navigate(Screen.Queue.route)
                                     }
+                                )
+
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                                    thickness = 0.5.dp
+                                )
+
+                                // Autoplay radio toggle
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Radio,
+                                                    contentDescription = null,
+                                                    tint = if (autoplayEnabled) MaterialTheme.colorScheme.primary
+                                                           else MaterialTheme.colorScheme.onSurface,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Text(
+                                                    "Autoplay",
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                            Text(
+                                                if (autoplayEnabled) "On" else "Off",
+                                                color = if (autoplayEnabled) MaterialTheme.colorScheme.primary
+                                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    },
+                                    onClick = { viewModel.toggleAutoplay() }
                                 )
 
                                 HorizontalDivider(

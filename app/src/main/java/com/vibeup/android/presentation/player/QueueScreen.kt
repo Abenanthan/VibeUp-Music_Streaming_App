@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +43,7 @@ fun QueueScreen(
 ) {
     val activeQueue by viewModel.activeQueue.collectAsState()
     val currentSong by viewModel.currentSong.collectAsState()
+    val autoplayEnabled by viewModel.autoplayEnabled.collectAsState()
 
     // Local mutable copy so drag reordering feels instant; PlayerManager is
     // the source of truth and gets updated on drag-end, not on every frame.
@@ -98,6 +100,38 @@ fun QueueScreen(
                     )
                 }
             }
+
+            // ── Autoplay radio toggle ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF12122A))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.Radio,
+                    contentDescription = null,
+                    tint = if (autoplayEnabled) MaterialTheme.colorScheme.primary else Color(0xFF6B7280)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Autoplay radio", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Keep playing similar songs when the queue ends",
+                        color = Color(0xFF6B7280),
+                        fontSize = 11.sp
+                    )
+                }
+                Switch(
+                    checked = autoplayEnabled,
+                    onCheckedChange = { viewModel.toggleAutoplay() }
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
 
             if (localQueue.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

@@ -96,6 +96,20 @@ class SongRepositoryImpl @Inject constructor(
         return getSongById(songId)
     }
 
+    override suspend fun getSuggestions(songId: String, limit: Int): List<Song> {
+        return try {
+            val response = api.getSongSuggestions(songId = songId, limit = limit)
+            // Keep only songs that came back with a playable URL.
+            response.data
+                ?.map { it.toDomain() }
+                ?.filter { it.audioUrl.isNotBlank() }
+                ?: emptyList()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     override suspend fun getSearchSuggestions(query: String): List<String> {
         return try {
             val response = directApi.getSuggestions(query = query)
