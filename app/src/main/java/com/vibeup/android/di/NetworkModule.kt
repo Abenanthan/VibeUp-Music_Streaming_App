@@ -73,6 +73,16 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .client(
                 okHttpClient.newBuilder()
+                    // lrclib.net asks clients to identify themselves; requests using
+                    // the default OkHttp UA get rate-limited/blocked (the reason
+                    // lyrics "suddenly" stopped returning results).
+                    .addInterceptor { chain ->
+                        chain.proceed(
+                            chain.request().newBuilder()
+                                .header("User-Agent", "VibeUp/1.0 (Android music player; contact: app)")
+                                .build()
+                        )
+                    }
                     .connectTimeout(10, TimeUnit.SECONDS)
                     .readTimeout(10, TimeUnit.SECONDS)
                     .build()

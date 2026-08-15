@@ -489,10 +489,28 @@ class PlayerManager @Inject constructor(
         }
     }
 
+    // Ensures the foreground service (and thus the media notification + MediaSession)
+    // exists. Safe to call repeatedly — if the service is already up it just delivers
+    // onStartCommand. Wrapped so a background-start restriction can't crash the app.
+    private fun ensureServiceStarted() {
+        try {
+            context.startForegroundService(Intent(context, MusicPlayerService::class.java))
+        } catch (e: Exception) {
+            android.util.Log.e("PlayerManager", "startForegroundService failed: ${e.message}")
+        }
+    }
+
     fun togglePlayPause() {
         val player = getExoPlayer()
-        if (player.isPlaying) player.pause()
-        else player.play()
+        if (player.isPlaying) {
+            player.pause()
+        } else {
+            // Resuming (e.g. after a session restore) — make sure the notification /
+            // foreground service is running, otherwise the OS reaps playback and the
+            // notification never appears. This is what "switching sections" was doing.
+            ensureServiceStarted()
+            player.play()
+        }
     }
 
     fun seekTo(position: Long) {
@@ -1015,6 +1033,10 @@ class PlayerManager @Inject constructor(
         val currentQueue = _queue.value
         val currentActive = _activeQueue.value
         if (currentActive.isEmpty()) return
+        // Don't persist while the player has no items — currentMediaItemIndex is 0
+        // then, which would wrongly save "first song" against a full queue (the
+        // cause of a playlist reopening on its first track).
+        if (player.mediaItemCount == 0) return
 
         // Strip URLs to force fresh ones on restore (prevent CDN expiry issues)
         val strippedQueue = currentQueue.map { it.copy(audioUrl = "") }
@@ -1163,6 +1185,13 @@ class PlayerManager @Inject constructor(
                             player.playWhenReady = false
                             player.prepare()
                             _currentPosition.value = state.position
+                            // NOTE: do NOT start the foreground service here. The
+                            // restored player is PAUSED, and starting the service for a
+                            // paused player makes PlayerNotificationManager cancel its
+                            // notification → stopSelf → onDestroy → player.release(),
+                            // which kills the shared player (song shows but play/next
+                            // do nothing). The service is started on resume instead
+                            // (togglePlayPause), when the player is actually playing.
                             android.util.Log.d("PlayerManager",
                                 "Restored: ${resolvedCurrent.title} at ${state.position}ms")
                         }

@@ -322,25 +322,32 @@ class MusicPlayerService : MediaLibraryService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaLibrarySession
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = mediaLibrarySession?.player
-        if (player == null || !player.playWhenReady || player.mediaItemCount == 0) {
-            playerManager.resetState()
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
-        }
+        // App swiped away from recents → stop playback and tear the service down.
+        // Save first so reopening restores the same song at its position.
+        // (Backgrounding the app without removing it from recents does NOT call this,
+        // so normal background playback while using other apps still works.)
+        playerManager.saveState()
+        playerManager.resetState()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
         super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
         stopProgressTick()
         serviceScope.cancel()
-        playerManager.getExoPlayer().removeListener(playerListener)
+        // Detach this service's listener from the shared player (via the session's
+        // reference, so we don't accidentally spin up a new player with getExoPlayer()).
+        mediaLibrarySession?.player?.removeListener(playerListener)
         playerNotificationManager?.setPlayer(null)
         mediaSessionCompat?.release()
-        mediaLibrarySession?.run {
-            player.release()
-            release()
-        }
+        // Release ONLY the MediaSession, NOT the underlying ExoPlayer. The player is
+        // owned by the @Singleton PlayerManager and may still be in use by the UI/
+        // mini-player. Releasing it here (the old `player.release()`) killed the shared
+        // player whenever the service stopped — the cause of "song remembered but not
+        // playing / next-previous stuck" after reopening. PlayerManager.resetState()/
+        // release() is the only place allowed to release the player.
+        mediaLibrarySession?.release()
         super.onDestroy()
     }
 
