@@ -326,7 +326,9 @@ class MusicPlayerService : MediaLibraryService() {
         // Save first so reopening restores the same song at its position.
         // (Backgrounding the app without removing it from recents does NOT call this,
         // so normal background playback while using other apps still works.)
-        playerManager.saveState()
+        // Synchronous: the process is about to be killed, so an async write would
+        // never reach disk (the reason the last song stopped being remembered).
+        playerManager.saveState(sync = true)
         playerManager.resetState()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()

@@ -995,6 +995,13 @@ class PlayerManager @Inject constructor(
         _activeQueue.value = emptyList()
         _isSmartShuffle.value = false
         _isShuffleEnabled.value = false
+        // Allow the saved session to be restored again on the next launch. Without
+        // this, if the PROCESS survives the swipe-away, isRestored stays true and
+        // restoreState() returns early — so the last song is never remembered.
+        isRestored.value = false
+        autoplaySeededIds.clear()
+        radioAddedKeys.clear()
+        isFetchingSuggestions = false
     }
 
     fun clearError() {
@@ -1028,7 +1035,12 @@ class PlayerManager @Inject constructor(
         autoSaveJob?.cancel()
     }
 
-    fun saveState() {
+    /**
+     * @param sync when true the file is written on the CALLING thread instead of a
+     * background coroutine. Required when the process is about to die (app swiped
+     * from recents) — an async write would never land and the session would be lost.
+     */
+    fun saveState(sync: Boolean = false) {
         val player = exoPlayer ?: return
         val currentQueue = _queue.value
         val currentActive = _activeQueue.value
@@ -1053,14 +1065,18 @@ class PlayerManager @Inject constructor(
             repeatMode = player.repeatMode
         )
 
-        scope.launch(Dispatchers.IO) {
+        val write = {
             try {
                 val file = File(context.filesDir, "playback_state.bin")
                 ObjectOutputStream(FileOutputStream(file)).use { it.writeObject(state) }
+                android.util.Log.d("PlayerManager",
+                    "Saved state: idx=${state.currentIndex} pos=${state.position} size=${state.activeQueue.size}")
             } catch (e: Exception) {
                 android.util.Log.e("PlayerManager", "Save state failed: ${e.message}")
             }
         }
+
+        if (sync) write() else scope.launch(Dispatchers.IO) { write() }
     }
 
     fun restoreState() {
