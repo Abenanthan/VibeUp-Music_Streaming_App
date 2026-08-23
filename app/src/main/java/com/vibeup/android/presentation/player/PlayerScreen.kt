@@ -1,10 +1,14 @@
 package com.vibeup.android.presentation.player
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +27,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -79,6 +85,23 @@ fun PlayerScreen(
     val downloads by downloadsViewModel.downloads.collectAsState(initial = emptyList())
     val isDownloaded = remember(currentSong, downloads) {
         downloads.any { it.id == currentSong?.id }
+    }
+
+    // ── Album-art display mode: tap the artwork to flip between the square cover
+    // and a spinning vinyl record. The disc keeps turning only while audio plays and
+    // holds its angle when paused, so resuming continues from where it stopped.
+    var isVinylMode by remember { mutableStateOf(false) }
+    val vinylRotation = remember { Animatable(0f) }
+    LaunchedEffect(isPlaying, isVinylMode) {
+        if (isPlaying && isVinylMode) {
+            while (true) {
+                vinylRotation.animateTo(
+                    targetValue = vinylRotation.value + 360f,
+                    animationSpec = tween(durationMillis = 20_000, easing = LinearEasing)
+                )
+                vinylRotation.snapTo(vinylRotation.value % 360f)
+            }
+        }
     }
 
     var showDownloadQualities by remember { mutableStateOf(false) }
@@ -232,24 +255,124 @@ fun PlayerScreen(
                     }
                 }
 
-                // ── Album Art ──
+                // ── Album Art — tap to switch between cover and spinning vinyl ──
                 item {
-                    AsyncImage(
-                        model = song.imageUrl,
-                        contentDescription = song.title,
+                    // 200.dp is clamped to half the box, so it resolves to a true circle.
+                    val artCorner by animateDpAsState(
+                        targetValue = if (isVinylMode) 200.dp else 24.dp,
+                        animationSpec = tween(durationMillis = 450),
+                        label = "artCorner"
+                    )
+                    // The record eases down a touch when the music stops.
+                    val artScale by animateFloatAsState(
+                        targetValue = if (isVinylMode && !isPlaying) 0.95f else 1f,
+                        animationSpec = tween(durationMillis = 350),
+                        label = "artScale"
+                    )
+                    val grooveDark = Color.Black.copy(alpha = 0.20f)
+                    val grooveLight = Color.White.copy(alpha = 0.05f)
+                    val ringBrush = Brush.sweepGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary,
+                            MaterialTheme.colorScheme.primary
+                        )
+                    )
+
+                    Box(
                         modifier = Modifier
                             .padding(horizontal = 32.dp)
                             .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .shadow(
-                                elevation = 32.dp,
-                                shape = RoundedCornerShape(24.dp),
-                                clip = false
+                            .aspectRatio(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    scaleX = artScale
+                                    scaleY = artScale
+                                }
+                                .shadow(
+                                    elevation = 32.dp,
+                                    shape = RoundedCornerShape(artCorner),
+                                    clip = false
+                                )
+                                .clip(RoundedCornerShape(artCorner))
+                                .clickable { isVinylMode = !isVinylMode },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = song.imageUrl,
+                                contentDescription = song.title,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        // Only the artwork spins; the grooves and centre
+                                        // label are radially symmetric, so they stay put.
+                                        rotationZ = if (isVinylMode) vinylRotation.value else 0f
+                                    },
+                                contentScale = ContentScale.Crop
                             )
-                            .clip(RoundedCornerShape(24.dp)),
-                        contentScale = ContentScale.Crop
+
+                            if (isVinylMode) {
+                                // Etched grooves
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    val r = size.minDimension / 2f
+                                    listOf(0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f).forEach { f ->
+                                        drawCircle(
+                                            color = grooveDark,
+                                            radius = r * f,
+                                            style = Stroke(width = 2f)
+                                        )
+                                        drawCircle(
+                                            color = grooveLight,
+                                            radius = r * f + 2f,
+                                            style = Stroke(width = 1f)
+                                        )
+                                    }
+                                }
+                                // Centre label + spindle
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize(0.30f)
+                                        .clip(CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.55f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.background)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Glowing orbit ring while the record spins
+                        if (isVinylMode && isPlaying) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        scaleX = artScale
+                                        scaleY = artScale
+                                    }
+                                    .border(2.dp, ringBrush, CircleShape)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = if (isVinylMode) "Tap record for cover" else "Tap cover for vinyl",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(22.dp))
                 }
 
                 // ── Song Info + Like ──
