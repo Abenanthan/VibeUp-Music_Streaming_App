@@ -6,7 +6,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,7 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -269,8 +267,6 @@ fun PlayerScreen(
                         animationSpec = tween(durationMillis = 350),
                         label = "artScale"
                     )
-                    val grooveDark = Color.Black.copy(alpha = 0.20f)
-                    val grooveLight = Color.White.copy(alpha = 0.05f)
                     val ringBrush = Brush.sweepGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary,
@@ -308,46 +304,11 @@ fun PlayerScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .graphicsLayer {
-                                        // Only the artwork spins; the grooves and centre
-                                        // label are radially symmetric, so they stay put.
                                         rotationZ = if (isVinylMode) vinylRotation.value else 0f
                                     },
                                 contentScale = ContentScale.Crop
                             )
 
-                            if (isVinylMode) {
-                                // Etched grooves
-                                Canvas(modifier = Modifier.fillMaxSize()) {
-                                    val r = size.minDimension / 2f
-                                    listOf(0.40f, 0.50f, 0.60f, 0.70f, 0.80f, 0.90f).forEach { f ->
-                                        drawCircle(
-                                            color = grooveDark,
-                                            radius = r * f,
-                                            style = Stroke(width = 2f)
-                                        )
-                                        drawCircle(
-                                            color = grooveLight,
-                                            radius = r * f + 2f,
-                                            style = Stroke(width = 1f)
-                                        )
-                                    }
-                                }
-                                // Centre label + spindle
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize(0.30f)
-                                        .clip(CircleShape)
-                                        .background(Color.Black.copy(alpha = 0.55f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(14.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.background)
-                                    )
-                                }
-                            }
                         }
 
                         // Glowing orbit ring while the record spins
@@ -364,15 +325,7 @@ fun PlayerScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = if (isVinylMode) "Tap record for cover" else "Tap cover for vinyl",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(22.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
                 // ── Song Info + Like ──
