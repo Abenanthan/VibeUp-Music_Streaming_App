@@ -1,6 +1,8 @@
 package com.vibeup.android.presentation.player
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +35,7 @@ import androidx.media3.common.Player
 import coil.compose.AsyncImage
 import com.vibeup.android.Screen
 import com.vibeup.android.presentation.library.DownloadsViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -493,12 +496,61 @@ fun PlayerScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp)
                     ) {
+                        // ── Smooth seek bar ──
+                        // The player reports its position only every ~500ms, so binding
+                        // the slider straight to it makes the thumb advance in visible
+                        // steps. We interpolate between those samples with a linear
+                        // animation, follow the finger instantly while dragging, and
+                        // commit the actual seek only once the drag ends.
+                        var isDragging by remember { mutableStateOf(false) }
+                        var dragValue by remember { mutableStateOf(0f) }
+                        // Holds the just-seeked value until the player catches up, so the
+                        // thumb never snaps backwards for a moment after you let go.
+                        var pendingSeek by remember { mutableStateOf<Float?>(null) }
+
+                        val targetProgress = if (duration > 0)
+                            (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+                        else 0f
+
+                        val animatedProgress by animateFloatAsState(
+                            targetValue = targetProgress,
+                            animationSpec = tween(durationMillis = 500, easing = LinearEasing),
+                            label = "seekProgress"
+                        )
+
+                        // Release the held value as soon as the real position reaches it.
+                        LaunchedEffect(targetProgress) {
+                            val p = pendingSeek
+                            if (p != null && kotlin.math.abs(targetProgress - p) < 0.02f) {
+                                pendingSeek = null
+                            }
+                        }
+                        // Safety net so a failed seek can't freeze the thumb.
+                        LaunchedEffect(pendingSeek) {
+                            if (pendingSeek != null) {
+                                delay(1500)
+                                pendingSeek = null
+                            }
+                        }
+
+                        val sliderValue = when {
+                            isDragging -> dragValue
+                            pendingSeek != null -> pendingSeek ?: animatedProgress
+                            else -> animatedProgress
+                        }
+
                         Slider(
-                            value = if (duration > 0)
-                                currentPosition.toFloat() / duration.toFloat()
-                            else 0f,
+                            value = sliderValue,
                             onValueChange = { progress ->
-                                viewModel.seekTo((progress * duration).toLong())
+                                isDragging = true
+                                dragValue = progress
+                            },
+                            onValueChangeFinished = {
+                                if (duration > 0) {
+                                    pendingSeek = dragValue
+                                    viewModel.seekTo((dragValue * duration).toLong())
+                                }
+                                isDragging = false
                             },
                             colors = SliderDefaults.colors(
                                 thumbColor = Color.White,
@@ -512,7 +564,11 @@ fun PlayerScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = formatDuration(currentPosition),
+                                text = formatDuration(
+                                    if (isDragging || pendingSeek != null)
+                                        (sliderValue * duration).toLong()
+                                    else currentPosition
+                                ),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
