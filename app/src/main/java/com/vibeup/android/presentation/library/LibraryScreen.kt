@@ -352,7 +352,7 @@ fun LibraryScreen(
                             )
                         }
                     } else {
-                        items(playlists) { playlist ->
+                        items(playlists, key = { it.id }) { playlist ->
                             PlaylistCard(
                                 playlist = playlist,
                                 onClick = {
@@ -464,7 +464,7 @@ fun LibraryScreen(
                             }
                         }
                     } else {
-                        items(likedSongs) { song ->
+                        items(likedSongs, key = { it.id }) { song ->
                             LibrarySongItem(
                                 song = song,
                                 onPlay = {
@@ -509,7 +509,7 @@ fun LibraryScreen(
                             }
                         }
                     } else {
-                        items(recentlyPlayed) { song ->
+                        items(recentlyPlayed, key = { it.id }) { song ->
                             LibrarySongItem(
                                 song = song,
                                 onPlay = {

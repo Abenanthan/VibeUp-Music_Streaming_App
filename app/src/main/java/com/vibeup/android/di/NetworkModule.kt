@@ -1,5 +1,7 @@
 package com.vibeup.android.di
 
+import android.content.Context
+import com.vibeup.android.BuildConfig
 import com.vibeup.android.data.remote.api.JioSaavnDirectApiService
 import com.vibeup.android.data.remote.api.LyricsApiService
 import com.vibeup.android.data.remote.api.SaavnApiService
@@ -7,11 +9,14 @@ import com.vibeup.android.data.remote.api.LyricsOvhApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.inject.Qualifier
@@ -36,13 +41,23 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context
+    ): OkHttpClient {
+        // Level.BODY buffers every response into memory and converts it to a
+        // String before writing it to logcat, line by line. Cold start alone
+        // fires ~19 requests of song JSON through this client, so it was a large
+        // CPU + allocation cost — and it was previously enabled in release too.
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC
+                    else HttpLoggingInterceptor.Level.NONE
         }
         return OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(LanguageInterceptor())
+            // Disk cache so a warm start can serve the Home feed without hitting
+            // the network at all.
+            .cache(Cache(File(context.cacheDir, "http_cache"), 20L * 1024 * 1024))
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()

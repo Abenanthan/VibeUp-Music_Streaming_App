@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -39,9 +40,12 @@ fun StatsScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    // Animated gradient offset
+    // Animated gradient offset.
+    // Kept as a State (not read here) — see the drawBehind at the usage site.
+    // Reading `.value` at this scope invalidated the whole StatsScreen at display
+    // refresh rate, permanently, for a decorative background.
     val infiniteTransition = rememberInfiniteTransition(label = "bg")
-    val animOffset by infiniteTransition.animateFloat(
+    val animOffsetState = infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
@@ -85,20 +89,25 @@ fun StatsScreen(
                         .fillMaxWidth()
                         .height(280.dp)
                 ) {
-                    // Animated gradient background
+                    // Animated gradient background.
+                    // The animation value is read inside drawBehind so each frame
+                    // only repaints this Box — it no longer recomposes the screen.
+                    val gradientColors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f),
+                        Color(0xFF0A0A1A)
+                    )
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f),
-                                        Color(0xFF0A0A1A)
-                                    ),
-                                    radius = 600f + animOffset / 5
+                            .drawBehind {
+                                drawRect(
+                                    brush = Brush.radialGradient(
+                                        colors = gradientColors,
+                                        radius = 600f + animOffsetState.value / 5
+                                    )
                                 )
-                            )
+                            }
                     )
 
                     Column(

@@ -8,6 +8,11 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
+
+# Signing secrets
+keystore.properties
+*.jks
+*.keystore
 /build
 /captures
 .externalNativeBuild

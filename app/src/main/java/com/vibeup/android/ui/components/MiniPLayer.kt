@@ -15,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -25,51 +27,53 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.vibeup.android.domain.model.Song
 
+/**
+ * @param progress playback progress in 0f..1f, passed as a lambda rather than a
+ * value on purpose. Playback position updates twice a second; reading it during
+ * composition made this composable — and with it the entire Scaffold bottom bar
+ * and navigation bar — recompose 2x/sec on *every* screen in the app. Reading it
+ * inside `drawBehind` defers the read to the draw phase, so a position tick
+ * repaints a 2dp rectangle instead of recomposing and re-laying-out the bar.
+ */
 @Composable
 fun MiniPlayer(
     song: Song,
     isPlaying: Boolean,
-    currentPosition: Long,
-    duration: Long,
+    progress: () -> Float,
     onTogglePlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onExpand: () -> Unit,
 ) {
+    val trackColor = Color.White.copy(alpha = 0.1f)
+    val progressBrush = Brush.horizontalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.tertiary
+        )
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         // ✅ Purple/Blue gradient progress bar
-        if (duration > 0) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-            ) {
-                // Track
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.White.copy(alpha = 0.1f))
-                )
-                // Progress
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(
-                            (currentPosition.toFloat() / duration.toFloat())
-                                .coerceIn(0f, 1f)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .drawBehind {
+                    drawRect(color = trackColor)
+                    val fraction = progress().coerceIn(0f, 1f)
+                    if (fraction > 0f) {
+                        drawRect(
+                            brush = progressBrush,
+                            size = Size(size.width * fraction, size.height)
                         )
-                        .fillMaxHeight()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                            )
-                        )
-                )
-            }
-        }
+                    }
+                }
+        )
 
         // Player Controls Row
         Row(

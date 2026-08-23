@@ -224,7 +224,7 @@ private fun ArtistContent(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
             }
-            itemsIndexed(artist.songs) { index, song ->
+            itemsIndexed(artist.songs, key = { _, s -> s.id }) { index, song ->
                 ArtistSongRow(
                     song = song,
                     index = index + 1,
@@ -250,7 +250,7 @@ private fun ArtistContent(
                     contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
                     // Show songs beyond the top 5 already listed above, as recommendations
-                    items(artist.songs.drop(5).take(10)) { song ->
+                    items(artist.songs.drop(5).take(10), key = { it.id }) { song ->
                         Column(
                             modifier = Modifier
                                 .width(130.dp)
@@ -303,7 +303,7 @@ private fun ArtistContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
-                    items(artist.albums) { album ->
+                    items(artist.albums, key = { it.id }) { album ->
                         Column(modifier = Modifier.width(120.dp)) {
                             AsyncImage(
                                 model = album.imageUrl,

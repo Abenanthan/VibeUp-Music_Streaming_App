@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
@@ -20,13 +23,40 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            if (keystorePropertiesFile.exists()) {
+                val properties = Properties()
+                properties.load(FileInputStream(keystorePropertiesFile))
+                storeFile = rootProject.file(properties.getProperty("storeFile"))
+                storePassword = properties.getProperty("storePassword")
+                keyAlias = properties.getProperty("keyAlias")
+                keyPassword = properties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            // R8 shrinks + optimizes the dex. This is the single largest startup
+            // win on low-end devices: it strips ~10,000 unused Material icon
+            // classes and everything else unreachable, so there is far less dex
+            // to load and verify at launch.
+            // Requires the keep rules in proguard-rules.pro — without them the
+            // Java-serialized playback session and Gson DTOs break silently.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            // Keep debug builds fast to iterate on; they are not representative
+            // of release performance.
+            isMinifyEnabled = false
         }
     }
 
@@ -37,6 +67,9 @@ android {
 
     buildFeatures {
         compose = true
+        // Needed so code can branch on BuildConfig.DEBUG (used to disable
+        // network body logging in release).
+        buildConfig = true
     }
 
     packaging {
@@ -117,13 +150,12 @@ dependencies {
     // Media Session Compat
     implementation("androidx.media:media:1.7.0")
 
-    implementation("androidx.core:core-ktx:1.13.1")
-
     //splash screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    // Baseline Profile installer — lets ART pre-compile the hot startup/scroll
+    // paths instead of JIT-interpreting them on first run.
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")

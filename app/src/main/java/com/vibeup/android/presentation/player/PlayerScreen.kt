@@ -55,7 +55,11 @@ fun PlayerScreen(
 ) {
     val currentSong by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
-    val currentPosition by viewModel.currentPosition.collectAsState()
+    // NOTE: currentPosition is deliberately NOT collected here. It updates twice a
+    // second, and reading it at this scope invalidated the entire player screen —
+    // artwork, controls, menus and all visible lyric lines — on every tick. It is
+    // collected inside SeekBarSection instead, and observed via a flow collector
+    // (below) for the lyric highlight.
     val duration by viewModel.duration.collectAsState()
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
     val isSmartShuffle by viewModel.isSmartShuffle.collectAsState()
@@ -142,9 +146,14 @@ fun PlayerScreen(
         }
     }
 
-    // ✅ Update current lyric line
-    LaunchedEffect(currentPosition) {
-        lyricsViewModel.updateCurrentLine(currentPosition)
+    // ✅ Update current lyric line.
+    // Collected in a coroutine rather than keyed on the position value: keying on it
+    // tore down and relaunched this effect twice a second, and reading it during
+    // composition recomposed the whole screen.
+    LaunchedEffect(Unit) {
+        viewModel.currentPosition.collect { pos ->
+            lyricsViewModel.updateCurrentLine(pos)
+        }
     }
 
     // ✅ Track if user is manually scrolling
@@ -567,94 +576,7 @@ fun PlayerScreen(
 
                 // ── Progress Bar ──
                 item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                    ) {
-                        // ── Smooth seek bar ──
-                        // The player reports its position only every ~500ms, so binding
-                        // the slider straight to it makes the thumb advance in visible
-                        // steps. We interpolate between those samples with a linear
-                        // animation, follow the finger instantly while dragging, and
-                        // commit the actual seek only once the drag ends.
-                        var isDragging by remember { mutableStateOf(false) }
-                        var dragValue by remember { mutableStateOf(0f) }
-                        // Holds the just-seeked value until the player catches up, so the
-                        // thumb never snaps backwards for a moment after you let go.
-                        var pendingSeek by remember { mutableStateOf<Float?>(null) }
-
-                        val targetProgress = if (duration > 0)
-                            (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-                        else 0f
-
-                        val animatedProgress by animateFloatAsState(
-                            targetValue = targetProgress,
-                            animationSpec = tween(durationMillis = 500, easing = LinearEasing),
-                            label = "seekProgress"
-                        )
-
-                        // Release the held value as soon as the real position reaches it.
-                        LaunchedEffect(targetProgress) {
-                            val p = pendingSeek
-                            if (p != null && kotlin.math.abs(targetProgress - p) < 0.02f) {
-                                pendingSeek = null
-                            }
-                        }
-                        // Safety net so a failed seek can't freeze the thumb.
-                        LaunchedEffect(pendingSeek) {
-                            if (pendingSeek != null) {
-                                delay(1500)
-                                pendingSeek = null
-                            }
-                        }
-
-                        val sliderValue = when {
-                            isDragging -> dragValue
-                            pendingSeek != null -> pendingSeek ?: animatedProgress
-                            else -> animatedProgress
-                        }
-
-                        Slider(
-                            value = sliderValue,
-                            onValueChange = { progress ->
-                                isDragging = true
-                                dragValue = progress
-                            },
-                            onValueChangeFinished = {
-                                if (duration > 0) {
-                                    pendingSeek = dragValue
-                                    viewModel.seekTo((dragValue * duration).toLong())
-                                }
-                                isDragging = false
-                            },
-                            colors = SliderDefaults.colors(
-                                thumbColor = Color.White,
-                                activeTrackColor = MaterialTheme.colorScheme.primary,
-                                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = formatDuration(
-                                    if (isDragging || pendingSeek != null)
-                                        (sliderValue * duration).toLong()
-                                    else currentPosition
-                                ),
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = formatDuration(duration),
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    SeekBarSection(viewModel = viewModel, duration = duration)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -888,7 +810,7 @@ fun PlayerScreen(
                     is LyricsState.SyncedLoaded -> {
                         if (showSynced) {
                             // ✅ Synced lyrics with tap to seek
-                            itemsIndexed(state.lines) { index, line ->
+                            itemsIndexed(state.lines, key = { i, l -> "${i}_${l.timeMs}" }) { index, line ->
                                 val isCurrentLine = index == currentLineIndex
                                 val isPastLine = index < currentLineIndex
 
@@ -1308,6 +1230,111 @@ fun PlayerScreen(
                     textAlign = TextAlign.Center
                 )
             }
+        }
+    }
+}
+
+/**
+ * Smooth seek bar, extracted into its own composable on purpose.
+ *
+ * The player reports its position only every ~500ms, so binding the slider straight
+ * to it makes the thumb advance in visible steps. We interpolate between those
+ * samples with a linear animation, follow the finger instantly while dragging, and
+ * commit the actual seek only once the drag ends.
+ *
+ * Because that interpolation is a continuously-running animation read during
+ * composition, whatever composable contains it recomposes at display refresh rate
+ * for the whole time a track is playing. Keeping it in its own small composable —
+ * and collecting the position here rather than in PlayerScreen — confines that cost
+ * to this slider plus two labels, instead of invalidating the entire player screen.
+ */
+@Composable
+private fun SeekBarSection(
+    viewModel: PlayerViewModel,
+    duration: Long
+) {
+    val currentPosition by viewModel.currentPosition.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+    ) {
+        var isDragging by remember { mutableStateOf(false) }
+        var dragValue by remember { mutableStateOf(0f) }
+        // Holds the just-seeked value until the player catches up, so the thumb
+        // never snaps backwards for a moment after you let go.
+        var pendingSeek by remember { mutableStateOf<Float?>(null) }
+
+        val targetProgress = if (duration > 0)
+            (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+        else 0f
+
+        val animatedProgress by animateFloatAsState(
+            targetValue = targetProgress,
+            animationSpec = tween(durationMillis = 500, easing = LinearEasing),
+            label = "seekProgress"
+        )
+
+        // Release the held value as soon as the real position reaches it.
+        LaunchedEffect(targetProgress) {
+            val p = pendingSeek
+            if (p != null && kotlin.math.abs(targetProgress - p) < 0.02f) {
+                pendingSeek = null
+            }
+        }
+        // Safety net so a failed seek can't freeze the thumb.
+        LaunchedEffect(pendingSeek) {
+            if (pendingSeek != null) {
+                delay(1500)
+                pendingSeek = null
+            }
+        }
+
+        val sliderValue = when {
+            isDragging -> dragValue
+            pendingSeek != null -> pendingSeek ?: animatedProgress
+            else -> animatedProgress
+        }
+
+        Slider(
+            value = sliderValue,
+            onValueChange = { progress ->
+                isDragging = true
+                dragValue = progress
+            },
+            onValueChangeFinished = {
+                if (duration > 0) {
+                    pendingSeek = dragValue
+                    viewModel.seekTo((dragValue * duration).toLong())
+                }
+                isDragging = false
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = formatDuration(
+                    if (isDragging || pendingSeek != null)
+                        (sliderValue * duration).toLong()
+                    else currentPosition
+                ),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = formatDuration(duration),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

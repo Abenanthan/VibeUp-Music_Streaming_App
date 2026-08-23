@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,11 @@ fun PlaylistDetailScreen(
     val isShuffleEnabled by playerViewModel.isShuffleEnabled.collectAsState()
     val isSmartShuffle by playerViewModel.isSmartShuffle.collectAsState()
     val currentQueueId by playerViewModel.currentQueueId.collectAsState()
+    // Hoisted out of the row lambda: collecting these per-row created one collector
+    // per visible song (churned on every scroll) and made every row recompose on any
+    // player update instead of just the two rows that actually changed.
+    val playingSong by playerViewModel.currentSong.collectAsState()
+    val playerIsPlaying by playerViewModel.isPlaying.collectAsState()
 
     val sortedSongs = remember(playlistSongs, sortOrder) {
         when (sortOrder) {
@@ -580,19 +586,22 @@ fun PlaylistDetailScreen(
                     }
                 }
             } else {
-                items(
+                itemsIndexed(
                     items = filteredSongs,
-                    key = { it.id }
-                ) { song ->
-                    val isCurrentSong = playerViewModel.currentSong.collectAsState().value?.id == song.id
-                    val isPlaying by playerViewModel.isPlaying.collectAsState()
+                    key = { _, song -> song.id }
+                ) { index, song ->
+                    val isCurrentSong = playingSong?.id == song.id
 
                     PlaylistSongItem(
                         song = song,
-                        index = sortedSongs.indexOf(song) + 1,
+                        // Was sortedSongs.indexOf(song): an O(n) scan per row, where
+                        // Song.equals() deep-compares 9 fields including a nested
+                        // list — so rendering a long playlist cost O(n^2). The row
+                        // index is already available for free.
+                        index = index + 1,
                         context = context,
                         isCurrent = isCurrentSong,
-                        isPlaying = isPlaying && isCurrentSong,
+                        isPlaying = playerIsPlaying && isCurrentSong,
                         onClick = {
                             // ✅ Play full playlist queue starting from this song and mark context
                             playerViewModel.playSong(song, sortedSongs, playlistId)

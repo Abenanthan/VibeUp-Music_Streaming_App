@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -990,7 +991,18 @@ fun ArtistCoverflow(
     val cardW = 150.dp
     val cardH = 200.dp
     val cardWpx = with(density) { cardW.toPx() }
-    val pos = anim.value
+
+    // Composition-phase decisions (which cards exist, their draw order) are based on
+    // the settled TARGET index, which only changes once per swipe step. The smooth
+    // in-between value (anim.value) is read inside graphicsLayer/drawBehind lambdas
+    // so the 460ms glide invalidates only the draw phase. Reading anim.value here
+    // instead re-ran this whole loop — and rebuilt every card — ~60x/sec while
+    // swiping.
+    fun relativeTo(index: Int, from: Float): Float {
+        var rel = (index - from).mod(n.toFloat())
+        if (rel > n / 2f) rel -= n
+        return rel
+    }
 
     Box(
         modifier = modifier
@@ -1014,25 +1026,24 @@ fun ArtistCoverflow(
         contentAlignment = Alignment.Center
     ) {
         artists.forEachIndexed { i, artist ->
-            // Nearest looped copy of this card relative to the current position.
-            var rel = (i - pos).mod(n.toFloat())
-            if (rel > n / 2f) rel -= n
-            val ax = kotlin.math.abs(rel)
-            if (ax > 2.6f) return@forEachIndexed
-
-            val scale = (1f - ax * 0.16f).coerceAtLeast(0.6f)
-            val rotY = (-rel * 15f).coerceIn(-34f, 34f)
-            val rotZ = (rel * 6f).coerceIn(-14f, 14f)
-            val tx = rel * cardWpx * 0.60f
-            val dimAlpha = (ax * 0.34f).coerceIn(0f, 0.62f)
+            // Stable, target-based position: drives culling and draw order only.
+            val relTarget = relativeTo(i, active.toFloat())
+            val axTarget = kotlin.math.abs(relTarget)
+            // Slightly wider window than the visual one so a card animating into
+            // view isn't popped in late.
+            if (axTarget > 3f) return@forEachIndexed
 
             Box(
                 modifier = Modifier
-                    .zIndex(-ax)
+                    .zIndex(-axTarget)
                     .graphicsLayer {
-                        translationX = tx
-                        rotationY = rotY
-                        rotationZ = rotZ
+                        // Draw-phase read of the running animation.
+                        val rel = relativeTo(i, anim.value)
+                        val ax = kotlin.math.abs(rel)
+                        val scale = (1f - ax * 0.16f).coerceAtLeast(0.6f)
+                        translationX = rel * cardWpx * 0.60f
+                        rotationY = (-rel * 15f).coerceIn(-34f, 34f)
+                        rotationZ = (rel * 6f).coerceIn(-14f, 14f)
                         scaleX = scale
                         scaleY = scale
                         // Lower camera distance = stronger perspective for the tilt.
@@ -1055,11 +1066,20 @@ fun ArtistCoverflow(
                         }
                     }
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(artist.artistImageUrl.ifBlank { artist.songs.firstOrNull()?.imageUrl })
+                // remember-ed: this was previously rebuilt on every frame of the
+                // swipe animation, allocating hundreds of short-lived requests/sec.
+                val context = LocalContext.current
+                val artUrl = artist.artistImageUrl.ifBlank {
+                    artist.songs.firstOrNull()?.imageUrl
+                }
+                val artRequest = remember(artUrl) {
+                    ImageRequest.Builder(context)
+                        .data(artUrl)
                         .crossfade(true)
-                        .build(),
+                        .build()
+                }
+                AsyncImage(
+                    model = artRequest,
                     contentDescription = artist.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -1103,12 +1123,17 @@ fun ArtistCoverflow(
                     }
                 }
 
-                // Dim overlay for inactive cards
-                if (dimAlpha > 0f) {
+                // Dim overlay for inactive cards. Alpha is computed inside
+                // drawBehind so it tracks the animation without recomposing.
+                if (axTarget > 0.01f) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(alpha = dimAlpha))
+                            .drawBehind {
+                                val ax = kotlin.math.abs(relativeTo(i, anim.value))
+                                val dim = (ax * 0.34f).coerceIn(0f, 0.62f)
+                                if (dim > 0f) drawRect(Color.Black.copy(alpha = dim))
+                            }
                     )
                 }
             }

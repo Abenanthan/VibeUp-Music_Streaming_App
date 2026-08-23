@@ -145,7 +145,7 @@ fun SearchScreen(
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                            items(topSearches.take(4)) { suggestion ->
+                            items(topSearches.take(4), key = { it }) { suggestion ->
                                 SuggestionItem(
                                     suggestion = suggestion,
                                     onClick = {
@@ -189,7 +189,7 @@ fun SearchScreen(
                                     }
                                 }
                             }
-                            items(searchHistory) { history ->
+                            items(searchHistory, key = { it.query }) { history ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -254,7 +254,7 @@ fun SearchScreen(
                 searchResults.isEmpty() && query.isNotEmpty() && !isLoading -> {
                     if (suggestions.isNotEmpty()) {
                         LazyColumn {
-                            items(suggestions) { suggestion ->
+                            items(suggestions, key = { it }) { suggestion ->
                                 SuggestionItem(
                                     suggestion = suggestion,
                                     onClick = {
@@ -285,7 +285,7 @@ fun SearchScreen(
                     ) {
                         // Show suggestions at the top if any
                         if (suggestions.isNotEmpty()) {
-                            items(suggestions.take(3)) { suggestion ->
+                            items(suggestions.take(3), key = { it }) { suggestion ->
                                 SuggestionItem(
                                     suggestion = suggestion,
                                     onClick = {
@@ -311,7 +311,7 @@ fun SearchScreen(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
-                        items(searchResults) { song ->
+                        items(searchResults, key = { it.id }) { song ->
                             SearchSongItem(
                                 song = song,
                                 playlists = playlists,

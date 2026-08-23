@@ -101,6 +101,12 @@ class MainActivity : ComponentActivity() {
                 val showBottomBar = currentRoute != Screen.Auth.route &&
                         currentRoute != Screen.Player.route
 
+                // Collected here (cheap: just creates the State objects and
+                // subscribes). Crucially `.value` is NOT read in this scope — see
+                // the `progress` lambda below.
+                val positionState = playerViewModel.currentPosition.collectAsState()
+                val durationState = playerViewModel.duration.collectAsState()
+
                 Scaffold(
                     bottomBar = {
                         if (showBottomBar) {
@@ -109,10 +115,21 @@ class MainActivity : ComponentActivity() {
                                     MiniPlayer(
                                         song = song,
                                         isPlaying = isPlaying,
-                                        currentPosition = playerViewModel.currentPosition
-                                            .collectAsState().value,
-                                        duration = playerViewModel.duration
-                                            .collectAsState().value,
+                                        // Deferred state read. The flows are still
+                                        // collected into Compose State here, but
+                                        // `.value` is only read inside the lambda,
+                                        // which runs in MiniPlayer's draw phase — so
+                                        // a position tick invalidates only the draw,
+                                        // not this scope. Reading `.value` here
+                                        // instead would recompose the whole bottomBar
+                                        // (mini player + NavigationBar + items)
+                                        // twice a second on every screen.
+                                        progress = {
+                                            val dur = durationState.value
+                                            if (dur > 0L)
+                                                positionState.value.toFloat() / dur.toFloat()
+                                            else 0f
+                                        },
                                         onTogglePlayPause = {
                                             playerViewModel.togglePlayPause()
                                         },
@@ -152,12 +169,19 @@ class MainActivity : ComponentActivity() {
                                                 navController.navigate(item.route) {
                                                     // Pop everything up to the root of the graph to avoid building up a large stack
                                                     popUpTo(navController.graph.findStartDestination().id) {
-                                                        saveState = false
+                                                        // Save each tab's state. With this
+                                                        // off, every tab switch destroyed
+                                                        // the back stack entry and its
+                                                        // ViewModel: Search re-ran its
+                                                        // network call and Library
+                                                        // re-registered 3 Firestore
+                                                        // listeners on every visit, and
+                                                        // scroll position was lost.
+                                                        saveState = true
                                                     }
                                                     // Avoid multiple copies of the same destination
                                                     launchSingleTop = true
-                                                    // Don't restore state so we always land on the root of the tab
-                                                    restoreState = false
+                                                    restoreState = true
                                                 }
                                             },
                                             icon = {
