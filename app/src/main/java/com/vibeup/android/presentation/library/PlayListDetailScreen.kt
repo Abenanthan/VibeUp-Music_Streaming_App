@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.library
 
+import com.vibeup.android.presentation.player.activityViewModel
+
 import com.vibeup.android.ui.theme.AppTheme
 
 import androidx.compose.foundation.background
@@ -38,9 +40,9 @@ import com.vibeup.android.presentation.player.PlayerViewModel
 fun PlaylistDetailScreen(
     navController: NavController,
     playlistId: String,
-    viewModel: LibraryViewModel = hiltViewModel(),
+    viewModel: LibraryViewModel = activityViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    downloadsViewModel: DownloadsViewModel = hiltViewModel()
+    downloadsViewModel: DownloadsViewModel = activityViewModel()
 ) {
     val context = LocalContext.current
     val playlists by viewModel.playlists.collectAsState()

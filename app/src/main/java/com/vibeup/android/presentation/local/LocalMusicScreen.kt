@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.local
 
+import com.vibeup.android.presentation.player.activityViewModel
+
 import com.vibeup.android.ui.theme.AppTheme
 
 import android.Manifest
@@ -39,7 +41,7 @@ import com.vibeup.android.presentation.player.PlayerViewModel
 @Composable
 fun LocalMusicScreen(
     navController: NavController,
-    viewModel: LocalMusicViewModel = hiltViewModel(),
+    viewModel: LocalMusicViewModel = activityViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel()
 ) {
     val localSongs by viewModel.filteredSongs.collectAsState()

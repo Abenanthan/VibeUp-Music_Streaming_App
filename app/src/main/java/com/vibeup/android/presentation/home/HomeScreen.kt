@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.home
 
+import com.vibeup.android.presentation.player.activityViewModel
+
 import com.vibeup.android.ui.theme.AppTheme
 
 import androidx.compose.animation.core.Animatable
@@ -67,10 +69,10 @@ data class MoodItem(
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = activityViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    libraryViewModel: LibraryViewModel = hiltViewModel(),
-    downloadsViewModel: DownloadsViewModel = hiltViewModel()
+    libraryViewModel: LibraryViewModel = activityViewModel(),
+    downloadsViewModel: DownloadsViewModel = activityViewModel()
 ) {
     val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()

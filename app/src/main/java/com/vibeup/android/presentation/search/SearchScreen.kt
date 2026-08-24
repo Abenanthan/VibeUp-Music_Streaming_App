@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.search
 
+import com.vibeup.android.presentation.player.activityViewModel
+
 import com.vibeup.android.ui.theme.AppTheme
 
 import androidx.compose.foundation.clickable
@@ -44,10 +46,10 @@ import com.vibeup.android.presentation.player.PlayerViewModel
 @Composable
 fun SearchScreen(
     navController: NavController,
-    viewModel: SearchViewModel = hiltViewModel(),
+    viewModel: SearchViewModel = activityViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    libraryViewModel: LibraryViewModel = hiltViewModel(),
-    downloadsViewModel: DownloadsViewModel = hiltViewModel()
+    libraryViewModel: LibraryViewModel = activityViewModel(),
+    downloadsViewModel: DownloadsViewModel = activityViewModel()
 ) {
     val query by viewModel.query.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()

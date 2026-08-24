@@ -201,21 +201,29 @@ class MainActivity : ComponentActivity() {
                                                 if (currentRoute == item.route) return@NavigationBarItem
 
                                                 navController.navigate(item.route) {
-                                                    // Pop everything up to the root of the graph to avoid building up a large stack
+                                                    // Clear everything above the graph root so a tab
+                                                    // press always lands on that tab's own page, from
+                                                    // anywhere in the app — including deep screens like
+                                                    // playlist detail, artist, settings or the queue.
+                                                    //
+                                                    // saveState/restoreState are deliberately OFF: with
+                                                    // them on, Navigation restores the tab's previously
+                                                    // saved back stack, so pressing a tab could drop you
+                                                    // back onto a sub-page instead of the tab root. That
+                                                    // is especially unpredictable here because the graph
+                                                    // is flat (no nested navigation{} per tab).
+                                                    //
+                                                    // The reason they were enabled — avoiding ViewModel
+                                                    // churn on every tab switch — is now handled by
+                                                    // scoping the tab ViewModels to the Activity instead
+                                                    // (see activityViewModel() in the screen signatures),
+                                                    // so state survives without hijacking navigation.
                                                     popUpTo(navController.graph.findStartDestination().id) {
-                                                        // Save each tab's state. With this
-                                                        // off, every tab switch destroyed
-                                                        // the back stack entry and its
-                                                        // ViewModel: Search re-ran its
-                                                        // network call and Library
-                                                        // re-registered 3 Firestore
-                                                        // listeners on every visit, and
-                                                        // scroll position was lost.
-                                                        saveState = true
+                                                        saveState = false
                                                     }
-                                                    // Avoid multiple copies of the same destination
+                                                    // Avoid stacking duplicates of the same destination
                                                     launchSingleTop = true
-                                                    restoreState = true
+                                                    restoreState = false
                                                 }
                                             },
                                             icon = {

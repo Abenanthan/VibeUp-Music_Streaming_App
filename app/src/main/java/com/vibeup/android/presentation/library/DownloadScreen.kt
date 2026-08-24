@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.library
 
+import com.vibeup.android.presentation.player.activityViewModel
+
 import com.vibeup.android.ui.theme.AppTheme
 
 import androidx.compose.foundation.background
@@ -36,7 +38,7 @@ import com.vibeup.android.data.repository.DownloadRepository
 @Composable
 fun DownloadsScreen(
     navController: NavController,
-    viewModel: DownloadsViewModel = hiltViewModel(),
+    viewModel: DownloadsViewModel = activityViewModel(),
     playerViewModel: PlayerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current

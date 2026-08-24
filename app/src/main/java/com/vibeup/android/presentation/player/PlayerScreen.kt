@@ -52,7 +52,7 @@ import androidx.compose.material.icons.filled.Speed
 fun PlayerScreen(
     navController: NavController,
     viewModel: PlayerViewModel = hiltViewModel(),
-    downloadsViewModel: DownloadsViewModel = hiltViewModel(),
+    downloadsViewModel: DownloadsViewModel = activityViewModel(),
     lyricsViewModel: LyricsViewModel = activityViewModel(),
     artistPreviewViewModel: ArtistPreviewViewModel = hiltViewModel()
 ) {
