@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.artist
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -116,8 +118,8 @@ private fun ArtistContent(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color(0xFF0A0A1A).copy(alpha = 0.4f),
-                                    Color(0xFF0A0A1A)
+                                    AppTheme.colors.background.copy(alpha = 0.4f),
+                                    AppTheme.colors.background
                                 )
                             )
                         )
@@ -131,14 +133,14 @@ private fun ArtistContent(
                         artist.name,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
+                        color = AppTheme.colors.textPrimary
                     )
                     if (artist.followerCount.isNotBlank() && artist.followerCount != "0") {
                         Spacer(Modifier.height(4.dp))
                         Text(
                             "${formatFollowerCount(artist.followerCount)} followers",
                             fontSize = 13.sp,
-                            color = Color(0xFFD1D5DB)
+                            color = AppTheme.colors.textSecondary
                         )
                     }
                 }
@@ -162,20 +164,15 @@ private fun ArtistContent(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    Brush.linearGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.tertiary
-                                        )
-                                    ),
+                                    AppTheme.brandBrush,
                                     RoundedCornerShape(14.dp)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = AppTheme.colors.textPrimary)
                                 Spacer(Modifier.width(6.dp))
-                                Text("Play", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("Play", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             }
                         }
                     }
@@ -197,13 +194,13 @@ private fun ArtistContent(
                         "About",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFF3F4F6),
+                        color = AppTheme.colors.textPrimary,
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
                     Text(
                         artist.bio,
                         fontSize = 13.sp,
-                        color = Color(0xFF9CA3AF),
+                        color = AppTheme.colors.textSecondary,
                         lineHeight = 19.sp,
                         maxLines = if (expanded) Int.MAX_VALUE else 4,
                         overflow = TextOverflow.Ellipsis,
@@ -220,7 +217,7 @@ private fun ArtistContent(
                     "Top Songs",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
             }
@@ -240,7 +237,7 @@ private fun ArtistContent(
                     "More from ${artist.name}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
                 )
             }
@@ -269,14 +266,14 @@ private fun ArtistContent(
                                 song.title,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 song.album,
                                 fontSize = 11.sp,
-                                color = Color(0xFF6B7280),
+                                color = AppTheme.colors.textMuted,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -294,7 +291,7 @@ private fun ArtistContent(
                     "Albums",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
                 )
             }
@@ -318,12 +315,12 @@ private fun ArtistContent(
                                 album.title,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             if (album.year.isNotBlank()) {
-                                Text(album.year, fontSize = 11.sp, color = Color(0xFF6B7280))
+                                Text(album.year, fontSize = 11.sp, color = AppTheme.colors.textMuted)
                             }
                         }
                     }
@@ -349,7 +346,7 @@ private fun ArtistSongRow(song: Song, index: Int, onClick: () -> Unit) {
         Text(
             "$index",
             fontSize = 13.sp,
-            color = Color(0xFF4B5563),
+            color = AppTheme.colors.textMuted,
             modifier = Modifier.width(20.dp)
         )
         AsyncImage(
@@ -365,14 +362,14 @@ private fun ArtistSongRow(song: Song, index: Int, onClick: () -> Unit) {
                 song.title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 song.album,
                 fontSize = 12.sp,
-                color = Color(0xFF6B7280),
+                color = AppTheme.colors.textMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

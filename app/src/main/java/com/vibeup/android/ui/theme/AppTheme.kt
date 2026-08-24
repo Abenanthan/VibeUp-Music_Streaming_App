@@ -10,7 +10,11 @@ enum class VibeTheme(val displayName: String, val description: String) {
     CRIMSON("Crimson", "Pocketcasts-inspired. Bold red, high contrast."),
     SAKURA("Sakura", "Bear-inspired. Warm pink, soft and human."),
     VOID("Void", "Vercel-inspired. Pure black, razor sharp."),
-    EMBER("Ember", "Encore-inspired. Warm amber, rich and musical.")
+    EMBER("Ember", "Encore-inspired. Warm amber, rich and musical."),
+
+    // ── Light themes ──
+    DAYLIGHT("Daylight", "YouTube Music-inspired. Crisp white, monochrome."),
+    PORCELAIN("Porcelain", "Apple Music-inspired. Clean white, signature red.")
 }
 
 data class VibeColorScheme(
@@ -36,7 +40,16 @@ data class VibeColorScheme(
 
     // Gradient pair
     val gradientStart: Color,
-    val gradientEnd: Color
+    val gradientEnd: Color,
+
+    // Content that sits ON TOP of a filled primary/gradient surface (buttons,
+    // FABs, selected chips). Stays white in both light and dark themes, because
+    // the fill underneath is a saturated brand colour either way.
+    val onAccent: Color = Color.White,
+
+    // Drives the Material3 light/dark colour scheme and the system bar icon
+    // appearance. Defaults to false so every existing dark theme is unaffected.
+    val isLight: Boolean = false
 )
 
 object VibeThemes {
@@ -174,6 +187,57 @@ object VibeThemes {
         gradientEnd   = Color(0xFF3B82F6)
     )
 
+    // ── Daylight ── YouTube Music light ──────────────────────────────────
+    // Faithfully monochrome. YT Music's light mode makes the PRIMARY ACTION BLACK,
+    // not red — red appears only as a now-playing / branding accent. That restraint
+    // is the design; a red-everywhere version reads as a knock-off.
+    // Surfaces are separated by hairlines and whitespace rather than grey fills,
+    // which is why `surface` intentionally equals `background`.
+    // Contrast on #FFFFFF: textPrimary 20.6:1, textSecondary 6.3:1, textMuted 4.9:1.
+    val Daylight = VibeColorScheme(
+        background    = Color(0xFFFFFFFF),
+        surface       = Color(0xFFFFFFFF),
+        card          = Color(0xFFF2F2F2),
+        elevated      = Color(0xFFE5E5E5),  // hairline dividers / borders
+        primary       = Color(0xFF030303),  // black pill buttons, white label
+        primaryLight  = Color(0xFF333333),
+        secondary     = Color(0xFF606060),
+        accent        = Color(0xFFFF0000),  // now-playing / branding only
+        textPrimary   = Color(0xFF030303),
+        textSecondary = Color(0xFF606060),
+        textMuted     = Color(0xFF717171),  // was #909090 → 3.19:1, failed AA
+        navBar        = Color(0xFFFFFFFF),
+        // Equal stops: any gradient built from these renders flat. See brandBrush.
+        gradientStart = Color(0xFF030303),
+        gradientEnd   = Color(0xFF030303),
+        onAccent      = Color.White,
+        isLight       = true
+    )
+
+    // ── Porcelain ── Apple Music light ───────────────────────────────────
+    // White page over iOS "grouped" grey surfaces, hairline separators, and Apple's
+    // two reds: the vivid brand red for icons/highlights, and the darker one for
+    // filled buttons so a white label clears AA (5.38:1 vs 3.90:1).
+    // Contrast on #FFFFFF: textPrimary 21:1, textSecondary 5.1:1, textMuted 4.6:1.
+    val Porcelain = VibeColorScheme(
+        background    = Color(0xFFFFFFFF),
+        surface       = Color(0xFFF2F2F7),  // iOS systemGroupedBackground
+        card          = Color(0xFFF2F2F7),
+        elevated      = Color(0xFFD1D1D6),  // iOS separator
+        primary       = Color(0xFFD70015),  // Apple dark red — for filled buttons
+        primaryLight  = Color(0xFFFA243C),  // vivid brand red — icons / highlights
+        secondary     = Color(0xFF8A8A8E),
+        accent        = Color(0xFFFA243C),
+        textPrimary   = Color(0xFF000000),
+        textSecondary = Color(0xFF6E6E73),
+        textMuted     = Color(0xFF757579),  // was #9AA4AE → 2.53:1, failed AA badly
+        navBar        = Color(0xFFF2F2F7),  // matches `surface` — avoids a seam
+        gradientStart = Color(0xFFD70015),
+        gradientEnd   = Color(0xFFD70015),
+        onAccent      = Color.White,
+        isLight       = true
+    )
+
     fun get(theme: VibeTheme) = when (theme) {
         VibeTheme.CLASSIC_PURPLE -> ClassicPurple
         VibeTheme.OBSIDIAN -> Obsidian
@@ -182,5 +246,7 @@ object VibeThemes {
         VibeTheme.SAKURA   -> Sakura
         VibeTheme.VOID     -> Void
         VibeTheme.EMBER    -> Ember
+        VibeTheme.DAYLIGHT -> Daylight
+        VibeTheme.PORCELAIN -> Porcelain
     }
 }

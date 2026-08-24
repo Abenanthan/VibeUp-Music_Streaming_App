@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.stats
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -95,7 +97,7 @@ fun StatsScreen(
                     val gradientColors = listOf(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                         MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f),
-                        Color(0xFF0A0A1A)
+                        AppTheme.colors.background
                     )
                     Box(
                         modifier = Modifier
@@ -126,14 +128,14 @@ fun StatsScreen(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .background(
-                                        Color.White.copy(alpha = 0.15f),
+                                        AppTheme.colors.textPrimary.copy(alpha = 0.15f),
                                         CircleShape
                                     )
                             ) {
                                 Icon(
                                     Icons.Default.ArrowBackIosNew,
                                     contentDescription = "Back",
-                                    tint = Color.White,
+                                    tint = AppTheme.colors.textPrimary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -142,7 +144,7 @@ fun StatsScreen(
                                 "Your Vibes 🎵",
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
+                                color = AppTheme.colors.textPrimary
                             )
                         }
 
@@ -152,19 +154,19 @@ fun StatsScreen(
                                 text = "%.1f".format(stats.totalHoursListened),
                                 fontSize = 72.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 lineHeight = 72.sp
                             )
                             Text(
                                 "hours of music 🎵",
                                 fontSize = 16.sp,
-                                color = Color.White.copy(alpha = 0.7f)
+                                color = AppTheme.colors.textPrimary.copy(alpha = 0.7f)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 "${stats.totalPlays} songs played",
                                 fontSize = 14.sp,
-                                color = Color.White.copy(alpha = 0.6f)
+                                color = AppTheme.colors.textPrimary.copy(alpha = 0.6f)
                             )
                         }
                     }
@@ -240,7 +242,7 @@ fun StatsScreen(
                             )
                             if (index < stats.topSongs.size - 1) {
                                 HorizontalDivider(
-                                    color = Color(0xFF1A1A3A),
+                                    color = AppTheme.divider,
                                     thickness = 0.5.dp,
                                     modifier = Modifier.padding(
                                         vertical = 6.dp
@@ -264,7 +266,7 @@ fun StatsScreen(
                             )
                             if (index < stats.topArtists.size - 1) {
                                 HorizontalDivider(
-                                    color = Color(0xFF1A1A3A),
+                                    color = AppTheme.divider,
                                     thickness = 0.5.dp,
                                     modifier = Modifier.padding(
                                         vertical = 6.dp
@@ -290,7 +292,7 @@ fun StatsScreen(
                             Text("🎵", fontSize = 56.sp)
                             Text(
                                 "No stats yet!",
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -336,14 +338,14 @@ fun QuickStatCard(
                     value,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     label,
                     fontSize = 10.sp,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = AppTheme.colors.textPrimary.copy(alpha = 0.7f)
                 )
             }
         }
@@ -361,14 +363,14 @@ fun StatCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(AppTheme.colors.surface)
             .padding(16.dp)
     ) {
         Text(
             title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = AppTheme.colors.textPrimary,
             modifier = Modifier.padding(bottom = 14.dp)
         )
         content()
@@ -409,12 +411,7 @@ fun WeeklyChart(
                         .height((heightFraction * 60).dp.coerceAtLeast(4.dp))
                         .clip(RoundedCornerShape(4.dp))
                         .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary
-                                )
-                            )
+                            AppTheme.brandBrushVertical
                         )
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -455,7 +452,7 @@ fun TopSongRow(
                     if (rank <= 3)
                         rankColors[rank - 1].copy(alpha = 0.2f)
                     else
-                        Color(0xFF1A1A3A),
+                        AppTheme.colors.card,
                     CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -487,7 +484,7 @@ fun TopSongRow(
                 song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -504,7 +501,7 @@ fun TopSongRow(
                     .fillMaxWidth()
                     .height(3.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFF1A1A3A))
+                    .background(AppTheme.colors.card)
             ) {
                 Box(
                     modifier = Modifier
@@ -513,12 +510,7 @@ fun TopSongRow(
                         )
                         .fillMaxHeight()
                         .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary
-                                )
-                            )
+                            AppTheme.brandBrush
                         )
                 )
             }
@@ -567,9 +559,7 @@ fun TopArtistRow(
             modifier = Modifier
                 .size(40.dp)
                 .background(
-                    Brush.linearGradient(
-                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                    ),
+                    AppTheme.brandBrush,
                     CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -578,7 +568,7 @@ fun TopArtistRow(
                 artist.first().uppercase(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = AppTheme.colors.textPrimary
             )
         }
 
@@ -587,7 +577,7 @@ fun TopArtistRow(
                 artist,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -596,7 +586,7 @@ fun TopArtistRow(
                     .fillMaxWidth()
                     .height(3.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFF1A1A3A))
+                    .background(AppTheme.colors.card)
             ) {
                 Box(
                     modifier = Modifier

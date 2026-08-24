@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.auth
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -83,7 +85,7 @@ fun ProfileScreen(
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = {
-                Text("Logout", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Logout", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
             },
             text = {
                 Text("Are you sure you want to logout?", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -99,7 +101,7 @@ fun ProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Logout", color = Color.White)
+                    Text("Logout", color = AppTheme.colors.textPrimary)
                 }
             },
             dismissButton = {
@@ -116,7 +118,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1A1A2E), MaterialTheme.colorScheme.background)
+                    colors = listOf(AppTheme.colors.surface, MaterialTheme.colorScheme.background)
                 )
             )
     ) {
@@ -138,14 +140,14 @@ fun ProfileScreen(
                     Icon(
                         Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = Color.White
+                        tint = AppTheme.colors.textPrimary
                     )
                 }
                 Text(
                     text = "Profile",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = AppTheme.colors.textPrimary
                 )
                 IconButton(onClick = { showLogoutDialog = true }) {
                     Icon(
@@ -200,7 +202,7 @@ fun ProfileScreen(
                     Icon(
                         Icons.Default.CameraAlt,
                         contentDescription = "Change Photo",
-                        tint = Color.Black,
+                        tint = AppTheme.colors.onAccent,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -230,8 +232,8 @@ fun ProfileScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                                 unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
+                                focusedTextColor = AppTheme.colors.textPrimary,
+                                unfocusedTextColor = AppTheme.colors.textPrimary,
                                 cursorColor = MaterialTheme.colorScheme.primary,
                                 focusedContainerColor = MaterialTheme.colorScheme.background,
                                 unfocusedContainerColor = MaterialTheme.colorScheme.background
@@ -256,7 +258,7 @@ fun ProfileScreen(
                                 text = displayName.ifEmpty { "Set your nickname" },
                                 fontSize = 16.sp,
                                 color = if (displayName.isEmpty())
-                                    MaterialTheme.colorScheme.onSurfaceVariant else Color.White
+                                    MaterialTheme.colorScheme.onSurfaceVariant else AppTheme.colors.textPrimary
                             )
                             IconButton(onClick = {
                                 nickname = displayName
@@ -298,7 +300,7 @@ fun ProfileScreen(
                         Text(
                             text = profileViewModel.email,
                             fontSize = 16.sp,
-                            color = Color.White
+                            color = AppTheme.colors.textPrimary
                         )
                     }
                 }
@@ -328,7 +330,7 @@ fun ProfileScreen(
                         Text(
                             text = "Reset Password",
                             fontSize = 16.sp,
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
@@ -364,7 +366,7 @@ fun ProfileScreen(
                         Text(
                             text = "Downloads",
                             fontSize = 16.sp,
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
@@ -406,7 +408,7 @@ fun ProfileScreen(
                         Text(
                             "Appearance",
                             fontSize = 16.sp,
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
@@ -446,7 +448,7 @@ fun ProfileScreen(
                     Text(
                         text = snackbarMessage,
                         modifier = Modifier.padding(12.dp),
-                        color = Color.White,
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 14.sp
                     )
                 }

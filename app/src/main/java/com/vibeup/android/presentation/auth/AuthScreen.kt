@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.auth
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -86,7 +88,7 @@ fun AuthScreen(
             title = {
                 Text(
                     "Reset Password",
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -96,25 +98,25 @@ fun AuthScreen(
                 ) {
                     Text(
                         "Enter your email to receive a reset link",
-                        color = TextSecondary,
+                        color = AppTheme.colors.textSecondary,
                         fontSize = 13.sp
                     )
                     OutlinedTextField(
                         value = forgotEmail,
                         onValueChange = { forgotEmail = it },
                         placeholder = {
-                            Text("Email", color = Color(0xFF4B5563))
+                            Text("Email", color = AppTheme.colors.textMuted)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PurplePrimary,
-                            unfocusedBorderColor = Color(0xFF2A2A4A),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = PurplePrimary,
-                            focusedContainerColor = Color(0xFF12122A),
-                            unfocusedContainerColor = Color(0xFF12122A)
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = AppTheme.colors.elevated,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = AppTheme.colors.surface,
+                            unfocusedContainerColor = AppTheme.colors.surface
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
@@ -132,7 +134,7 @@ fun AuthScreen(
                         forgotEmail = ""
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PurplePrimary
+                        containerColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -146,10 +148,10 @@ fun AuthScreen(
                         forgotEmail = ""
                     }
                 ) {
-                    Text("Cancel", color = TextSecondary)
+                    Text("Cancel", color = AppTheme.colors.textSecondary)
                 }
             },
-            containerColor = Color(0xFF12122A),
+            containerColor = AppTheme.colors.surface,
             shape = RoundedCornerShape(20.dp)
         )
     }
@@ -157,7 +159,7 @@ fun AuthScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A1A))
+            .background(AppTheme.colors.background)
     ) {
         // Background gradient glow
         Box(
@@ -167,7 +169,7 @@ fun AuthScreen(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            PurplePrimary.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                             Color.Transparent
                         )
                     )
@@ -181,7 +183,7 @@ fun AuthScreen(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            BluePrimary.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
                             Color.Transparent
                         )
                     )
@@ -202,7 +204,7 @@ fun AuthScreen(
                 modifier = Modifier
                     .size(110.dp)
                     .clip(RoundedCornerShape(28.dp))
-                    .background(Color(0xFF12122A)),
+                    .background(AppTheme.colors.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -222,14 +224,14 @@ fun AuthScreen(
                 fontWeight = FontWeight.ExtraBold,
                 style = androidx.compose.ui.text.TextStyle(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(PurpleLight, BlueLight)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                     )
                 )
             )
             Text(
                 text = "Feel the music 🎧",
                 fontSize = 13.sp,
-                color = TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 modifier = Modifier.padding(bottom = 40.dp)
             )
 
@@ -238,7 +240,7 @@ fun AuthScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF0D0D2B))
+                    .background(AppTheme.colors.surface)
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -253,8 +255,8 @@ fun AuthScreen(
                                     if (isLogin == loginMode)
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                PurplePrimary,
-                                                BluePrimary
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.secondary
                                             )
                                         )
                                     else
@@ -277,9 +279,9 @@ fun AuthScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (isLogin == loginMode)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
-                                    TextSecondary
+                                    AppTheme.colors.textSecondary
                             )
                         }
                     }
@@ -294,26 +296,26 @@ fun AuthScreen(
                     email = it
                     errorMessage = ""
                 },
-                label = { Text("Email", color = TextSecondary) },
+                label = { Text("Email", color = AppTheme.colors.textSecondary) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Email,
                         contentDescription = null,
-                        tint = TextSecondary
+                        tint = AppTheme.colors.textSecondary
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PurplePrimary,
-                    unfocusedBorderColor = Color(0xFF2A2A4A),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = PurplePrimary,
-                    focusedContainerColor = Color(0xFF12122A),
-                    unfocusedContainerColor = Color(0xFF12122A),
-                    focusedLabelColor = PurplePrimary,
-                    unfocusedLabelColor = TextSecondary
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = AppTheme.colors.elevated,
+                    focusedTextColor = AppTheme.colors.textPrimary,
+                    unfocusedTextColor = AppTheme.colors.textPrimary,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedContainerColor = AppTheme.colors.surface,
+                    unfocusedContainerColor = AppTheme.colors.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = AppTheme.colors.textSecondary
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -334,12 +336,12 @@ fun AuthScreen(
                     password = it
                     errorMessage = ""
                 },
-                label = { Text("Password", color = TextSecondary) },
+                label = { Text("Password", color = AppTheme.colors.textSecondary) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Lock,
                         contentDescription = null,
-                        tint = TextSecondary
+                        tint = AppTheme.colors.textSecondary
                     )
                 },
                 trailingIcon = {
@@ -352,7 +354,7 @@ fun AuthScreen(
                             else
                                 Icons.Default.Visibility,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = AppTheme.colors.textSecondary
                         )
                     }
                 },
@@ -363,15 +365,15 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PurplePrimary,
-                    unfocusedBorderColor = Color(0xFF2A2A4A),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = PurplePrimary,
-                    focusedContainerColor = Color(0xFF12122A),
-                    unfocusedContainerColor = Color(0xFF12122A),
-                    focusedLabelColor = PurplePrimary,
-                    unfocusedLabelColor = TextSecondary
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = AppTheme.colors.elevated,
+                    focusedTextColor = AppTheme.colors.textPrimary,
+                    unfocusedTextColor = AppTheme.colors.textPrimary,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedContainerColor = AppTheme.colors.surface,
+                    unfocusedContainerColor = AppTheme.colors.surface,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = AppTheme.colors.textSecondary
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -407,14 +409,14 @@ fun AuthScreen(
                         label = {
                             Text(
                                 "Confirm Password",
-                                color = TextSecondary
+                                color = AppTheme.colors.textSecondary
                             )
                         },
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = TextSecondary
+                                tint = AppTheme.colors.textSecondary
                             )
                         },
                         trailingIcon = {
@@ -429,7 +431,7 @@ fun AuthScreen(
                                     else
                                         Icons.Default.Visibility,
                                     contentDescription = null,
-                                    tint = TextSecondary
+                                    tint = AppTheme.colors.textSecondary
                                 )
                             }
                         },
@@ -440,15 +442,15 @@ fun AuthScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PurplePrimary,
-                            unfocusedBorderColor = Color(0xFF2A2A4A),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = PurplePrimary,
-                            focusedContainerColor = Color(0xFF12122A),
-                            unfocusedContainerColor = Color(0xFF12122A),
-                            focusedLabelColor = PurplePrimary,
-                            unfocusedLabelColor = TextSecondary
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = AppTheme.colors.elevated,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            focusedContainerColor = AppTheme.colors.surface,
+                            unfocusedContainerColor = AppTheme.colors.surface,
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = AppTheme.colors.textSecondary
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
@@ -477,7 +479,7 @@ fun AuthScreen(
                 ) {
                     Text(
                         "Forgot Password?",
-                        color = PurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 13.sp
                     )
                 }
@@ -552,7 +554,7 @@ fun AuthScreen(
                         .fillMaxSize()
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(PurplePrimary, BluePrimary)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                             ),
                             RoundedCornerShape(14.dp)
                         ),
@@ -560,7 +562,7 @@ fun AuthScreen(
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             modifier = Modifier.size(22.dp),
                             strokeWidth = 2.dp
                         )
@@ -569,7 +571,7 @@ fun AuthScreen(
                             text = if (isLogin) "Sign In" else "Create Account",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = AppTheme.colors.textPrimary
                         )
                     }
                 }
@@ -585,12 +587,12 @@ fun AuthScreen(
             ) {
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
-                    color = Color(0xFF2A2A4A)
+                    color = AppTheme.divider
                 )
-                Text("or", color = TextSecondary, fontSize = 13.sp)
+                Text("or", color = AppTheme.colors.textSecondary, fontSize = 13.sp)
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
-                    color = Color(0xFF2A2A4A)
+                    color = AppTheme.divider
                 )
             }
 
@@ -608,10 +610,10 @@ fun AuthScreen(
                 shape = RoundedCornerShape(14.dp),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    Color(0xFF2A2A4A)
+                    AppTheme.colors.elevated
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.White
+                    contentColor = AppTheme.colors.onAccent
                 ),
                 enabled = !isLoading
             ) {
@@ -622,14 +624,14 @@ fun AuthScreen(
                     Icon(
                         Icons.Default.PersonOutline,
                         contentDescription = null,
-                        tint = TextSecondary,
+                        tint = AppTheme.colors.textSecondary,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
                         "Continue as Guest",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
-                        color = TextSecondary
+                        color = AppTheme.colors.textSecondary
                     )
                 }
             }
@@ -640,7 +642,7 @@ fun AuthScreen(
             Text(
                 text = "By continuing you agree to our Terms of Service\nand Privacy Policy",
                 fontSize = 11.sp,
-                color = Color(0xFF374151),
+                color = AppTheme.colors.textMuted,
                 textAlign = TextAlign.Center,
                 lineHeight = 16.sp
             )

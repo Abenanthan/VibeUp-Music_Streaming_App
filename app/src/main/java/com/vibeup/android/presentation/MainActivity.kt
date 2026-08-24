@@ -19,6 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.NavigationBarItemDefaults
+import com.vibeup.android.ui.theme.AppTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -57,6 +62,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // System bar colours/icon appearance are driven by VibeUpTheme, which
+        // re-applies them whenever the user switches theme (a light theme needs dark
+        // bar icons). themes.xml supplies the dark default for the pre-Compose frame.
         if (savedInstanceState == null) {
             playerManager.restoreState()
         }
@@ -107,6 +116,20 @@ class MainActivity : ComponentActivity() {
                 val positionState = playerViewModel.currentPosition.collectAsState()
                 val durationState = playerViewModel.duration.collectAsState()
 
+                // Hoisted out of the draw lambda below (AppTheme.colors is a
+                // @Composable getter and can't be read inside drawBehind).
+                val navDivider = AppTheme.divider
+                val navSelectedColors = NavigationBarItemDefaults.colors(
+                    // Material's default selected indicator is the baseline lavender
+                    // (#E8DEF8) because secondaryContainer isn't part of our palette —
+                    // off-brand in every theme. Tie it to the app's own colours.
+                    selectedIconColor = AppTheme.colors.onAccent,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = AppTheme.colors.textSecondary,
+                    unselectedTextColor = AppTheme.colors.textSecondary
+                )
+
                 Scaffold(
                     bottomBar = {
                         if (showBottomBar) {
@@ -141,7 +164,17 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 NavigationBar(
-                                    containerColor = MaterialTheme.colorScheme.surface
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    // In the light themes `surface` is the same as (or
+                                    // within 2% of) `background`, so the bar merged into
+                                    // the page. A hairline separator is what YouTube
+                                    // Music and Apple Music both use here.
+                                    modifier = Modifier.drawBehind {
+                                        drawRect(
+                                            color = navDivider,
+                                            size = Size(size.width, 1.dp.toPx())
+                                        )
+                                    }
                                 ) {
                                     bottomNavItems.forEach { item ->
                                         val isSelected = when (item.route) {
@@ -162,6 +195,7 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         NavigationBarItem(
+                                            colors = navSelectedColors,
                                             selected = isSelected,
                                             onClick = {
                                                 if (currentRoute == item.route) return@NavigationBarItem

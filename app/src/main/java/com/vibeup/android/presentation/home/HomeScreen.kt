@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.home
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -597,28 +599,19 @@ fun HomeHeader(navController: NavController) {
                 text = "VibeUp",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.ExtraBold,
-                style = TextStyle(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFFA78BFA),
-                            Color(0xFF60A5FA)
-                        )
-                    )
-                )
+                style = TextStyle(brush = AppTheme.brandBrush)
             )
             Text(
                 text = "Feel the music 🎧",
                 fontSize = 11.sp,
-                color = Color(0xFF4B5563)
+                color = AppTheme.colors.textMuted
             )
         }
         Box(
             modifier = Modifier
                 .size(42.dp)
                 .background(
-                    Brush.linearGradient(
-                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                    ),
+                    AppTheme.brandBrush,
                     CircleShape
                 )
                 .clip(CircleShape)
@@ -628,7 +621,7 @@ fun HomeHeader(navController: NavController) {
             Icon(
                 Icons.Default.Person,
                 contentDescription = "Profile",
-                tint = Color.White,
+                tint = AppTheme.colors.textPrimary,
                 modifier = Modifier.size(22.dp)
             )
         }
@@ -661,12 +654,12 @@ fun SearchBar(onClick: () -> Unit) {
             Icon(
                 Icons.Default.Search,
                 contentDescription = null,
-                tint = Color(0xFF4B5563),
+                tint = AppTheme.colors.textMuted,
                 modifier = Modifier.size(18.dp)
             )
             Text(
                 text = "Search songs, artists, albums...",
-                color = Color(0xFF374151),
+                color = AppTheme.colors.textMuted,
                 fontSize = 13.sp
             )
         }
@@ -687,13 +680,13 @@ fun SectionHeader(title: String, subtitle: String = "") {
             text = title,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFF3F4F6)
+            color = AppTheme.colors.textPrimary
         )
         if (subtitle.isNotEmpty()) {
             Text(
                 text = subtitle,
                 fontSize = 11.sp,
-                color = Color(0xFF4B5563)
+                color = AppTheme.colors.textMuted
             )
         }
     }
@@ -770,7 +763,7 @@ fun PlaylistShortcuts(
                 }
                 Text(
                     text = playlist.name,
-                    color = Color(0xFFD1D5DB),
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -847,21 +840,21 @@ fun MoodCard(
             Text(text = mood.emoji, fontSize = 20.sp)
             Text(
                 text = mood.label,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = if (mood.songs.isEmpty()) "Loading..."
                 else "${mood.songs.size} songs",
-                color = Color.White.copy(alpha = 0.65f),
+                color = AppTheme.colors.textPrimary.copy(alpha = 0.65f),
                 fontSize = 10.sp
             )
         }
         Icon(
             Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = Color.White.copy(alpha = 0.6f),
+            tint = AppTheme.colors.textPrimary.copy(alpha = 0.6f),
             modifier = Modifier
                 .size(16.dp)
                 .align(Alignment.CenterEnd)
@@ -911,15 +904,13 @@ fun ArtistsSection(
                             .width(3.dp)
                             .height(16.dp)
                             .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                ),
+                                AppTheme.brandBrushVertical,
                                 RoundedCornerShape(2.dp)
                             )
                     )
                     Text(
                         text = artist.name,
-                        color = Color(0xFFE5E7EB),
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -1051,7 +1042,7 @@ fun ArtistCoverflow(
                     }
                     .size(cardW, cardH)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFF1A1A2E))
+                    .background(AppTheme.colors.card)
                     .clickable {
                         // Which artist index is currently centred.
                         val centered = ((active % n) + n) % n
@@ -1108,7 +1099,7 @@ fun ArtistCoverflow(
                 ) {
                     Text(
                         text = artist.name,
-                        color = Color.White,
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -1117,7 +1108,7 @@ fun ArtistCoverflow(
                     if (artist.songs.isNotEmpty()) {
                         Text(
                             text = "${artist.songs.size} songs",
-                            color = Color(0xFFB0B0C0),
+                            color = AppTheme.colors.textSecondary,
                             fontSize = 11.sp
                         )
                     }
@@ -1257,7 +1248,7 @@ fun GlassSongCard(
                 Icon(
                     Icons.Default.MoreVert,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = AppTheme.colors.textPrimary,
                     modifier = Modifier.size(13.dp)
                 )
             }
@@ -1269,9 +1260,7 @@ fun GlassSongCard(
                     .height(3.dp)
                     .align(Alignment.BottomCenter)
                     .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                        )
+                        AppTheme.brandBrush
                     )
             )
         }
@@ -1282,14 +1271,14 @@ fun GlassSongCard(
             text = song.title,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFFF3F4F6),
+            color = AppTheme.colors.textPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             text = song.artist,
             fontSize = 11.sp,
-            color = Color(0xFF6B7280),
+            color = AppTheme.colors.textMuted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -1314,7 +1303,7 @@ fun SongOptionsDialog(
         title = {
             Text(
                 text = song.title,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -1339,7 +1328,7 @@ fun SongOptionsDialog(
                         )
                         Text(
                             "Add to Liked Songs",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     }
@@ -1347,7 +1336,7 @@ fun SongOptionsDialog(
 
                 // Download option
                 if (onDownload != null) {
-                    HorizontalDivider(color = Color(0xFF1F1F3A), thickness = 1.dp)
+                    HorizontalDivider(color = AppTheme.divider, thickness = 1.dp)
                     var showQualityMenu by remember { mutableStateOf(false) }
 
                     TextButton(
@@ -1364,7 +1353,7 @@ fun SongOptionsDialog(
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.tertiary
                             )
-                            Text("Download", color = Color.White, fontSize = 14.sp)
+                            Text("Download", color = AppTheme.colors.textPrimary, fontSize = 14.sp)
                         }
                     }
 
@@ -1387,10 +1376,10 @@ fun SongOptionsDialog(
                                     Icon(
                                         Icons.Default.GraphicEq,
                                         contentDescription = null,
-                                        tint = Color(0xFF6B7280),
+                                        tint = AppTheme.colors.textMuted,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                    Text(quality, color = Color(0xFF9CA3AF), fontSize = 13.sp)
+                                    Text(quality, color = AppTheme.colors.textSecondary, fontSize = 13.sp)
                                 }
                             }
                         }
@@ -1398,7 +1387,7 @@ fun SongOptionsDialog(
                 }
 
                 // Set as Ringtone option
-                HorizontalDivider(color = Color(0xFF1F1F3A), thickness = 1.dp)
+                HorizontalDivider(color = AppTheme.divider, thickness = 1.dp)
                 TextButton(
                     onClick = { ringtoneLauncher(song); onDismiss() },
                     modifier = Modifier.fillMaxWidth()
@@ -1413,25 +1402,25 @@ fun SongOptionsDialog(
                             contentDescription = null,
                             tint = Color(0xFFF59E0B)
                         )
-                        Text("Set as Ringtone", color = Color.White, fontSize = 14.sp)
+                        Text("Set as Ringtone", color = AppTheme.colors.textPrimary, fontSize = 14.sp)
                     }
                 }
 
                 HorizontalDivider(
-                    color = Color(0xFF1F1F3A),
+                    color = AppTheme.divider,
                     thickness = 1.dp
                 )
                 if (playlists.isEmpty()) {
                     Text(
                         text = "No playlists yet!\nCreate one in Library 📚",
-                        color = Color(0xFF6B7280),
+                        color = AppTheme.colors.textMuted,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(8.dp)
                     )
                 } else {
                     Text(
                         text = "Add to playlist:",
-                        color = Color(0xFF6B7280),
+                        color = AppTheme.colors.textMuted,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(
                             top = 8.dp, start = 8.dp, bottom = 4.dp
@@ -1454,7 +1443,7 @@ fun SongOptionsDialog(
                                 )
                                 Text(
                                     playlist.name,
-                                    color = Color.White,
+                                    color = AppTheme.colors.textPrimary,
                                     fontSize = 14.sp
                                 )
                             }
@@ -1466,10 +1455,10 @@ fun SongOptionsDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Color(0xFF6B7280))
+                Text("Cancel", color = AppTheme.colors.textMuted)
             }
         },
-        containerColor = Color(0xFF12122A),
+        containerColor = AppTheme.colors.surface,
         shape = RoundedCornerShape(20.dp)
     )
 }
@@ -1513,7 +1502,7 @@ fun EmptyRow(message: String) {
     ) {
         Text(
             text = message,
-            color = Color(0xFF4B5563),
+            color = AppTheme.colors.textMuted,
             fontSize = 12.sp,
             textAlign = TextAlign.Center
         )

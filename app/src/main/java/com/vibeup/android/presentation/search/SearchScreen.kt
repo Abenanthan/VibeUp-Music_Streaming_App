@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.search
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -157,7 +159,7 @@ fun SearchScreen(
                             }
                             item {
                                 HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.surface,
+                                    color = AppTheme.divider,
                                     thickness = 0.5.dp,
                                     modifier = Modifier.padding(vertical = 12.dp)
                                 )
@@ -226,7 +228,7 @@ fun SearchScreen(
                                     }
                                 }
                                 HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.surface,
+                                    color = AppTheme.divider,
                                     thickness = 0.5.dp
                                 )
                             }
@@ -297,7 +299,7 @@ fun SearchScreen(
                             item {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 8.dp),
-                                    color = MaterialTheme.colorScheme.surface,
+                                    color = AppTheme.divider,
                                     thickness = 0.5.dp
                                 )
                             }

@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.library
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -186,12 +188,12 @@ fun AddSongsScreen(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFF12122A), androidx.compose.foundation.shape.CircleShape)
+                        .background(AppTheme.colors.surface, androidx.compose.foundation.shape.CircleShape)
                 ) {
                     Icon(
                         Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = Color.White,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -200,12 +202,12 @@ fun AddSongsScreen(
                         text = "Add Songs",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = AppTheme.colors.textPrimary
                     )
                     Text(
                         text = "Search or pick from recommendations",
                         fontSize = 11.sp,
-                        color = Color(0xFF6B7280)
+                        color = AppTheme.colors.textMuted
                     )
                 }
                 // Done button
@@ -213,16 +215,14 @@ fun AddSongsScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(
-                            Brush.linearGradient(
-                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                            )
+                            AppTheme.brandBrush
                         )
                         .clickable { navController.popBackStack() }
                         .padding(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text(
                         "Done",
-                        color = Color.White,
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -239,14 +239,14 @@ fun AddSongsScreen(
                 placeholder = {
                     Text(
                         "Search songs to add...",
-                        color = Color(0xFF4B5563)
+                        color = AppTheme.colors.textMuted
                     )
                 },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
                         contentDescription = null,
-                        tint = Color(0xFF6B7280)
+                        tint = AppTheme.colors.textMuted
                     )
                 },
                 trailingIcon = {
@@ -258,7 +258,7 @@ fun AddSongsScreen(
                             Icon(
                                 Icons.Default.Clear,
                                 contentDescription = null,
-                                tint = Color(0xFF6B7280)
+                                tint = AppTheme.colors.textMuted
                             )
                         }
                     }
@@ -269,12 +269,12 @@ fun AddSongsScreen(
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color(0xFF2A2A4A),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    unfocusedBorderColor = AppTheme.colors.elevated,
+                    focusedTextColor = AppTheme.colors.textPrimary,
+                    unfocusedTextColor = AppTheme.colors.textPrimary,
                     cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedContainerColor = Color(0xFF12122A),
-                    unfocusedContainerColor = Color(0xFF12122A)
+                    focusedContainerColor = AppTheme.colors.surface,
+                    unfocusedContainerColor = AppTheme.colors.surface
                 ),
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Search
@@ -304,7 +304,7 @@ fun AddSongsScreen(
                             Text(
                                 if (isLoading) "Loading recommendations..."
                                 else "Searching...",
-                                color = Color(0xFF6B7280),
+                                color = AppTheme.colors.textMuted,
                                 fontSize = 13.sp
                             )
                         }
@@ -323,7 +323,7 @@ fun AddSongsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 "No results for \"$query\"",
-                                color = Color(0xFF6B7280),
+                                color = AppTheme.colors.textMuted,
                                 fontSize = 14.sp
                             )
                         }
@@ -342,7 +342,7 @@ fun AddSongsScreen(
                         text = sectionTitle,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFF3F4F6),
+                        color = AppTheme.colors.textPrimary,
                         modifier = Modifier.padding(bottom = 10.dp)
                     )
 
@@ -387,7 +387,7 @@ fun AddSongsScreen(
                 Text(
                     text = it,
                     modifier = Modifier.padding(14.dp),
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp
                 )
@@ -408,7 +408,7 @@ fun AddSongItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(AppTheme.colors.surface)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -432,14 +432,14 @@ fun AddSongItem(
                 text = song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFF3F4F6),
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = song.artist,
                 fontSize = 11.sp,
-                color = Color(0xFF6B7280),
+                color = AppTheme.colors.textMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -459,9 +459,7 @@ fun AddSongItem(
                             )
                         )
                     else
-                        Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                        )
+                        AppTheme.brandBrush
                 )
                 .clickable { onAdd() },
             contentAlignment = Alignment.Center
@@ -469,7 +467,7 @@ fun AddSongItem(
             Icon(
                 if (isAdded) Icons.Default.Check else Icons.Default.Add,
                 contentDescription = if (isAdded) "Added" else "Add",
-                tint = Color.White,
+                tint = AppTheme.colors.textPrimary,
                 modifier = Modifier.size(18.dp)
             )
         }

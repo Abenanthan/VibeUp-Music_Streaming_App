@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.player
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -26,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -218,7 +221,7 @@ fun PlayerScreen(
                             Icon(
                                 Icons.Default.KeyboardArrowDown,
                                 contentDescription = "Minimize",
-                                tint = Color.White,
+                                tint = AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -237,7 +240,7 @@ fun PlayerScreen(
                                 text = song.album.ifEmpty { "VibeUp" },
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -254,7 +257,7 @@ fun PlayerScreen(
                                 Icon(
                                     Icons.Default.Equalizer,
                                     contentDescription = "Equalizer",
-                                    tint = Color.White,
+                                    tint = AppTheme.colors.textPrimary,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -276,7 +279,11 @@ fun PlayerScreen(
                         animationSpec = tween(durationMillis = 350),
                         label = "artScale"
                     )
-                    val ringBrush = Brush.sweepGradient(
+                    // Flat on light themes — a multi-hue sweep ring reads as noise
+                    // against a white page.
+                    val ringBrush = if (AppTheme.colors.isLight)
+                        SolidColor(MaterialTheme.colorScheme.primary)
+                    else Brush.sweepGradient(
                         listOf(
                             MaterialTheme.colorScheme.primary,
                             MaterialTheme.colorScheme.tertiary,
@@ -350,7 +357,7 @@ fun PlayerScreen(
                                 text = song.title,
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -375,7 +382,7 @@ fun PlayerScreen(
                                 tint = if (isLiked)
                                     MaterialTheme.colorScheme.tertiary
                                 else
-                                    Color.White,
+                                    AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -389,7 +396,7 @@ fun PlayerScreen(
                                 Icon(
                                     Icons.Default.MoreVert,
                                     contentDescription = "More options",
-                                    tint = Color.White,
+                                    tint = AppTheme.colors.textPrimary,
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -544,21 +551,21 @@ fun PlayerScreen(
                                     else 
                                         Icons.Default.Download,
                                     contentDescription = "Download",
-                                    tint = if (isDownloaded) Color(0xFF10B981) else Color.White,
+                                    tint = if (isDownloaded) Color(0xFF10B981) else AppTheme.colors.textPrimary,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
                             DropdownMenu(
                                 expanded = showDownloadQualities,
                                 onDismissRequest = { showDownloadQualities = false },
-                                modifier = Modifier.background(Color(0xFF1C1C3A))
+                                modifier = Modifier.background(AppTheme.colors.card)
                             ) {
                                 listOf("320kbps", "160kbps", "96kbps").forEach { quality ->
                                     DropdownMenuItem(
                                         text = {
                                             Text(
                                                 quality,
-                                                color = Color.White,
+                                                color = AppTheme.colors.textPrimary,
                                                 fontSize = 14.sp
                                             )
                                         },
@@ -600,7 +607,7 @@ fun PlayerScreen(
                                     tint = when {
                                         isSmartShuffle -> Color(0xFF10B981) // green = smart
                                         isShuffleEnabled -> MaterialTheme.colorScheme.primary   // primary = normal
-                                        else -> Color.White                  // white = off
+                                        else -> AppTheme.colors.textPrimary  // neutral = off
                                     },
                                     modifier = Modifier.size(26.dp)
                                 )
@@ -625,7 +632,7 @@ fun PlayerScreen(
                             Icon(
                                 Icons.Default.SkipPrevious,
                                 contentDescription = "Previous",
-                                tint = Color.White,
+                                tint = AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(40.dp)
                             )
                         }
@@ -640,19 +647,14 @@ fun PlayerScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary,
-                                                MaterialTheme.colorScheme.tertiary
-                                            )
-                                        ),
+                                        AppTheme.brandBrush,
                                         CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (isResolvingUrl) {
                                     CircularProgressIndicator(
-                                        color = Color.White,
+                                        color = AppTheme.colors.textPrimary,
                                         modifier = Modifier.size(24.dp),
                                         strokeWidth = 2.dp
                                     )
@@ -663,7 +665,7 @@ fun PlayerScreen(
                                         else
                                             Icons.Default.PlayArrow,
                                         contentDescription = null,
-                                        tint = Color.White,
+                                        tint = AppTheme.colors.textPrimary,
                                         modifier = Modifier.size(40.dp)
                                     )
                                 }
@@ -677,7 +679,7 @@ fun PlayerScreen(
                             Icon(
                                 Icons.Default.SkipNext,
                                 contentDescription = "Next",
-                                tint = Color.White,
+                                tint = AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(40.dp)
                             )
                         }
@@ -697,7 +699,7 @@ fun PlayerScreen(
                                 tint = if (repeatMode != Player.REPEAT_MODE_OFF)
                                     MaterialTheme.colorScheme.primary
                                 else
-                                    Color.White,
+                                    AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(26.dp)
                             )
                         }
@@ -719,9 +721,7 @@ fun PlayerScreen(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                )
+                                brush = AppTheme.brandBrush
                             )
                         )
                         // Toggle synced/full
@@ -729,7 +729,7 @@ fun PlayerScreen(
                             Row(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(Color(0xFF12122A))
+                                    .background(AppTheme.colors.surface)
                                     .padding(4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
@@ -740,12 +740,7 @@ fun PlayerScreen(
                                                 .clip(RoundedCornerShape(16.dp))
                                                 .background(
                                                     if (showSynced == sync)
-                                                        Brush.linearGradient(
-                                                            colors = listOf(
-                                                                MaterialTheme.colorScheme.primary,
-                                                                MaterialTheme.colorScheme.tertiary
-                                                            )
-                                                        )
+                                                        AppTheme.brandBrush
                                                     else
                                                         Brush.linearGradient(
                                                             colors = listOf(
@@ -768,7 +763,7 @@ fun PlayerScreen(
                                                 label,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.SemiBold,
-                                                color = Color.White
+                                                color = AppTheme.colors.textPrimary
                                             )
                                         }
                                     }
@@ -816,9 +811,9 @@ fun PlayerScreen(
 
                                 val textColor by animateColorAsState(
                                     targetValue = when {
-                                        isCurrentLine -> Color.White
-                                        isPastLine -> Color.White.copy(alpha = 0.35f)
-                                        else -> Color.White.copy(alpha = 0.2f)
+                                        isCurrentLine -> AppTheme.colors.textPrimary
+                                        isPastLine -> AppTheme.colors.textPrimary.copy(alpha = 0.35f)
+                                        else -> AppTheme.colors.textPrimary.copy(alpha = 0.2f)
                                     },
                                     animationSpec = tween(300),
                                     label = "lyric_color_$index"
@@ -867,7 +862,7 @@ fun PlayerScreen(
                                 Text(
                                     text = state.lines.joinToString("\n") { it.text },
                                     fontSize = 16.sp,
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    color = AppTheme.colors.textPrimary.copy(alpha = 0.8f),
                                     lineHeight = 28.sp,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -882,7 +877,7 @@ fun PlayerScreen(
                             Text(
                                 text = state.lyrics,
                                 fontSize = 16.sp,
-                                color = Color.White.copy(alpha = 0.8f),
+                                color = AppTheme.colors.textPrimary.copy(alpha = 0.8f),
                                 lineHeight = 28.sp,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -898,7 +893,7 @@ fun PlayerScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 24.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF12122A))
+                                    .background(AppTheme.colors.surface)
                                     .padding(24.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -930,7 +925,7 @@ fun PlayerScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 24.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF12122A))
+                                    .background(AppTheme.colors.surface)
                                     .padding(24.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -963,9 +958,7 @@ fun PlayerScreen(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                )
+                                brush = AppTheme.brandBrush
                             ),
                             modifier = Modifier.padding(horizontal = 24.dp)
                         )
@@ -1009,13 +1002,13 @@ fun PlayerScreen(
                                     text = artist.name,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White
+                                    color = AppTheme.colors.textPrimary
                                 )
                                 if (artist.followerCount.isNotBlank() && artist.followerCount != "0") {
                                     Text(
                                         text = "${formatFollowerCountPlayer(artist.followerCount)} followers",
                                         fontSize = 12.sp,
-                                        color = Color(0xFFD1D5DB)
+                                        color = AppTheme.colors.textSecondary
                                     )
                                 }
                             }
@@ -1029,7 +1022,7 @@ fun PlayerScreen(
                                 text = "Explore more from ${artist.name}",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF9CA3AF),
+                                color = AppTheme.colors.textSecondary,
                                 modifier = Modifier.padding(horizontal = 24.dp)
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -1059,14 +1052,14 @@ fun PlayerScreen(
                                             exploreSong.title,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = Color.White,
+                                            color = AppTheme.colors.textPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
                                             exploreSong.album,
                                             fontSize = 11.sp,
-                                            color = Color(0xFF6B7280),
+                                            color = AppTheme.colors.textMuted,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -1088,9 +1081,7 @@ fun PlayerScreen(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                )
+                                brush = AppTheme.brandBrush
                             ),
                             modifier = Modifier.padding(horizontal = 24.dp)
                         )
@@ -1107,7 +1098,7 @@ fun PlayerScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(Color(0xFF0D0D2B))
+                                        .background(AppTheme.colors.surface)
                                         .padding(12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1118,9 +1109,7 @@ fun PlayerScreen(
                                             .size(52.dp)
                                             .clip(CircleShape)
                                             .background(
-                                                Brush.linearGradient(
-                                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                                )
+                                                AppTheme.brandBrush
                                             )
                                     ) {
                                         if (artist.imageUrl.isNotBlank()) {
@@ -1140,7 +1129,7 @@ fun PlayerScreen(
                                                     text = artist.name.firstOrNull()?.toString() ?: "?",
                                                     fontSize = 20.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = Color.White
+                                                    color = AppTheme.colors.textPrimary
                                                 )
                                             }
                                         }
@@ -1152,7 +1141,7 @@ fun PlayerScreen(
                                             text = artist.name,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = Color.White,
+                                            color = AppTheme.colors.textPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -1162,7 +1151,7 @@ fun PlayerScreen(
                                             else
                                                 "Featured Artist",
                                             fontSize = 11.sp,
-                                            color = Color(0xFF6B7280)
+                                            color = AppTheme.colors.textMuted
                                         )
                                     }
 
@@ -1172,12 +1161,7 @@ fun PlayerScreen(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(20.dp))
                                                 .background(
-                                                    Brush.linearGradient(
-                                                        colors = listOf(
-                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
-                                                        )
-                                                    )
+                                                    SolidColor(AppTheme.selectedFill)
                                                 )
                                                 .clickable {
                                                     navController.navigate(
@@ -1190,7 +1174,7 @@ fun PlayerScreen(
                                                 text = "Explore",
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.SemiBold,
-                                                color = Color(0xFFA78BFA)
+                                                color = MaterialTheme.colorScheme.primary
                                             )
                                         }
                                     }
@@ -1224,7 +1208,7 @@ fun PlayerScreen(
                 Text(
                     text = msg,
                     modifier = Modifier.padding(14.dp),
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
@@ -1311,9 +1295,9 @@ private fun SeekBarSection(
                 isDragging = false
             },
             colors = SliderDefaults.colors(
-                thumbColor = Color.White,
+                thumbColor = AppTheme.colors.onAccent,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
+                inactiveTrackColor = AppTheme.colors.textPrimary.copy(alpha = 0.2f)
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -1421,12 +1405,7 @@ private fun PlaybackSpeedSheet(
                         .clip(RoundedCornerShape(14.dp))
                         .background(
                             if (isSelected)
-                                Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
-                                    )
-                                )
+                                SolidColor(AppTheme.selectedFill)
                             else
                                 Brush.linearGradient(
                                     colors = listOf(

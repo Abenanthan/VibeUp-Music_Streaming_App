@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.settings
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -162,7 +164,7 @@ fun SettingsScreen(
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (viewModel.hasUnappliedChanges() && !applied)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
                                     activeColors.textMuted
                             )
@@ -204,12 +206,20 @@ private fun ThemeCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Theme preview swatch
+            // Theme preview swatch.
+            // Bordered on purpose: a light theme's swatch is white-on-white against the
+            // card once you are already using a light theme, so without an outline the
+            // preview disappears entirely.
             Box(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(colors.background)
+                    .border(
+                        width = 1.dp,
+                        color = AppTheme.colors.textPrimary.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(14.dp)
+                    )
             ) {
                 // Simulated mini UI preview
                 Column(
@@ -333,7 +343,7 @@ private fun ThemeCard(
                     Icon(
                         Icons.Default.Check,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = colors.onAccent,
                         modifier = Modifier.size(14.dp)
                     )
                 }

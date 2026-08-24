@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.ringtone
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -53,11 +55,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.core.net.toUri
 import com.vibeup.android.data.repository.RingtoneType
 import com.vibeup.android.presentation.player.LyricLine
 import com.vibeup.android.presentation.player.LyricsState
 import com.vibeup.android.presentation.player.LyricsViewModel
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.math.abs
 import kotlin.math.sin
 
@@ -83,7 +87,7 @@ fun RingtoneTrimmerScreen(
     // Auto-close a moment after success.
     LaunchedEffect(state.stage) {
         if (state.stage is RingtoneStage.Done) {
-            delay(900)
+            delay(900.milliseconds)
             navController.popBackStack()
         }
     }
@@ -103,9 +107,9 @@ fun RingtoneTrimmerScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back", tint = Color.White)
+                    Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back", tint = AppTheme.colors.textPrimary)
                 }
-                Text("Set as Ringtone", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text("Set as Ringtone", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             }
 
             val song = state.song
@@ -123,8 +127,8 @@ fun RingtoneTrimmerScreen(
                         modifier = Modifier.size(56.dp).clip(RoundedCornerShape(10.dp))
                     )
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(song.title, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(song.artist, color = Color(0xFF9CA3AF), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(song.title, color = AppTheme.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(song.artist, color = AppTheme.colors.textSecondary, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -159,7 +163,7 @@ private fun ColumnScope.CenterStatus(
             modifier = Modifier.padding(32.dp)
         ) {
             if (showSpinner) CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            Text(message, color = if (error) Color(0xFFEF4444) else Color(0xFF9CA3AF), fontSize = 15.sp)
+            Text(message, color = if (error) Color(0xFFEF4444) else AppTheme.colors.textSecondary, fontSize = 15.sp)
         }
     }
 }
@@ -177,7 +181,7 @@ private fun ColumnScope.TrimmerBody(
 
     var range by remember { mutableStateOf(0f..minOf(30f, durationSec)) }
     var selectedType by remember { mutableStateOf(RingtoneType.RINGTONE) }
-    var playheadFrac by remember { mutableStateOf(0f) }
+    var playheadFrac by remember { mutableFloatStateOf(0f) }
     var contactUri by remember { mutableStateOf<Uri?>(null) }
 
     // ── Lyrics (reuse the existing LyricsViewModel) ──
@@ -204,7 +208,7 @@ private fun ColumnScope.TrimmerBody(
                 val posMs = player.currentPosition
                 if (posMs >= (range.endInclusive * 1000).toLong()) player.seekTo((range.start * 1000).toLong())
                 playheadFrac = if (durationSec > 0f) (posMs / 1000f) / durationSec else 0f
-                delay(40)
+                delay(40.milliseconds)
             }
         } else {
             player.playWhenReady = false
@@ -246,7 +250,7 @@ private fun ColumnScope.TrimmerBody(
         } else {
             pendingApply = true
             writeSettingsLauncher.launch(
-                Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply { data = Uri.parse("package:${context.packageName}") }
+                Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply { data = "package:${context.packageName}".toUri() }
             )
         }
     }
@@ -265,9 +269,9 @@ private fun ColumnScope.TrimmerBody(
             // Readout
             item {
                 Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Start ${formatSec(range.start)}", color = Color(0xFF9CA3AF), fontSize = 13.sp)
+                    Text("Start ${formatSec(range.start)}", color = AppTheme.colors.textSecondary, fontSize = 13.sp)
                     Text("Length ${formatSec(range.endInclusive - range.start)}", color = accent, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                    Text("End ${formatSec(range.endInclusive)}", color = Color(0xFF9CA3AF), fontSize = 13.sp)
+                    Text("End ${formatSec(range.endInclusive)}", color = AppTheme.colors.textSecondary, fontSize = 13.sp)
                 }
             }
 
@@ -308,7 +312,7 @@ private fun ColumnScope.TrimmerBody(
             // Type chips
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Set as", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text("Set as", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         TypeChip("Ringtone", Icons.Default.MusicNote, selectedType == RingtoneType.RINGTONE) { selectedType = RingtoneType.RINGTONE }
                         TypeChip("Notification", Icons.Default.Notifications, selectedType == RingtoneType.NOTIFICATION) { selectedType = RingtoneType.NOTIFICATION }
@@ -326,7 +330,7 @@ private fun ColumnScope.TrimmerBody(
                     Icon(
                         if (contactUri != null) Icons.Default.CheckCircle else Icons.Default.Person,
                         contentDescription = null,
-                        tint = if (contactUri != null) Color(0xFF10B981) else Color(0xFF9CA3AF)
+                        tint = if (contactUri != null) Color(0xFF10B981) else AppTheme.colors.textSecondary
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(if (contactUri != null) "Contact selected — tap to change" else "Also set for a contact (optional)")
@@ -335,7 +339,7 @@ private fun ColumnScope.TrimmerBody(
 
             // Lyrics seek panel
             item {
-                Text("Seek by lyrics", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("Seek by lyrics", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
             when (val ls = lyricsState) {
                 is LyricsState.SyncedLoaded -> {
@@ -353,10 +357,10 @@ private fun ColumnScope.TrimmerBody(
                     }
                 }
                 is LyricsState.Loading -> item {
-                    Text("Loading lyrics…", color = Color(0xFF6B7280), fontSize = 12.sp)
+                    Text("Loading lyrics…", color = AppTheme.colors.textMuted, fontSize = 12.sp)
                 }
                 else -> item {
-                    Text("Synced lyrics not available for this song", color = Color(0xFF6B7280), fontSize = 12.sp)
+                    Text("Synced lyrics not available for this song", color = AppTheme.colors.textMuted, fontSize = 12.sp)
                 }
             }
 
@@ -390,13 +394,13 @@ private fun NudgeGroup(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
-            .border(1.dp, Color(0xFF2A2A45), RoundedCornerShape(10.dp))
+            .border(1.dp, AppTheme.colors.elevated, RoundedCornerShape(10.dp))
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         NudgeButton(Icons.Default.Remove, accent, onMinus)
-        Text(label, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = AppTheme.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         NudgeButton(Icons.Default.Add, accent, onPlus)
     }
 }
@@ -434,13 +438,13 @@ private fun LyricRow(
     ) {
         Text(
             formatSec(line.timeMs / 1000f),
-            color = if (selected) accent else Color(0xFF6B7280),
+            color = if (selected) accent else AppTheme.colors.textMuted,
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium
         )
         Text(
             line.text,
-            color = if (selected) Color.White else Color(0xFFB0B0C0),
+            color = if (selected) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
             fontSize = 13.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -450,7 +454,7 @@ private fun LyricRow(
 
 @Composable
 private fun TypeChip(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
-    val border = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF2A2A45)
+    val border = if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.elevated
     val bg = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent
     Row(
         modifier = Modifier
@@ -461,9 +465,9 @@ private fun TypeChip(label: String, icon: ImageVector, selected: Boolean, onClic
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else Color(0xFF9CA3AF), modifier = Modifier.size(16.dp))
+        Icon(icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else AppTheme.colors.textSecondary, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
-        Text(label, color = if (selected) Color.White else Color(0xFF9CA3AF), fontSize = 12.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+        Text(label, color = if (selected) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary, fontSize = 12.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
     }
 }
 
@@ -486,11 +490,12 @@ private fun WaveformTrimmer(
         }
     }
 
-    var widthPx by remember { mutableStateOf(1f) }
+    var widthPx by remember { mutableFloatStateOf(1f) }
     val rangeState = remember { mutableStateOf(range) }
     rangeState.value = range
-    var activeHandle by remember { mutableStateOf(0) }
-    val dim = Color(0xFF2E2E4D)
+    var activeHandle by remember { mutableIntStateOf(0) }
+    val dim = AppTheme.colors.elevated
+    val playheadColor = AppTheme.colors.textPrimary
 
     Canvas(
         modifier = Modifier
@@ -550,7 +555,7 @@ private fun WaveformTrimmer(
 
         if (playheadFrac > 0f) {
             val px = playheadFrac.coerceIn(0f, 1f) * w
-            drawRoundRect(color = Color.White, topLeft = Offset(px - 1.5f, 0f), size = Size(3f, h), cornerRadius = CornerRadius(2f, 2f))
+            drawRoundRect(color = playheadColor, topLeft = Offset(px - 1.5f, 0f), size = Size(3f, h), cornerRadius = CornerRadius(2f, 2f))
         }
     }
 }

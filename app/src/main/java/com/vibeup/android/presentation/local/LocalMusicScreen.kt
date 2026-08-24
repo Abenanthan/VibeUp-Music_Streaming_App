@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.local
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -61,7 +63,7 @@ fun LocalMusicScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1A1A2E), MaterialTheme.colorScheme.background)
+                    colors = listOf(AppTheme.colors.surface, MaterialTheme.colorScheme.background)
                 )
             )
     ) {
@@ -99,7 +101,7 @@ fun LocalMusicScreen(
                             text = "Access Local Music",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = AppTheme.colors.textPrimary
                         )
                         Text(
                             text = "Allow VibeUp to access your\nlocal music files",
@@ -118,7 +120,7 @@ fun LocalMusicScreen(
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.Black
+                                contentColor = AppTheme.colors.onAccent
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -164,8 +166,8 @@ fun LocalMusicScreen(
                         unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = AppTheme.colors.textPrimary,
+                        unfocusedTextColor = AppTheme.colors.textPrimary,
                         cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     keyboardOptions = KeyboardOptions(
@@ -277,7 +279,7 @@ fun LocalSongItem(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF2A2A2A)),
+                    .background(AppTheme.colors.card),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -303,7 +305,7 @@ fun LocalSongItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = song.title,
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,

@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.library
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -86,7 +88,7 @@ fun PlaylistDetailScreen(
             title = {
                 Text(
                     "Rename Playlist",
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -99,8 +101,8 @@ fun PlaylistDetailScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = AppTheme.colors.textPrimary,
+                        unfocusedTextColor = AppTheme.colors.textPrimary,
                         cursorColor = MaterialTheme.colorScheme.primary,
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -169,7 +171,7 @@ fun PlaylistDetailScreen(
                         Icon(
                             Icons.Default.ArrowBackIosNew,
                             contentDescription = "Back",
-                            tint = Color.White,
+                            tint = AppTheme.colors.textPrimary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -178,7 +180,7 @@ fun PlaylistDetailScreen(
                             text = playlist?.name ?: "Playlist",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -201,7 +203,7 @@ fun PlaylistDetailScreen(
                             Icon(
                                 Icons.Default.MoreVert,
                                 contentDescription = "Options",
-                                tint = Color.White,
+                                tint = AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -214,7 +216,7 @@ fun PlaylistDetailScreen(
                                 text = {
                                     Text(
                                         "✏️ Rename Playlist",
-                                        color = Color.White,
+                                        color = AppTheme.colors.textPrimary,
                                         fontSize = 14.sp
                                     )
                                 },
@@ -361,9 +363,7 @@ fun PlaylistDetailScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                    ),
+                                    AppTheme.brandBrush,
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -377,7 +377,7 @@ fun PlaylistDetailScreen(
                                 else 
                                     Icons.Default.PlayArrow,
                                 contentDescription = "Play",
-                                tint = Color.White,
+                                tint = AppTheme.colors.textPrimary,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -490,8 +490,8 @@ fun PlaylistDetailScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         unfocusedBorderColor = MaterialTheme.colorScheme.surface,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = AppTheme.colors.textPrimary,
+                        unfocusedTextColor = AppTheme.colors.textPrimary,
                         cursorColor = MaterialTheme.colorScheme.primary,
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -519,12 +519,7 @@ fun PlaylistDetailScreen(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(
                                     if (sortOrder == order)
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
-                                            )
-                                        )
+                                        AppTheme.brandBrush
                                     else
                                         Brush.linearGradient(
                                             colors = listOf(
@@ -544,7 +539,7 @@ fun PlaylistDetailScreen(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (sortOrder == order)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -696,7 +691,7 @@ fun PlaylistSongItem(
                 text = song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (isCurrent) MaterialTheme.colorScheme.primary else Color.White,
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -733,7 +728,7 @@ fun PlaylistSongItem(
                     text = {
                         Text(
                             "▶️ Play",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
@@ -743,21 +738,21 @@ fun PlaylistSongItem(
                     text = {
                         Text(
                             "💚 Like Song",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
                     onClick = { showMenu = false; onLike() }
                 )
                 
-                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, thickness = 0.5.dp)
+                HorizontalDivider(color = AppTheme.divider, thickness = 0.5.dp)
 
                 // Download section
                 DropdownMenuItem(
                     text = {
                         Text(
                             "📥 Download",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
@@ -784,21 +779,21 @@ fun PlaylistSongItem(
                 }
 
                 HorizontalDivider(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = AppTheme.divider,
                     thickness = 0.5.dp
                 )
                 DropdownMenuItem(
                     text = {
                         Text(
                             "🔔 Set as Ringtone",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
                     onClick = { showMenu = false; ringtoneLauncher(song) }
                 )
                 HorizontalDivider(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = AppTheme.divider,
                     thickness = 0.5.dp
                 )
                 DropdownMenuItem(

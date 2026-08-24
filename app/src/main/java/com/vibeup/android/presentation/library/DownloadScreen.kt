@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.library
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -72,12 +74,12 @@ fun DownloadsScreen(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFF12122A), CircleShape)
+                        .background(AppTheme.colors.surface, CircleShape)
                 ) {
                     Icon(
                         Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = Color.White,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -87,15 +89,13 @@ fun DownloadsScreen(
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         style = androidx.compose.ui.text.TextStyle(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                            )
+                            brush = AppTheme.brandBrush
                         )
                     )
                     Text(
                         "${downloads.size} songs • $totalSize",
                         fontSize = 11.sp,
-                        color = Color(0xFF4B5563)
+                        color = AppTheme.colors.textMuted
                     )
                 }
             }
@@ -112,18 +112,18 @@ fun DownloadsScreen(
                         Icon(
                             Icons.Default.Download,
                             contentDescription = null,
-                            tint = Color(0xFF2A2A4A),
+                            tint = AppTheme.colors.elevated,
                             modifier = Modifier.size(80.dp)
                         )
                         Text(
                             "No downloads yet!",
-                            color = Color(0xFF4B5563),
+                            color = AppTheme.colors.textMuted,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             "Download songs to play offline",
-                            color = Color(0xFF374151),
+                            color = AppTheme.colors.textMuted,
                             fontSize = 13.sp
                         )
                     }
@@ -175,7 +175,7 @@ fun DownloadsScreen(
                 Text(
                     text = it,
                     modifier = Modifier.padding(14.dp),
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp
                 )
@@ -203,7 +203,7 @@ fun DownloadedSongItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(AppTheme.colors.surface)
             .clickable { onPlay() }
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -227,14 +227,14 @@ fun DownloadedSongItem(
                 text = song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFF3F4F6),
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = song.artist,
                 fontSize = 11.sp,
-                color = Color(0xFF6B7280),
+                color = AppTheme.colors.textMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -259,7 +259,7 @@ fun DownloadedSongItem(
                 Text(
                     text = formatSize(song.fileSize),
                     fontSize = 10.sp,
-                    color = Color(0xFF4B5563)
+                    color = AppTheme.colors.textMuted
                 )
             }
 
@@ -273,7 +273,7 @@ fun DownloadedSongItem(
                         .height(3.dp)
                         .clip(RoundedCornerShape(2.dp)),
                     color = MaterialTheme.colorScheme.primary,
-                    trackColor = Color(0xFF2A2A4A)
+                    trackColor = AppTheme.colors.elevated
                 )
             }
         }
@@ -295,34 +295,34 @@ fun DownloadedSongItem(
                 Icon(
                     Icons.Default.MoreVert,
                     contentDescription = null,
-                    tint = Color(0xFF6B7280),
+                    tint = AppTheme.colors.textMuted,
                     modifier = Modifier.size(16.dp)
                 )
             }
             DropdownMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(Color(0xFF1C1C3A))
+                modifier = Modifier.background(AppTheme.colors.card)
             ) {
                 DropdownMenuItem(
                     text = {
                         Text(
                             "▶️ Play",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
                     onClick = { showMenu = false; onPlay() }
                 )
                 HorizontalDivider(
-                    color = Color(0xFF2A2A4A),
+                    color = AppTheme.divider,
                     thickness = 0.5.dp
                 )
                 DropdownMenuItem(
                     text = {
                         Text(
                             "🔔 Set as Ringtone",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
@@ -343,7 +343,7 @@ fun DownloadedSongItem(
                     }
                 )
                 HorizontalDivider(
-                    color = Color(0xFF2A2A4A),
+                    color = AppTheme.divider,
                     thickness = 0.5.dp
                 )
                 DropdownMenuItem(

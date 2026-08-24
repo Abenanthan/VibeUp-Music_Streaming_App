@@ -7,4 +7,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Matches DeepDark (0xFF0A0A1A) in ui/theme/Color.kt so the system
+         bars blend into the app background instead of standing out. -->
+    <color name="vibe_background">#FF0A0A1A</color>
 </resources>

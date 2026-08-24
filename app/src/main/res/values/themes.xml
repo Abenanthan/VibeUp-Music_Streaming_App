@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+      This is the PRE-COMPOSE default only. Once VibeUpTheme composes it takes over
+      the system bars at runtime and follows the user's selected theme (including the
+      two light ones). A dark default is used here because 7 of the 9 themes — and the
+      default theme — are dark; a light-theme user sees one dark frame at cold start.
+
+      windowLightStatusBar / windowLightNavigationBar = false means "this bar has
+      a dark background, so draw its icons light". windowBackground is set to the
+      same dark colour to avoid a white flash during launch.
+    -->
     <style name="Theme.VibeUp"
-        parent="android:Theme.Material.Light.NoActionBar" />
+        parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/vibe_background</item>
+        <item name="android:statusBarColor">@color/vibe_background</item>
+        <item name="android:navigationBarColor">@color/vibe_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
 
     <style name="Theme.VibeUp.SplashScreen"
         parent="Theme.SplashScreen">

@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.player
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -75,12 +77,12 @@ fun QueueScreen(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFF12122A), CircleShape)
+                        .background(AppTheme.colors.surface, CircleShape)
                 ) {
                     Icon(
                         Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = Color.White,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -90,13 +92,13 @@ fun QueueScreen(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         style = androidx.compose.ui.text.TextStyle(
-                            brush = Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
+                            brush = AppTheme.brandBrush
                         )
                     )
                     Text(
                         "${localQueue.size} songs in queue",
                         fontSize = 11.sp,
-                        color = Color(0xFF6B7280)
+                        color = AppTheme.colors.textMuted
                     )
                 }
             }
@@ -107,7 +109,7 @@ fun QueueScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF12122A))
+                    .background(AppTheme.colors.surface)
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -115,13 +117,13 @@ fun QueueScreen(
                 Icon(
                     Icons.Default.Radio,
                     contentDescription = null,
-                    tint = if (autoplayEnabled) MaterialTheme.colorScheme.primary else Color(0xFF6B7280)
+                    tint = if (autoplayEnabled) MaterialTheme.colorScheme.primary else AppTheme.colors.textMuted
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Autoplay radio", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Autoplay radio", color = AppTheme.colors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Text(
                         "Keep playing similar songs when the queue ends",
-                        color = Color(0xFF6B7280),
+                        color = AppTheme.colors.textMuted,
                         fontSize = 11.sp
                     )
                 }
@@ -139,11 +141,11 @@ fun QueueScreen(
                         Icon(
                             Icons.Default.MusicNote,
                             contentDescription = null,
-                            tint = Color(0xFF374151),
+                            tint = AppTheme.colors.textMuted,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(Modifier.height(8.dp))
-                        Text("Queue is empty", color = Color(0xFF6B7280), fontSize = 13.sp)
+                        Text("Queue is empty", color = AppTheme.colors.textMuted, fontSize = 13.sp)
                     }
                 }
                 return@Column
@@ -243,8 +245,8 @@ private fun QueueRow(
             .clip(RoundedCornerShape(14.dp))
             .background(
                 if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                else if (isDragging) Color(0xFF1C1C3A)
-                else Color(0xFF12122A)
+                else if (isDragging) AppTheme.colors.card
+                else AppTheme.colors.surface
             )
     ) {
         Row(
@@ -303,7 +305,7 @@ private fun QueueRow(
                     Icon(
                         Icons.Default.DragHandle,
                         contentDescription = "Drag to reorder",
-                        tint = Color(0xFF4B5563),
+                        tint = AppTheme.colors.textMuted,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -322,14 +324,14 @@ private fun QueueRow(
                     song.title,
                     fontSize = 13.sp,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isCurrent) MaterialTheme.colorScheme.primary else Color.White,
+                    color = if (isCurrent) MaterialTheme.colorScheme.primary else AppTheme.colors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     song.artist,
                     fontSize = 11.sp,
-                    color = Color(0xFF6B7280),
+                    color = AppTheme.colors.textMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -347,7 +349,7 @@ private fun QueueRow(
                     Icon(
                         Icons.Default.Close,
                         contentDescription = "Remove from queue",
-                        tint = Color(0xFF4B5563),
+                        tint = AppTheme.colors.textMuted,
                         modifier = Modifier.size(16.dp)
                     )
                 }

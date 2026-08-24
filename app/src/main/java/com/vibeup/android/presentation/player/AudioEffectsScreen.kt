@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.player
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,12 +100,12 @@ fun AudioEffectsScreen(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFF12122A), CircleShape)
+                        .background(AppTheme.colors.surface, CircleShape)
                 ) {
                     Icon(
                         Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = Color.White,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -112,15 +115,13 @@ fun AudioEffectsScreen(
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         style = androidx.compose.ui.text.TextStyle(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                            )
+                            brush = AppTheme.brandBrush
                         )
                     )
                     Text(
                         "Customize your sound",
                         fontSize = 11.sp,
-                        color = Color(0xFF4B5563)
+                        color = AppTheme.colors.textMuted
                     )
                 }
             }
@@ -133,8 +134,8 @@ fun AudioEffectsScreen(
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                Color(0xFF1A1A3A),
-                                Color(0xFF0D1B3A)
+                                AppTheme.colors.card,
+                                AppTheme.colors.surface
                             )
                         )
                     )
@@ -150,12 +151,12 @@ fun AudioEffectsScreen(
                             "🎛️ Device Audio Engine",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF3F4F6)
+                            color = AppTheme.colors.textPrimary
                         )
                         Text(
                             "Deepfield · Dolby · Hi-Res · Dirac",
                             fontSize = 11.sp,
-                            color = Color(0xFF4B5563)
+                            color = AppTheme.colors.textMuted
                         )
                     }
                     Button(
@@ -167,15 +168,13 @@ fun AudioEffectsScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .background(
-                                Brush.linearGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                )
+                                AppTheme.brandBrush
                             )
                     ) {
                         Text(
                             "Open",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
@@ -205,7 +204,7 @@ fun AudioEffectsScreen(
                 Text(
                     deviceHint,
                     fontSize = 11.sp,
-                    color = Color(0xFF6366F1),
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 )
 
@@ -215,7 +214,7 @@ fun AudioEffectsScreen(
                     "Note: Device audio engine and VibeUp EQ work together. " +
                             "Device engine processes output after VibeUp's effects.",
                     fontSize = 10.sp,
-                    color = Color(0xFF374151),
+                    color = AppTheme.colors.textMuted,
                     lineHeight = 14.sp
                 )
             }
@@ -229,12 +228,7 @@ fun AudioEffectsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
-                    )
-                )
+                        SolidColor(AppTheme.selectedFill)
             )
             .clickable {
                 navController.navigate(Screen.SoftwareEq.route)
@@ -247,9 +241,7 @@ fun AudioEffectsScreen(
             modifier = Modifier
                 .size(44.dp)
                 .background(
-                    Brush.linearGradient(
-                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                    ),
+                    AppTheme.brandBrush,
                     RoundedCornerShape(12.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -257,7 +249,7 @@ fun AudioEffectsScreen(
             Icon(
                 Icons.Default.Equalizer,
                 contentDescription = null,
-                tint = Color.White,
+                tint = AppTheme.colors.textPrimary,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -266,7 +258,7 @@ fun AudioEffectsScreen(
                 "🎚️ Software Equalizer",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = AppTheme.colors.textPrimary
             )
             Text(
                 "32-band · AutoEq import · All devices",
@@ -294,7 +286,7 @@ fun AudioEffectsScreen(
                 Text(
                     "Presets",
                     fontSize = 12.sp,
-                    color = Color(0xFF6B7280),
+                    color = AppTheme.colors.textMuted,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyRow(
@@ -308,17 +300,12 @@ fun AudioEffectsScreen(
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(
                                     if (eqPreset == index)
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary,
-                                                MaterialTheme.colorScheme.tertiary
-                                            )
-                                        )
+                                        AppTheme.brandBrush
                                     else
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                Color(0xFF1C1C3A),
-                                                Color(0xFF1C1C3A)
+                                                AppTheme.colors.card,
+                                                AppTheme.colors.card
                                             )
                                         )
                                 )
@@ -330,9 +317,9 @@ fun AudioEffectsScreen(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (eqPreset == index)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
-                                    Color(0xFF6B7280)
+                                    AppTheme.colors.textMuted
                             )
                         }
                     }
@@ -349,7 +336,7 @@ fun AudioEffectsScreen(
                                 Text(
                                     freq,
                                     fontSize = 11.sp,
-                                    color = Color(0xFF9CA3AF)
+                                    color = AppTheme.colors.textSecondary
                                 )
                                 Text(
                                     "${eqBands[index] / 100} dB",
@@ -366,7 +353,7 @@ fun AudioEffectsScreen(
                                 colors = SliderDefaults.colors(
                                     thumbColor = MaterialTheme.colorScheme.primary,
                                     activeTrackColor = MaterialTheme.colorScheme.primary,
-                                    inactiveTrackColor = Color(0xFF2A2A4A)
+                                    inactiveTrackColor = AppTheme.colors.elevated
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -388,7 +375,7 @@ fun AudioEffectsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Strength", fontSize = 12.sp, color = Color(0xFF6B7280))
+                    Text("Strength", fontSize = 12.sp, color = AppTheme.colors.textMuted)
                     Text(
                         "${bassStrength / 10}%",
                         fontSize = 12.sp,
@@ -403,7 +390,7 @@ fun AudioEffectsScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.primary,
                         activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = Color(0xFF2A2A4A)
+                        inactiveTrackColor = AppTheme.colors.elevated
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -422,7 +409,7 @@ fun AudioEffectsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Strength", fontSize = 12.sp, color = Color(0xFF6B7280))
+                    Text("Strength", fontSize = 12.sp, color = AppTheme.colors.textMuted)
                     Text(
                         "${virtStrength / 10}%",
                         fontSize = 12.sp,
@@ -437,7 +424,7 @@ fun AudioEffectsScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.tertiary,
                         activeTrackColor = MaterialTheme.colorScheme.tertiary,
-                        inactiveTrackColor = Color(0xFF2A2A4A)
+                        inactiveTrackColor = AppTheme.colors.elevated
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -455,7 +442,7 @@ fun AudioEffectsScreen(
                 Text(
                     "Environment",
                     fontSize = 12.sp,
-                    color = Color(0xFF6B7280),
+                    color = AppTheme.colors.textMuted,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyRow(
@@ -476,8 +463,8 @@ fun AudioEffectsScreen(
                                     else
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                Color(0xFF1C1C3A),
-                                                Color(0xFF1C1C3A)
+                                                AppTheme.colors.card,
+                                                AppTheme.colors.card
                                             )
                                         )
                                 )
@@ -489,9 +476,9 @@ fun AudioEffectsScreen(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (reverbPreset == value)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
-                                    Color(0xFF6B7280)
+                                    AppTheme.colors.textMuted
                             )
                         }
                     }
@@ -511,7 +498,7 @@ fun AudioEffectsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Gain", fontSize = 12.sp, color = Color(0xFF6B7280))
+                    Text("Gain", fontSize = 12.sp, color = AppTheme.colors.textMuted)
                     Text(
                         "+${loudnessGain / 100} dB",
                         fontSize = 12.sp,
@@ -526,7 +513,7 @@ fun AudioEffectsScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = Color(0xFF10B981),
                         activeTrackColor = Color(0xFF10B981),
-                        inactiveTrackColor = Color(0xFF2A2A4A)
+                        inactiveTrackColor = AppTheme.colors.elevated
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -552,7 +539,7 @@ fun AudioEffectsScreen(
                     Text(
                         "Duration",
                         fontSize = 12.sp,
-                        color = Color(0xFF6B7280)
+                        color = AppTheme.colors.textMuted
                     )
                     Text(
                         "$crossfadeDuration seconds",
@@ -571,7 +558,7 @@ fun AudioEffectsScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.primary,
                         activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = Color(0xFF2A2A4A)
+                        inactiveTrackColor = AppTheme.colors.elevated
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -589,17 +576,12 @@ fun AudioEffectsScreen(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     if (crossfadeDuration == seconds)
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary,
-                                                MaterialTheme.colorScheme.tertiary
-                                            )
-                                        )
+                                        AppTheme.brandBrush
                                     else
                                         Brush.linearGradient(
                                             colors = listOf(
-                                                Color(0xFF1C1C3A),
-                                                Color(0xFF1C1C3A)
+                                                AppTheme.colors.card,
+                                                AppTheme.colors.card
                                             )
                                         )
                                 )
@@ -613,9 +595,9 @@ fun AudioEffectsScreen(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (crossfadeDuration == seconds)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
-                                    Color(0xFF6B7280)
+                                    AppTheme.colors.textMuted
                             )
                         }
                     }
@@ -626,7 +608,7 @@ fun AudioEffectsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF0A1628))
+                        .background(AppTheme.colors.card)
                         .padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -635,7 +617,7 @@ fun AudioEffectsScreen(
                         "Songs fade out and overlap smoothly. " +
                                 "Works best with 5-7 seconds.",
                         fontSize = 11.sp,
-                        color = Color(0xFF4B5563),
+                        color = AppTheme.colors.textMuted,
                         lineHeight = 16.sp
                     )
                 }
@@ -703,7 +685,7 @@ fun EffectCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF0D0D2B))
+            .background(AppTheme.colors.surface)
             .padding(16.dp)
     ) {
         Row(
@@ -718,22 +700,22 @@ fun EffectCard(
                     title,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF3F4F6)
+                    color = AppTheme.colors.textPrimary
                 )
                 Text(
                     subtitle,
                     fontSize = 11.sp,
-                    color = Color(0xFF4B5563)
+                    color = AppTheme.colors.textMuted
                 )
             }
             Switch(
                 checked = enabled,
                 onCheckedChange = { onToggle() },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
+                    checkedThumbColor = AppTheme.colors.onAccent,
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    uncheckedThumbColor = Color(0xFF6B7280),
-                    uncheckedTrackColor = Color(0xFF1C1C3A)
+                    uncheckedThumbColor = AppTheme.colors.textMuted,
+                    uncheckedTrackColor = AppTheme.colors.card
                 )
             )
         }

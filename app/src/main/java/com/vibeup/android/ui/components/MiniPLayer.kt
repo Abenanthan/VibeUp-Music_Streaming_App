@@ -1,5 +1,7 @@
 package com.vibeup.android.ui.components
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,13 +47,8 @@ fun MiniPlayer(
     onPrevious: () -> Unit,
     onExpand: () -> Unit,
 ) {
-    val trackColor = Color.White.copy(alpha = 0.1f)
-    val progressBrush = Brush.horizontalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.tertiary
-        )
-    )
+    val trackColor = AppTheme.colors.textPrimary.copy(alpha = 0.1f)
+    val progressBrush = AppTheme.brandBrush
 
     Column(
         modifier = Modifier

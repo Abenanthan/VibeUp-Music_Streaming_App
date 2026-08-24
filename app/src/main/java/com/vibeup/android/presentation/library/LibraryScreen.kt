@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.library
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,7 +70,7 @@ fun LibraryScreen(
             title = {
                 Text(
                     "New Playlist",
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -84,8 +87,8 @@ fun LibraryScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary,
                             cursorColor = MaterialTheme.colorScheme.primary,
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -106,8 +109,8 @@ fun LibraryScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary,
                             cursorColor = MaterialTheme.colorScheme.primary,
                             focusedContainerColor = MaterialTheme.colorScheme.surface,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -153,7 +156,7 @@ fun LibraryScreen(
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = {
-                Text("Logout", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Logout", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
             },
             text = {
                 Text(
@@ -216,12 +219,7 @@ fun LibraryScreen(
                         fontSize = 26.sp,
                         fontWeight = FontWeight.ExtraBold,
                         style = androidx.compose.ui.text.TextStyle(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.tertiary
-                                )
-                            )
+                            brush = AppTheme.brandBrush
                         )
                     )
                     IconButton(onClick = { showLogoutDialog = true }) {
@@ -252,12 +250,7 @@ fun LibraryScreen(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     if (selectedTab == index)
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
-                                            )
-                                        )
+                                        AppTheme.brandBrush
                                     else
                                         Brush.linearGradient(
                                             colors = listOf(
@@ -274,7 +267,7 @@ fun LibraryScreen(
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (selectedTab == index)
-                                    Color.White
+                                    AppTheme.colors.onAccent
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -299,18 +292,13 @@ fun LibraryScreen(
                                 "🎵 Your Playlists",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = AppTheme.colors.textPrimary
                             )
                             Row(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
                                     .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary,
-                                                MaterialTheme.colorScheme.tertiary
-                                            )
-                                        )
+                                        AppTheme.brandBrush
                                     )
                                     .clickable { showCreateDialog = true }
                                     .padding(
@@ -323,13 +311,13 @@ fun LibraryScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = null,
-                                    tint = Color.White,
+                                    tint = AppTheme.colors.textPrimary,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
                                     "New Playlist",
                                     fontSize = 11.sp,
-                                    color = Color.White,
+                                    color = AppTheme.colors.textPrimary,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -378,12 +366,7 @@ fun LibraryScreen(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                        )
-                                    )
+                                    SolidColor(AppTheme.selectedFill)
                                 )
                                 .clickable {
                                     navController.navigate(Screen.Downloads.route)
@@ -397,16 +380,14 @@ fun LibraryScreen(
                                     .size(52.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.primary)
-                                        )
+                                        AppTheme.brandBrush
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Download,
                                     contentDescription = null,
-                                    tint = Color.White,
+                                    tint = AppTheme.colors.textPrimary,
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -415,7 +396,7 @@ fun LibraryScreen(
                                     "Downloads",
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = AppTheme.colors.textPrimary
                                 )
                                 Text(
                                     "Play music offline",
@@ -441,7 +422,7 @@ fun LibraryScreen(
                             "💚 Liked Songs",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -486,7 +467,7 @@ fun LibraryScreen(
                             "🕐 Recently Played",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
@@ -538,7 +519,7 @@ fun LibraryScreen(
                 Text(
                     text = it,
                     modifier = Modifier.padding(14.dp),
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp
                 )
@@ -584,7 +565,7 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
             Icon(
                 Icons.Default.Favorite,
                 contentDescription = null,
-                tint = Color.White,
+                tint = AppTheme.colors.textPrimary,
                 modifier = Modifier.size(26.dp)
             )
         }
@@ -593,7 +574,7 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
                 "Liked Songs",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = AppTheme.colors.textPrimary
             )
             Text(
                 "$count songs",
@@ -606,16 +587,14 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
                 .size(34.dp)
                 .clip(CircleShape)
                 .background(
-                    Brush.linearGradient(
-                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                    )
+                    AppTheme.brandBrush
                 ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.PlayArrow,
                 contentDescription = null,
-                tint = Color.White,
+                tint = AppTheme.colors.textPrimary,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -647,7 +626,7 @@ fun PlaylistCard(
             title = {
                 Text(
                     "Rename Playlist",
-                    color = Color.White,
+                    color = AppTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -660,8 +639,8 @@ fun PlaylistCard(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
+                        focusedTextColor = AppTheme.colors.textPrimary,
+                        unfocusedTextColor = AppTheme.colors.textPrimary,
                         cursorColor = MaterialTheme.colorScheme.primary,
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -724,7 +703,7 @@ fun PlaylistCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("♪", fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f))
+                        Text("♪", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
                     }
                     Box(
                         modifier = Modifier
@@ -737,7 +716,7 @@ fun PlaylistCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("♩", fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f))
+                        Text("♩", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -752,7 +731,7 @@ fun PlaylistCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("♫", fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f))
+                        Text("♫", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
                     }
                     Box(
                         modifier = Modifier
@@ -765,7 +744,7 @@ fun PlaylistCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("♬", fontSize = 10.sp, color = Color.White.copy(alpha = 0.7f))
+                        Text("♬", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
                     }
                 }
             }
@@ -776,7 +755,7 @@ fun PlaylistCard(
                 text = playlist.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -813,7 +792,7 @@ fun PlaylistCard(
                     text = {
                         Text(
                             "✏️ Rename",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
@@ -869,16 +848,14 @@ fun EmptyPlaylistCard(onClick: () -> Unit) {
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(
-                        Brush.linearGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                        )
+                        AppTheme.brandBrush
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = AppTheme.colors.textPrimary,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -926,7 +903,7 @@ fun LibrarySongItem(
                 text = song.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = AppTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -959,7 +936,7 @@ fun LibrarySongItem(
                     text = {
                         Text(
                             "Play",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },
@@ -969,7 +946,7 @@ fun LibrarySongItem(
                     text = {
                         Text(
                             "Set as Ringtone",
-                            color = Color.White,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 14.sp
                         )
                     },

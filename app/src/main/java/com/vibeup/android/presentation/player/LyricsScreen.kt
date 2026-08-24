@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.player
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -69,7 +71,12 @@ fun LyricsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Background album art blur effect
+        // Background album art wash.
+        // The scrim must follow the theme: it used to be a fixed 80% BLACK overlay,
+        // which meant a light theme drew near-black lyric text on a black rectangle —
+        // the whole screen was unreadable. Tinting with `background` keeps the art
+        // subtly visible while guaranteeing contrast against textPrimary either way.
+        val scrim = AppTheme.colors.background
         currentSong?.let { song ->
             AsyncImage(
                 model = song.imageUrl,
@@ -77,20 +84,18 @@ fun LyricsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .then(
-                        Modifier.background(
-                            Color.Black.copy(alpha = 0.8f)
-                        )
+                        Modifier.background(scrim.copy(alpha = 0.8f))
                     ),
                 contentScale = ContentScale.Crop,
                 alpha = 0.15f
             )
         }
 
-        // Dark overlay
+        // Theme-aware overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.8f))
+                .background(scrim.copy(alpha = 0.8f))
         )
 
         Column(
@@ -109,14 +114,14 @@ fun LyricsScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .background(
-                            Color.White.copy(alpha = 0.1f),
+                            AppTheme.colors.textPrimary.copy(alpha = 0.1f),
                             CircleShape
                         )
                 ) {
                     Icon(
                         Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back",
-                        tint = Color.White,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -126,13 +131,13 @@ fun LyricsScreen(
                         text = currentSong?.title ?: "Lyrics",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = AppTheme.colors.textPrimary,
                         maxLines = 1
                     )
                     Text(
                         text = currentSong?.artist ?: "",
                         fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = AppTheme.colors.textPrimary.copy(alpha = 0.6f),
                         maxLines = 1
                     )
                 }
@@ -142,7 +147,7 @@ fun LyricsScreen(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.1f))
+                            .background(AppTheme.colors.textPrimary.copy(alpha = 0.1f))
                             .padding(horizontal = 2.dp, vertical = 2.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
@@ -152,12 +157,7 @@ fun LyricsScreen(
                                     .clip(RoundedCornerShape(18.dp))
                                     .background(
                                         if (showSynced == sync)
-                                            Brush.linearGradient(
-                                                colors = listOf(
-                                                    MaterialTheme.colorScheme.primary,
-                                                    MaterialTheme.colorScheme.tertiary
-                                                )
-                                            )
+                                            AppTheme.brandBrush
                                         else
                                             Brush.linearGradient(
                                                 colors = listOf(
@@ -180,7 +180,7 @@ fun LyricsScreen(
                                     label,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
+                                    color = AppTheme.colors.textPrimary
                                 )
                             }
                         }
@@ -209,7 +209,7 @@ fun LyricsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 "Fetching lyrics...",
-                                color = Color.White.copy(alpha = 0.6f),
+                                color = AppTheme.colors.textPrimary.copy(alpha = 0.6f),
                                 fontSize = 14.sp
                             )
                         }
@@ -232,9 +232,9 @@ fun LyricsScreen(
 
                                     val textColor by animateColorAsState(
                                         targetValue = when {
-                                            isCurrentLine -> Color.White
-                                            isPastLine -> Color.White.copy(alpha = 0.4f)
-                                            else -> Color.White.copy(alpha = 0.25f)
+                                            isCurrentLine -> AppTheme.colors.textPrimary
+                                            isPastLine -> AppTheme.colors.textPrimary.copy(alpha = 0.4f)
+                                            else -> AppTheme.colors.textPrimary.copy(alpha = 0.25f)
                                         },
                                         animationSpec = tween(300),
                                         label = "lyric_color"
@@ -260,7 +260,7 @@ fun LyricsScreen(
                                             .fillMaxWidth()
                                             .then(
                                                 if (isCurrentLine) Modifier.background(
-                                                    Color.White.copy(alpha = 0.05f),
+                                                    AppTheme.colors.textPrimary.copy(alpha = 0.05f),
                                                     RoundedCornerShape(8.dp)
                                                 ).padding(
                                                     horizontal = 8.dp,
@@ -286,7 +286,7 @@ fun LyricsScreen(
                                     Text(
                                         text = state.lines.joinToString("\n") { it.text },
                                         fontSize = 16.sp,
-                                        color = Color.White.copy(alpha = 0.85f),
+                                        color = AppTheme.colors.textPrimary.copy(alpha = 0.85f),
                                         lineHeight = 28.sp,
                                         textAlign = TextAlign.Start
                                     )
@@ -306,7 +306,7 @@ fun LyricsScreen(
                                 Text(
                                     text = state.lyrics,
                                     fontSize = 16.sp,
-                                    color = Color.White.copy(alpha = 0.85f),
+                                    color = AppTheme.colors.textPrimary.copy(alpha = 0.85f),
                                     lineHeight = 28.sp,
                                     textAlign = TextAlign.Start
                                 )
@@ -323,13 +323,13 @@ fun LyricsScreen(
                             Text("🎸", fontSize = 56.sp)
                             Text(
                                 "Instrumental Track",
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 "No lyrics for this song",
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = AppTheme.colors.textPrimary.copy(alpha = 0.5f),
                                 fontSize = 13.sp
                             )
                         }
@@ -344,18 +344,18 @@ fun LyricsScreen(
                             Icon(
                                 Icons.Default.MusicNote,
                                 contentDescription = null,
-                                tint = Color.White.copy(alpha = 0.3f),
+                                tint = AppTheme.colors.textPrimary.copy(alpha = 0.3f),
                                 modifier = Modifier.size(64.dp)
                             )
                             Text(
                                 "Lyrics Not Found",
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 "Lyrics unavailable for\n${currentSong?.title}",
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = AppTheme.colors.textPrimary.copy(alpha = 0.5f),
                                 fontSize = 13.sp,
                                 textAlign = TextAlign.Center
                             )
@@ -371,7 +371,7 @@ fun LyricsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 "Failed to load lyrics",
-                                color = Color.White,
+                                color = AppTheme.colors.textPrimary,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )

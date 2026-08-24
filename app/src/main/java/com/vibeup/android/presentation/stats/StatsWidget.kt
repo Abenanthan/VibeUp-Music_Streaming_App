@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.stats
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,8 +35,8 @@ fun StatsWidget(
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF1A0533),
-                        Color(0xFF0A1628)
+                        AppTheme.colors.card,
+                        AppTheme.colors.surface
                     )
                 )
             )
@@ -79,16 +81,14 @@ fun StatsWidget(
                             .size(32.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                Brush.linearGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                )
+                                AppTheme.brandBrush
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.BarChart,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = AppTheme.colors.textPrimary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -96,7 +96,7 @@ fun StatsWidget(
                         "Your Vibes",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = AppTheme.colors.textPrimary
                     )
                 }
                 Row(
@@ -146,12 +146,12 @@ fun StatsWidget(
                             "No stats yet",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = AppTheme.colors.textPrimary
                         )
                         Text(
                             "Play songs to build your listening history",
                             fontSize = 11.sp,
-                            color = Color(0xFF6B7280)
+                            color = AppTheme.colors.textMuted
                         )
                     }
                 }
@@ -165,7 +165,7 @@ fun StatsWidget(
                         "%.1f".format(stats.totalHoursListened),
                         fontSize = 48.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
+                        color = AppTheme.colors.textPrimary,
                         lineHeight = 48.sp
                     )
                     Text(
@@ -179,7 +179,7 @@ fun StatsWidget(
                 Text(
                     "${stats.totalPlays} songs played · ${stats.streak} day streak 🔥",
                     fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF)
+                    color = AppTheme.colors.textSecondary
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -232,7 +232,7 @@ fun StatsWidget(
                     Text(
                         "This week",
                         fontSize = 11.sp,
-                        color = Color(0xFF6B7280),
+                        color = AppTheme.colors.textMuted,
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
                     val maxPlays = stats.weeklyPlays.maxOfOrNull { it.playCount } ?: 1
@@ -252,9 +252,7 @@ fun StatsWidget(
                                     .fillMaxHeight(frac.coerceAtLeast(0.05f))
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(
-                                        Brush.verticalGradient(
-                                            colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-                                        )
+                                        AppTheme.brandBrushVertical
                                     )
                             )
                         }
@@ -284,13 +282,13 @@ private fun StatPill(
         Text(
             label,
             fontSize = 9.sp,
-            color = Color(0xFF9CA3AF)
+            color = AppTheme.colors.textSecondary
         )
         Text(
             value,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = AppTheme.colors.textPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

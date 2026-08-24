@@ -1,5 +1,7 @@
 package com.vibeup.android.presentation.player
 
+import com.vibeup.android.ui.theme.AppTheme
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -67,7 +69,7 @@ fun SoftwareEqScreen(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text("Import AutoEq Profile", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Import AutoEq Profile", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(
@@ -83,8 +85,8 @@ fun SoftwareEqScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary,
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             cursorColor = MaterialTheme.colorScheme.primary
@@ -92,7 +94,7 @@ fun SoftwareEqScreen(
                         placeholder = {
                             Text(
                                 "Filter 1: ON PK Fc 32 Hz Gain 3.5 dB Q 0.7...",
-                                color = Color(0xFF374151),
+                                color = AppTheme.colors.textMuted,
                                 fontSize = 11.sp
                             )
                         }
@@ -125,7 +127,7 @@ fun SoftwareEqScreen(
     if (showSavePresetDialog) {
         AlertDialog(
             onDismissRequest = { showSavePresetDialog = false },
-            title = { Text("Save Custom Preset", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Save Custom Preset", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(
@@ -142,13 +144,13 @@ fun SoftwareEqScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
+                            focusedTextColor = AppTheme.colors.textPrimary,
+                            unfocusedTextColor = AppTheme.colors.textPrimary,
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             cursorColor = MaterialTheme.colorScheme.primary
                         ),
-                        placeholder = { Text("e.g. My Earphones", color = Color(0xFF374151), fontSize = 12.sp) }
+                        placeholder = { Text("e.g. My Earphones", color = AppTheme.colors.textMuted, fontSize = 12.sp) }
                     )
                 }
             },
@@ -192,7 +194,7 @@ fun SoftwareEqScreen(
                         Icon(
                             Icons.Default.ArrowBackIosNew,
                             contentDescription = "Back",
-                            tint = Color.White,
+                            tint = AppTheme.colors.textPrimary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -202,7 +204,7 @@ fun SoftwareEqScreen(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             style = androidx.compose.ui.text.TextStyle(
-                                brush = Brush.horizontalGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
+                                brush = AppTheme.brandBrush
                             )
                         )
                         Text("32-band high-precision DSP", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -211,9 +213,9 @@ fun SoftwareEqScreen(
                         checked = isEnabled,
                         onCheckedChange = { eq.toggle() },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
+                            checkedThumbColor = AppTheme.colors.onAccent,
                             checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            uncheckedThumbColor = Color(0xFF6B7280),
+                            uncheckedThumbColor = AppTheme.colors.textMuted,
                             uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     )
@@ -246,7 +248,7 @@ fun SoftwareEqScreen(
                             if (isBypassed) "Playing unprocessed (A)" else "A/B Compare",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = AppTheme.colors.textPrimary
                         )
                         Text(
                             if (isBypassed) "Tap to restore EQ early" else "Briefly hear raw audio without EQ",
@@ -255,7 +257,7 @@ fun SoftwareEqScreen(
                         )
                     }
                     if (!isEnabled) {
-                        Text("EQ off", fontSize = 10.sp, color = Color(0xFF4B5563))
+                        Text("EQ off", fontSize = 10.sp, color = AppTheme.colors.textMuted)
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -290,7 +292,7 @@ fun SoftwareEqScreen(
                                     Icon(
                                         Icons.Default.Person,
                                         contentDescription = null,
-                                        tint = if (currentPreset == preset) Color.White else MaterialTheme.colorScheme.primary,
+                                        tint = if (currentPreset == preset) AppTheme.colors.onAccent else MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(11.dp)
                                     )
                                 }
@@ -298,7 +300,7 @@ fun SoftwareEqScreen(
                                     preset,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = if (currentPreset == preset) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (currentPreset == preset) AppTheme.colors.onAccent else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -328,7 +330,7 @@ fun SoftwareEqScreen(
                     Text(
                         "Long-press a saved preset name below to delete it",
                         fontSize = 10.sp,
-                        color = Color(0xFF4B5563).copy(alpha = contentAlpha),
+                        color = AppTheme.colors.textMuted.copy(alpha = contentAlpha),
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                 }
@@ -348,7 +350,7 @@ fun SoftwareEqScreen(
                         Text(
                             "Pre-amp Gain",
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = contentAlpha),
+                            color = AppTheme.colors.textPrimary.copy(alpha = contentAlpha),
                             fontWeight = FontWeight.Medium
                         )
                         Text(
@@ -367,8 +369,8 @@ fun SoftwareEqScreen(
                             thumbColor = MaterialTheme.colorScheme.primary,
                             activeTrackColor = MaterialTheme.colorScheme.primary,
                             inactiveTrackColor = MaterialTheme.colorScheme.surface,
-                            disabledThumbColor = Color(0xFF4B5563),
-                            disabledActiveTrackColor = Color(0xFF374151),
+                            disabledThumbColor = AppTheme.colors.textMuted,
+                            disabledActiveTrackColor = AppTheme.colors.textMuted,
                             disabledInactiveTrackColor = MaterialTheme.colorScheme.surface
                         )
                     )
@@ -421,8 +423,8 @@ fun SoftwareEqScreen(
                                     thumbColor = MaterialTheme.colorScheme.primary,
                                     activeTrackColor = MaterialTheme.colorScheme.primary,
                                     inactiveTrackColor = MaterialTheme.colorScheme.surface,
-                                    disabledThumbColor = Color(0xFF4B5563),
-                                    disabledActiveTrackColor = Color(0xFF374151),
+                                    disabledThumbColor = AppTheme.colors.textMuted,
+                                    disabledActiveTrackColor = AppTheme.colors.textMuted,
                                     disabledInactiveTrackColor = MaterialTheme.colorScheme.surface
                                 ),
                                 modifier = Modifier.weight(1f).height(28.dp)
@@ -488,6 +490,10 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .alpha(contentAlpha)
     ) {
+        // Hoisted: AppTheme.colors is a @Composable getter and cannot be read
+        // inside Canvas's DrawScope lambda.
+        val zeroLineColor = AppTheme.colors.textPrimary.copy(alpha = 0.08f)
+        val flatDotColor = AppTheme.colors.textPrimary.copy(alpha = 0.25f)
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
             val height = size.height
@@ -496,7 +502,7 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
 
             // Zero-line
             drawLine(
-                color = Color.White.copy(alpha = 0.08f),
+                color = zeroLineColor,
                 start = Offset(0f, midY),
                 end = Offset(width, midY),
                 strokeWidth = 1f,
@@ -558,7 +564,7 @@ private fun EqCurveVisualizer(bands: List<com.vibeup.android.service.audio.Softw
             points.forEachIndexed { i, point ->
                 val gain = bands[i].gainDb
                 drawCircle(
-                    color = if (gain == 0.0) Color.White.copy(alpha = 0.25f) else primaryColor,
+                    color = if (gain == 0.0) flatDotColor else primaryColor,
                     radius = if (gain == 0.0) 1.5f else 2.5f,
                     center = point
                 )
