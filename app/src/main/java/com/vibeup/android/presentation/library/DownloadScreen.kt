@@ -175,7 +175,7 @@ fun DownloadsScreen(
                 Text(
                     text = it,
                     modifier = Modifier.padding(14.dp),
-                    color = AppTheme.colors.textPrimary,
+                    color = AppTheme.colors.onAccent,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp
                 )

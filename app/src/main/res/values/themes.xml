@@ -6,18 +6,24 @@
       two light ones). A dark default is used here because 7 of the 9 themes — and the
       default theme — are dark; a light-theme user sees one dark frame at cold start.
 
-      windowLightStatusBar / windowLightNavigationBar = false means "this bar has
-      a dark background, so draw its icons light". windowBackground is set to the
-      same dark colour to avoid a white flash during launch.
+      windowLightStatusBar = false means "this bar has a dark background, so draw its
+      icons light". windowBackground uses the same dark colour to avoid a white flash
+      during launch.
+
+      NOTE: android:windowLightNavigationBar is API 27+ but minSdk is 26, so it lives
+      in values-v27/themes.xml rather than here. Styles do NOT merge across resource
+      qualifiers — a same-named style in values-v27 replaces this one wholesale — so
+      the shared items live in Base.Theme.VibeUp and each variant just inherits it.
     -->
-    <style name="Theme.VibeUp"
+    <style name="Base.Theme.VibeUp"
         parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/vibe_background</item>
         <item name="android:statusBarColor">@color/vibe_background</item>
         <item name="android:navigationBarColor">@color/vibe_background</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
     </style>
+
+    <style name="Theme.VibeUp" parent="Base.Theme.VibeUp" />
 
     <style name="Theme.VibeUp.SplashScreen"
         parent="Theme.SplashScreen">

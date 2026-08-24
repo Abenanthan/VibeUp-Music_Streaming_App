@@ -16,9 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -218,9 +216,7 @@ fun LibraryScreen(
                         text = "Library",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        style = androidx.compose.ui.text.TextStyle(
-                            brush = AppTheme.brandBrush
-                        )
+                        color = AppTheme.colors.textPrimary
                     )
                     IconButton(onClick = { showLogoutDialog = true }) {
                         Icon(
@@ -250,14 +246,9 @@ fun LibraryScreen(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     if (selectedTab == index)
-                                        AppTheme.brandBrush
+                                        MaterialTheme.colorScheme.primary
                                     else
-                                        Brush.linearGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color.Transparent
-                                            )
-                                        )
+                                        Color.Transparent
                                 )
                                 .clickable { selectedTab = index },
                             contentAlignment = Alignment.Center
@@ -298,7 +289,7 @@ fun LibraryScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
                                     .background(
-                                        AppTheme.brandBrush
+                                        MaterialTheme.colorScheme.primary
                                     )
                                     .clickable { showCreateDialog = true }
                                     .padding(
@@ -311,13 +302,13 @@ fun LibraryScreen(
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = null,
-                                    tint = AppTheme.colors.textPrimary,
+                                    tint = AppTheme.colors.onAccent,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
                                     "New Playlist",
                                     fontSize = 11.sp,
-                                    color = AppTheme.colors.textPrimary,
+                                    color = AppTheme.colors.onAccent,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -365,9 +356,7 @@ fun LibraryScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    SolidColor(AppTheme.selectedFill)
-                                )
+                                .background(AppTheme.selectedFill)
                                 .clickable {
                                     navController.navigate(Screen.Downloads.route)
                                 }
@@ -380,14 +369,14 @@ fun LibraryScreen(
                                     .size(52.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(
-                                        AppTheme.brandBrush
+                                        MaterialTheme.colorScheme.primary
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Download,
                                     contentDescription = null,
-                                    tint = AppTheme.colors.textPrimary,
+                                    tint = AppTheme.colors.onAccent,
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -519,7 +508,7 @@ fun LibraryScreen(
                 Text(
                     text = it,
                     modifier = Modifier.padding(14.dp),
-                    color = AppTheme.colors.textPrimary,
+                    color = AppTheme.colors.onAccent,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp
                 )
@@ -535,14 +524,7 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFFEC4899).copy(alpha = 0.2f),
-                        Color(0xFF8B5CF6).copy(alpha = 0.2f)
-                    )
-                )
-            )
+            .background(AppTheme.selectedFill)
             .clickable { onClick() }
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -552,20 +534,13 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
             modifier = Modifier
                 .size(52.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFFEC4899),
-                            Color(0xFF8B5CF6)
-                        )
-                    )
-                ),
+                .background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.Favorite,
                 contentDescription = null,
-                tint = AppTheme.colors.textPrimary,
+                tint = AppTheme.colors.onAccent,
                 modifier = Modifier.size(26.dp)
             )
         }
@@ -587,14 +562,14 @@ fun LikedSongsCard(count: Int, onClick: () -> Unit) {
                 .size(34.dp)
                 .clip(CircleShape)
                 .background(
-                    AppTheme.brandBrush
+                    MaterialTheme.colorScheme.primary
                 ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.Default.PlayArrow,
                 contentDescription = null,
-                tint = AppTheme.colors.textPrimary,
+                tint = AppTheme.colors.onAccent,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -613,11 +588,13 @@ fun PlaylistCard(
     var showRenameDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(playlist.name) }
 
-    val gradients = listOf(
-        listOf(Color(0xFF4C1D95), Color(0xFF7C3AED)),
-        listOf(Color(0xFF1E3A8A), Color(0xFF2563EB)),
-        listOf(Color(0xFF064E3B), Color(0xFF059669)),
-        listOf(Color(0xFF7C2D12), Color(0xFFDC2626))
+    // Flat, theme-derived tints for the 2x2 cover placeholder. These were four
+    // hardcoded dark jewel-tone gradients, which read as dark blobs on a light page.
+    val tileTints = listOf(
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.40f),
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.28f),
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.34f),
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
     )
 
     if (showRenameDialog) {
@@ -696,11 +673,7 @@ fun PlaylistCard(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .background(
-                                Brush.linearGradient(
-                                    colors = gradients[0]
-                                )
-                            ),
+                            .background(tileTints[0]),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("♪", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
@@ -709,11 +682,7 @@ fun PlaylistCard(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .background(
-                                Brush.linearGradient(
-                                    colors = gradients[2]
-                                )
-                            ),
+                            .background(tileTints[2]),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("♩", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
@@ -724,11 +693,7 @@ fun PlaylistCard(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .background(
-                                Brush.linearGradient(
-                                    colors = gradients[1]
-                                )
-                            ),
+                            .background(tileTints[1]),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("♫", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
@@ -737,11 +702,7 @@ fun PlaylistCard(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
-                            .background(
-                                Brush.linearGradient(
-                                    colors = gradients[3]
-                                )
-                            ),
+                            .background(tileTints[3]),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("♬", fontSize = 10.sp, color = AppTheme.colors.textPrimary.copy(alpha = 0.7f))
@@ -848,14 +809,14 @@ fun EmptyPlaylistCard(onClick: () -> Unit) {
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(
-                        AppTheme.brandBrush
+                        MaterialTheme.colorScheme.primary
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = null,
-                    tint = AppTheme.colors.textPrimary,
+                    tint = AppTheme.colors.onAccent,
                     modifier = Modifier.size(22.dp)
                 )
             }

@@ -621,7 +621,7 @@ fun HomeHeader(navController: NavController) {
             Icon(
                 Icons.Default.Person,
                 contentDescription = "Profile",
-                tint = AppTheme.colors.textPrimary,
+                tint = AppTheme.colors.onAccent,
                 modifier = Modifier.size(22.dp)
             )
         }

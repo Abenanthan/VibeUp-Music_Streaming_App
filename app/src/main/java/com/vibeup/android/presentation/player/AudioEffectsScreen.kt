@@ -174,7 +174,7 @@ fun AudioEffectsScreen(
                         Text(
                             "Open",
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            color = AppTheme.colors.textPrimary,
+                            color = AppTheme.colors.onAccent,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
@@ -249,7 +249,7 @@ fun AudioEffectsScreen(
             Icon(
                 Icons.Default.Equalizer,
                 contentDescription = null,
-                tint = AppTheme.colors.textPrimary,
+                tint = AppTheme.colors.onAccent,
                 modifier = Modifier.size(24.dp)
             )
         }

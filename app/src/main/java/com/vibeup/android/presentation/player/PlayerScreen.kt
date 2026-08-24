@@ -654,7 +654,7 @@ fun PlayerScreen(
                             ) {
                                 if (isResolvingUrl) {
                                     CircularProgressIndicator(
-                                        color = AppTheme.colors.textPrimary,
+                                        color = AppTheme.colors.onAccent,
                                         modifier = Modifier.size(24.dp),
                                         strokeWidth = 2.dp
                                     )
@@ -665,7 +665,7 @@ fun PlayerScreen(
                                         else
                                             Icons.Default.PlayArrow,
                                         contentDescription = null,
-                                        tint = AppTheme.colors.textPrimary,
+                                        tint = AppTheme.colors.onAccent,
                                         modifier = Modifier.size(40.dp)
                                     )
                                 }
@@ -1129,7 +1129,7 @@ fun PlayerScreen(
                                                     text = artist.name.firstOrNull()?.toString() ?: "?",
                                                     fontSize = 20.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = AppTheme.colors.textPrimary
+                                                    color = AppTheme.colors.onAccent
                                                 )
                                             }
                                         }
@@ -1208,7 +1208,7 @@ fun PlayerScreen(
                 Text(
                     text = msg,
                     modifier = Modifier.padding(14.dp),
-                    color = AppTheme.colors.textPrimary,
+                    color = AppTheme.colors.onAccent,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center

@@ -461,9 +461,9 @@ fun SoftwareEqScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.Download, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Download, contentDescription = null, tint = AppTheme.colors.onAccent, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("AutoEq Import", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                        Text("AutoEq Import", fontSize = 12.sp, color = AppTheme.colors.onAccent)
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))

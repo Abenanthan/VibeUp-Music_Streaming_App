@@ -222,7 +222,7 @@ fun AddSongsScreen(
                 ) {
                     Text(
                         "Done",
-                        color = AppTheme.colors.textPrimary,
+                        color = AppTheme.colors.onAccent,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -387,7 +387,7 @@ fun AddSongsScreen(
                 Text(
                     text = it,
                     modifier = Modifier.padding(14.dp),
-                    color = AppTheme.colors.textPrimary,
+                    color = AppTheme.colors.onAccent,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp
                 )

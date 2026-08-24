@@ -88,7 +88,7 @@ fun StatsWidget(
                         Icon(
                             Icons.Default.BarChart,
                             contentDescription = null,
-                            tint = AppTheme.colors.textPrimary,
+                            tint = AppTheme.colors.onAccent,
                             modifier = Modifier.size(18.dp)
                         )
                     }

@@ -170,9 +170,9 @@ private fun ArtistContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = AppTheme.colors.textPrimary)
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = AppTheme.colors.onAccent)
                                 Spacer(Modifier.width(6.dp))
-                                Text("Play", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("Play", color = AppTheme.colors.onAccent, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                             }
                         }
                     }

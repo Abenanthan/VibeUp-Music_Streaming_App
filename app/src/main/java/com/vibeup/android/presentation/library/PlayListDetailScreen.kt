@@ -377,7 +377,7 @@ fun PlaylistDetailScreen(
                                 else 
                                     Icons.Default.PlayArrow,
                                 contentDescription = "Play",
-                                tint = AppTheme.colors.textPrimary,
+                                tint = AppTheme.colors.onAccent,
                                 modifier = Modifier.size(32.dp)
                             )
                         }

@@ -568,7 +568,7 @@ fun TopArtistRow(
                 artist.first().uppercase(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = AppTheme.colors.textPrimary
+                color = AppTheme.colors.onAccent
             )
         }
 
